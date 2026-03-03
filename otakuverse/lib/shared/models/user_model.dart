@@ -1,10 +1,12 @@
+import 'package:otakuverse/features/profile/models/profile_model.dart';
+
 class UserModel {
   final String id;
   final String email;
   final String username;
-  final String? displayName;   // nullable → reste null si absent
-  final String? bio;           // nullable → reste null si absent
-  final String? avatarUrl;     // nullable → reste null si absent
+  final String? displayName;
+  final String? bio;
+  final String? avatarUrl;
   final DateTime createdAt;
   final DateTime updatedAt;
   final int followersCount;
@@ -29,20 +31,21 @@ class UserModel {
     this.isPrivate = false,
   });
 
+  // ─── Depuis la table profiles (Supabase) ─────────────────────────
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      id: json['id'] as String,
-      email: json['email'] as String,
-      username: json['username'] as String,
-      displayName: json['display_name'] as String?,   // ✅ null si absent
-      bio: json['bio'] as String?,                    // ✅ null si absent
-      avatarUrl: json['avatar_url'] as String?,       // ✅ null si absent
-      followersCount: json['followers_count'] ?? 0,
-      followingCount: json['following_count'] ?? 0,
-      postsCount: json['posts_count'] ?? 0,
-      isVerified: json['is_verified'] ?? false,
-      isPrivate: json['is_private'] ?? false,
-      createdAt: json['created_at'] != null          // ✅ protection crash
+      id:          json['user_id'] as String,        // ✅ user_id pas id
+      email:       json['email']   as String? ?? '',
+      username:    json['username'] as String,
+      displayName: json['display_name'] as String?,
+      bio:         json['bio']          as String?,
+      avatarUrl:   json['avatar_url']   as String?,
+      followersCount: json['followers_count'] as int? ?? 0,
+      followingCount: json['following_count'] as int? ?? 0,
+      postsCount:     json['posts_count']     as int? ?? 0,
+      isVerified:     json['is_verified']     as bool? ?? false,
+      isPrivate:      json['is_private']      as bool? ?? false,
+      createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'])
           : DateTime.now(),
       updatedAt: json['updated_at'] != null
@@ -51,19 +54,43 @@ class UserModel {
     );
   }
 
+  // ─── Depuis un ProfileModel ───────────────────────────────────────
+  factory UserModel.fromProfile(ProfileModel profile) {
+    return UserModel(
+      id:             profile.userId,
+      email:          profile.email    ?? '',
+      username:       profile.username,
+      displayName:    profile.displayName,
+      bio:            profile.bio,
+      avatarUrl:      profile.avatarUrl,
+      followersCount: profile.followersCount,
+      followingCount: profile.followingCount,
+      postsCount:     profile.postsCount,
+      isVerified:     profile.isVerified,
+      isPrivate:      profile.isPrivate,
+      createdAt:      profile.createdAt,
+      updatedAt:      profile.updatedAt,
+    );
+  }
+
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'email': email,
-    'username': username,
-    'display_name': displayName,
-    'bio': bio,
-    'avatar_url': avatarUrl,
+    'user_id':         id,
+    'email':           email,
+    'username':        username,
+    'display_name':    displayName,
+    'bio':             bio,
+    'avatar_url':      avatarUrl,
     'followers_count': followersCount,
     'following_count': followingCount,
-    'posts_count': postsCount,
-    'is_verified': isVerified,
-    'is_private': isPrivate,
-    'created_at': createdAt.toIso8601String(),
-    'updated_at': updatedAt.toIso8601String(),
+    'posts_count':     postsCount,
+    'is_verified':     isVerified,
+    'is_private':      isPrivate,
+    'created_at':      createdAt.toIso8601String(),
+    'updated_at':      updatedAt.toIso8601String(),
   };
+
+  // ─── Getters ──────────────────────────────────────────────────────
+  String get displayNameOrUsername => displayName ?? username;
+  String get atUsername            => '@$username';
+  bool   get hasAvatar             => avatarUrl != null && avatarUrl!.isNotEmpty;
 }

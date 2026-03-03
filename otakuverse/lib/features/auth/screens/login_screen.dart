@@ -6,21 +6,23 @@ import 'package:otakuverse/core/utils/validators.dart';
 import 'package:otakuverse/core/widgets/button/app_button.dart';
 import 'package:otakuverse/core/widgets/input/input_standard.dart';
 import 'package:otakuverse/features/auth/controllers/auth_controller.dart';
-import 'signup_screen.dart';
+import 'package:otakuverse/features/auth/screens/signup_screen.dart'; // ✅ import absolu
 
 class SignInScreen extends StatelessWidget {
   SignInScreen({super.key});
 
-  final _authController = Get.find<AuthController>();
-  final _formKey = GlobalKey<FormState>();
+  final _authController  = Get.find<AuthController>();
+  final _formKey         = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
   Future<void> _handleSignIn() async {
     if (!_formKey.currentState!.validate()) return;
+
+    // ✅ Signature correcte avec paramètres nommés
     await _authController.signIn(
-      _emailController.text.trim(),
-      _passwordController.text,
+      email:    _emailController.text.trim(),
+      password: _passwordController.text,
     );
   }
 
@@ -40,7 +42,7 @@ class SignInScreen extends StatelessWidget {
                 _buildHeader(),
                 const SizedBox(height: 60),
 
-                // Erreur réactive
+                // ─── Erreur réactive ──────────────────────────────
                 Obx(() {
                   if (_authController.errorMessage.value.isEmpty) {
                     return const SizedBox.shrink();
@@ -70,7 +72,7 @@ class SignInScreen extends StatelessWidget {
                 const SizedBox(height: 32),
 
                 Obx(() => AppButton(
-                  label: 'Se connecter', // ✅ Corrigé (était "S'inscrire")
+                  label: 'Se connecter',
                   type: AppButtonType.primary,
                   isLoading: _authController.isLoading.value,
                   onPressed: _handleSignIn,
@@ -88,28 +90,37 @@ class SignInScreen extends StatelessWidget {
     );
   }
 
+  // ─── HEADER ────────────────────────────────────────────────────────
   Widget _buildHeader() {
     return Column(
       children: [
         Container(
-          width: 80, height: 80,
-          decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
+          width: 80,
+          height: 80,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+          ),
           child: Image.asset('assets/logo/otakuverse_logo.png'),
         ),
         const SizedBox(height: 24),
         const Text(
           'Bon retour !',
-          style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
         const SizedBox(height: 8),
         Text(
-          'Connectez-vous pour continuer',
-          style: TextStyle(fontSize: 16, color: Colors.grey[400]),
+          'Connecte-toi pour continuer',
+          style: TextStyle(fontSize: 15, color: Colors.grey[400]),
         ),
       ],
     );
   }
 
+  // ─── BANNER ERREUR ─────────────────────────────────────────────────
   Widget _buildErrorBanner(String message) {
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
@@ -124,19 +135,34 @@ class SignInScreen extends StatelessWidget {
           const Icon(Icons.error_outline, color: AppColors.errorRed),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(message, style: const TextStyle(color: AppColors.errorRed, fontSize: 14)),
+            child: Text(
+              message,
+              style: const TextStyle(
+                  color: AppColors.errorRed, fontSize: 14),
+            ),
+          ),
+          // ✅ Bouton fermer le banner
+          GestureDetector(
+            onTap: () => _authController.errorMessage.value = '',
+            child: const Icon(Icons.close,
+                color: AppColors.errorRed, size: 18),
           ),
         ],
       ),
     );
   }
 
+  // ─── MOT DE PASSE OUBLIÉ ───────────────────────────────────────────
   Widget _buildForgotPassword(BuildContext context) {
     return Align(
       alignment: Alignment.centerRight,
       child: TextButton(
-        onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Fonctionnalité à venir')),
+        onPressed: () => Get.snackbar(
+          'Bientôt disponible',
+          'La réinitialisation du mot de passe arrive prochainement',
+          backgroundColor: AppColors.darkGray,
+          colorText: AppColors.pureWhite,
+          snackPosition: SnackPosition.BOTTOM,
         ),
         child: const Text(
           'Mot de passe oublié ?',
@@ -146,28 +172,34 @@ class SignInScreen extends StatelessWidget {
     );
   }
 
+  // ─── DIVIDER ───────────────────────────────────────────────────────
   Widget _buildDivider() {
     return Row(
       children: [
         Expanded(child: Divider(color: Colors.grey[800])),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Text('OU', style: TextStyle(color: Colors.grey[600], fontSize: 14)),
+          child: Text(
+            'OU',
+            style: TextStyle(color: Colors.grey[600], fontSize: 13),
+          ),
         ),
         Expanded(child: Divider(color: Colors.grey[800])),
       ],
     );
   }
 
+  // ─── LIEN INSCRIPTION ──────────────────────────────────────────────
   Widget _buildSignUpLink(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text('Pas encore de compte ? ', style: TextStyle(color: Colors.grey[400], fontSize: 14)),
+        Text(
+          'Pas encore de compte ? ',
+          style: TextStyle(color: Colors.grey[400], fontSize: 14),
+        ),
         TextButton(
-          onPressed: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => SignUpScreen()),
-          ),
+          onPressed: () => Get.to(() => SignUpScreen()), // ✅ GetX au lieu de Navigator
           child: Text("S'inscrire", style: AppTextStyles.link),
         ),
       ],

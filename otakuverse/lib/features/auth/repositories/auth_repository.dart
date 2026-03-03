@@ -1,20 +1,25 @@
+import 'package:otakuverse/features/profile/models/profile_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:otakuverse/shared/models/user_model.dart';
 
 class AuthRepository {
   final _supabase = Supabase.instance.client;
 
-  // ─── INSCRIPTION ────────────────────────────────────────────────
+  // ─── INSCRIPTION ─────────────────────────────────────────────────
   Future<UserModel> signUp({
     required String email,
     required String password,
     required String username,
     String? displayName,
   }) async {
-    // 1. Créer le compte Supabase Auth
     final authResponse = await _supabase.auth.signUp(
       email: email,
       password: password,
+      data: {
+        'username':                    username.toLowerCase().trim(),
+        if (displayName != null)
+          'display_name':              displayName,
+      },
     );
 
     if (authResponse.user == null) {
@@ -22,23 +27,50 @@ class AuthRepository {
     }
 
     final userId = authResponse.user!.id;
-    final now = DateTime.now().toIso8601String();
 
-    // 2. Créer le profil dans la table profiles
-    final profileData = await _supabase
+    // ✅ Attente fixe de 1.5s — le trigger est rapide, pas besoin de retry complexe
+    await Future.delayed(const Duration(milliseconds: 1500));
+
+    // ✅ Une seule tentative propre
+    final data = await _supabase
         .from('profiles')
-        .insert({
-          'id': userId,
-          'email': email,
-          'username': username,
-          'display_name': displayName,
-          'created_at': now,
-          'updated_at': now,
-        })
+        .select()
+        .eq('user_id', userId)
+        .maybeSingle();
+
+    if (data != null) {
+      print('✅ Profil créé par le trigger');
+      return UserModel.fromProfile(ProfileModel.fromJson(data));
+    }
+
+    // ─── Fallback : upsert si trigger trop lent ───────────────────
+    print('⚠️ Fallback upsert');
+    final fallback = await _supabase
+        .from('profiles')
+        .upsert(
+          {
+            'user_id':         userId,
+            'username':        username.toLowerCase().trim(),
+            'email':           email,
+            'display_name':    displayName,
+            'favorite_anime':  [],
+            'favorite_manga':  [],
+            'favorite_games':  [],
+            'favorite_genres': [],
+            'followers_count': 0,
+            'following_count': 0,
+            'posts_count':     0,
+            'is_private':      false,
+            'is_verified':     false,
+            'created_at':      DateTime.now().toIso8601String(),
+            'updated_at':      DateTime.now().toIso8601String(),
+          },
+          onConflict: 'user_id',
+        )
         .select()
         .single();
 
-    return UserModel.fromJson(profileData);
+    return UserModel.fromProfile(ProfileModel.fromJson(fallback));
   }
 
   // ─── CONNEXION ───────────────────────────────────────────────────
@@ -55,11 +87,10 @@ class AuthRepository {
       throw Exception('Email ou mot de passe incorrect');
     }
 
-    // Récupérer le profil complet depuis la table profiles
     final profileData = await _supabase
         .from('profiles')
         .select()
-        .eq('id', authResponse.user!.id)
+        .eq('user_id', authResponse.user!.id)
         .single();
 
     return UserModel.fromJson(profileData);
@@ -70,9 +101,17 @@ class AuthRepository {
     await _supabase.auth.signOut();
   }
 
-  // ─── SESSION ─────────────────────────────────────────────────────
-  bool get isLoggedIn => _supabase.auth.currentUser != null;
+  // ─── VÉRIFIER UNICITÉ USERNAME ───────────────────────────────────
+  Future<bool> isUsernameTaken(String username) async {
+    final data = await _supabase
+        .from('profiles')
+        .select('username')
+        .eq('username', username.toLowerCase().trim())
+        .maybeSingle();
+    return data != null;
+  }
 
-  // User Supabase Auth (pas le profil complet)
+  // ─── SESSION ─────────────────────────────────────────────────────
+  bool  get isLoggedIn      => _supabase.auth.currentUser != null;
   User? get currentAuthUser => _supabase.auth.currentUser;
 }

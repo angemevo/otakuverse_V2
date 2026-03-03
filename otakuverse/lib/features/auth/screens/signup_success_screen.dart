@@ -1,15 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:otakuverse/core/utils/helpers.dart';
-import 'package:otakuverse/features/navigation/navigation_page.dart';
+import 'package:get/get.dart';
+import 'package:otakuverse/core/constants/colors.dart';
+import 'package:otakuverse/features/auth/controllers/auth_controller.dart';
 
 class SignupSuccessScreen extends StatefulWidget {
-  final String username;
-
-  const SignupSuccessScreen({
-    super.key,
-    required this.username,
-  });
+  const SignupSuccessScreen({super.key});
 
   @override
   State<SignupSuccessScreen> createState() => _SignupSuccessScreenState();
@@ -17,7 +13,7 @@ class SignupSuccessScreen extends StatefulWidget {
 
 class _SignupSuccessScreenState extends State<SignupSuccessScreen>
     with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
+  late AnimationController _animController;
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
 
@@ -25,73 +21,121 @@ class _SignupSuccessScreenState extends State<SignupSuccessScreen>
   void initState() {
     super.initState();
 
-    _controller = AnimationController(
+    _animController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 700),
     );
 
     _scaleAnimation = CurvedAnimation(
-      parent: _controller,
+      parent: _animController,
       curve: Curves.elasticOut,
     );
 
     _fadeAnimation = CurvedAnimation(
-      parent: _controller,
+      parent: _animController,
       curve: Curves.easeIn,
     );
 
-    _controller.forward();
+    _animController.forward();
 
-    // Redirection automatique
-    Timer(const Duration(seconds: 2), () {
+    // ✅ Redirection GetX vers home après 2.5s
+    Timer(const Duration(milliseconds: 2500), () {
       if (!mounted) return;
-      Helpers.navigateOffAll(NavigationPage());
+      Get.offAllNamed('/home');
     });
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _animController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    // ✅ Username récupéré depuis le controller, pas en paramètre
+    final username = Get.find<AuthController>().currentUser.value?.username ?? '';
+
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: AppColors.deepBlack,
       body: Center(
         child: FadeTransition(
           opacity: _fadeAnimation,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ScaleTransition(
-                scale: _scaleAnimation,
-                child: const Icon(
-                  Icons.check_circle_rounded,
-                  size: 96,
-                  color: Color(0xFF4CAF50),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // ─── Icône animée ───────────────────────────────
+                ScaleTransition(
+                  scale: _scaleAnimation,
+                  child: Container(
+                    width: 120,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.successGreen.withValues(alpha: 0.1),
+                      border: Border.all(
+                        color: AppColors.successGreen,
+                        width: 2,
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.check_rounded,
+                      size: 64,
+                      color: AppColors.successGreen,
+                    ),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 24),
-              const Text(
-                'Inscription réussie',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+
+                const SizedBox(height: 32),
+
+                // ─── Titre ──────────────────────────────────────
+                const Text(
+                  'Inscription réussie !',
+                  style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.pureWhite,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Bienvenue sur Otakuverse, ${widget.username} 👋',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[400],
+
+                const SizedBox(height: 12),
+
+                // ─── Message de bienvenue ────────────────────────
+                Text(
+                  'Bienvenue sur Otakuverse, $username 👋\nPrépare-toi à rejoindre la communauté 🎌',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    color: AppColors.mediumGray,
+                    height: 1.5,
+                  ),
                 ),
-              ),
-            ],
+
+                const SizedBox(height: 40),
+
+                // ─── Indicateur de chargement ────────────────────
+                const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.crimsonRed,
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
+                Text(
+                  'Redirection en cours...',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.mediumGray.withValues(alpha: 0.6),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
