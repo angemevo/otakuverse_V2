@@ -54,7 +54,7 @@ class _InputStandardState extends State<InputStandard> {
           ),
           helperText: widget.helperText,
           helperStyle: const TextStyle(
-            color: AppColors.mediumGray,
+            color: AppColors.lightGray,
             fontSize: 12,
           ),
           filled: true,

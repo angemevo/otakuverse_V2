@@ -5,6 +5,7 @@ class PostService {
   final _supabase = Supabase.instance.client;
 
   String get _uid => _supabase.auth.currentUser!.id;
+  static const _select = '*, profiles!inner(username, display_name, avatar_url)';
 
   // ─── CRÉER UN POST ───────────────────────────────────────────────
   Future<PostModel> createPost({
@@ -25,14 +26,35 @@ class PostService {
   }
 
   // ─── FEED PRINCIPAL (tous les posts) ─────────────────────────────
-  Future<List<PostModel>> getFeed({int limit = 20, int offset = 0}) async {
+  Future<List<PostModel>> getFeed() async {
+    final myId = _supabase.auth.currentUser!.id;
+
+    // 1. Récupérer les IDs des gens que je suis
+    final followsData = await _supabase
+        .from('follows')
+        .select('following_id')
+        .eq('follower_id', myId);
+
+    final followingIds = (followsData as List)
+        .map((e) => e['following_id'] as String)
+        .toList();
+
+    // ✅ Inclure mes propres posts
+    followingIds.add(myId);
+
+    if (followingIds.isEmpty) return [];
+
+    // 2. Récupérer les posts de ces utilisateurs
     final data = await _supabase
         .from('posts')
-        .select('*, profiles(username, avatar_url)') // ← join
+        .select(_select)
+        .inFilter('user_id', followingIds)
         .order('created_at', ascending: false)
-        .range(offset, offset + limit - 1);
+        .limit(30);
 
-    return (data as List).map((e) => PostModel.fromJson(e)).toList();
+    return (data as List)
+        .map((e) => PostModel.fromJson(e))
+        .toList();
   }
 
   // ─── POSTS D'UN USER ─────────────────────────────────────────────

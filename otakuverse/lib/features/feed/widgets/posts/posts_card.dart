@@ -27,8 +27,8 @@ class PostCard extends StatefulWidget {
 
 class _PostCardState extends State<PostCard> {
   late bool _isLiked;
-  bool _showHeart = false;
-  int _currentPage = 0;
+  bool _showHeart  = false;
+  int  _currentPage = 0;
   final PageController _pageController = PageController();
 
   @override
@@ -40,7 +40,6 @@ class _PostCardState extends State<PostCard> {
   @override
   void didUpdateWidget(PostCard oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Sync si le parent met à jour isLiked (optimistic update)
     if (oldWidget.isLiked != widget.isLiked) {
       _isLiked = widget.isLiked;
     }
@@ -76,14 +75,15 @@ class _PostCardState extends State<PostCard> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildHeader(),
-          if (widget.post.hasMedia) _buildMedia(),
+          // ✅ mediaUrls.isNotEmpty au lieu de hasMedia
+          if (widget.post.mediaUrls.isNotEmpty) _buildMedia(),
           _buildActions(),
           _buildLikesCount(),
           _buildCaption(),
           if (widget.post.commentsCount > 0) _buildCommentsPreview(),
           _buildTimestamp(),
           const SizedBox(height: 8),
-          const Divider(color: Color(0xFF1A1A1A), height: 1),
+          // const Divider(color: Color(0xFF1A1A1A), height: 1),
         ],
       ),
     );
@@ -95,28 +95,41 @@ class _PostCardState extends State<PostCard> {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       child: Row(
         children: [
-          // Avatar
+          // ─ Avatar ───────────────────────────────────────────────
           CircleAvatar(
             radius: 18,
             backgroundColor: AppColors.darkGray,
-            backgroundImage: widget.post.avatarUrl != null
+            backgroundImage: widget.post.avatarUrl != null &&
+                    widget.post.avatarUrl!.isNotEmpty
                 ? NetworkImage(widget.post.avatarUrl!)
                 : null,
-            child: widget.post.avatarUrl == null
-                ? const Icon(Icons.person, color: AppColors.pureWhite, size: 18)
+            child: (widget.post.avatarUrl == null ||
+                    widget.post.avatarUrl!.isEmpty)
+                ? Text(
+                    // ✅ Initiale du username
+                    widget.post.displayNameOrUsername.isNotEmpty
+                        ? widget.post.displayNameOrUsername[0].toUpperCase()
+                        : '?',
+                    style: const TextStyle(
+                      color: AppColors.pureWhite,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  )
                 : null,
           ),
           const SizedBox(width: 10),
 
-          // Username + location
+          // ─ Username + location ───────────────────────────────────
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
+                    // ✅ displayNameOrUsername
                     Text(
-                      widget.post.displayUsername,
+                      widget.post.displayNameOrUsername,
                       style: GoogleFonts.inter(
                         color: AppColors.pureWhite,
                         fontWeight: FontWeight.w600,
@@ -133,19 +146,27 @@ class _PostCardState extends State<PostCard> {
                     ],
                   ],
                 ),
+                // ✅ hasLocation depuis PostModel
                 if (widget.post.hasLocation)
-                  Text(
-                    widget.post.location!,
-                    style: GoogleFonts.inter(
-                      color: AppColors.mediumGray,
-                      fontSize: 11,
-                    ),
+                  Row(
+                    children: [
+                      const Icon(Icons.location_on,
+                          color: AppColors.mediumGray, size: 10),
+                      const SizedBox(width: 2),
+                      Text(
+                        widget.post.location!,
+                        style: GoogleFonts.inter(
+                          color: AppColors.mediumGray,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
                   ),
               ],
             ),
           ),
 
-          // Menu contextuel
+          // ─ Menu ─────────────────────────────────────────────────
           IconButton(
             icon: const Icon(Icons.more_horiz, color: AppColors.pureWhite),
             onPressed: () => _showPostMenu(context),
@@ -173,19 +194,21 @@ class _PostCardState extends State<PostCard> {
             Positioned(
               top: 12, right: 12,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: Colors.black54,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
                   '${_currentPage + 1}/${widget.post.mediaCount}',
-                  style: GoogleFonts.inter(color: Colors.white, fontSize: 12),
+                  style: GoogleFonts.inter(
+                      color: Colors.white, fontSize: 12),
                 ),
               ),
             ),
 
-          // Animation cœur au double tap
+          // Animation cœur
           if (_showHeart)
             const Positioned.fill(child: HeartAnimation()),
         ],
@@ -203,13 +226,15 @@ class _PostCardState extends State<PostCard> {
         return Container(
           color: AppColors.darkGray,
           child: const Center(
-            child: CircularProgressIndicator(color: AppColors.crimsonRed),
+            child: CircularProgressIndicator(
+                strokeWidth: 2, color: AppColors.crimsonRed),
           ),
         );
       },
       errorBuilder: (_, __, ___) => Container(
         color: AppColors.darkGray,
-        child: const Icon(Icons.broken_image, color: AppColors.mediumGray, size: 48),
+        child: const Icon(Icons.broken_image,
+            color: AppColors.mediumGray, size: 48),
       ),
     );
   }
@@ -221,10 +246,11 @@ class _PostCardState extends State<PostCard> {
           controller: _pageController,
           itemCount: widget.post.mediaUrls.length,
           onPageChanged: (i) => setState(() => _currentPage = i),
-          itemBuilder: (_, i) => _buildSingleImage(widget.post.mediaUrls[i]),
+          itemBuilder: (_, i) =>
+              _buildSingleImage(widget.post.mediaUrls[i]),
         ),
 
-        // Dots indicateur
+        // Dots indicateurs
         Positioned(
           bottom: 10, left: 0, right: 0,
           child: Row(
@@ -237,7 +263,9 @@ class _PostCardState extends State<PostCard> {
                 width: _currentPage == i ? 16 : 6,
                 height: 6,
                 decoration: BoxDecoration(
-                  color: _currentPage == i ? AppColors.crimsonRed : Colors.white38,
+                  color: _currentPage == i
+                      ? AppColors.crimsonRed
+                      : Colors.white38,
                   borderRadius: BorderRadius.circular(3),
                 ),
               ),
@@ -302,9 +330,8 @@ class _PostCardState extends State<PostCard> {
       icon: animate
           ? AnimatedSwitcher(
               duration: const Duration(milliseconds: 200),
-              transitionBuilder: (child, anim) => ScaleTransition(
-                scale: anim, child: child,
-              ),
+              transitionBuilder: (child, anim) =>
+                  ScaleTransition(scale: anim, child: child),
               child: Icon(
                 icon,
                 key: ValueKey(icon),
@@ -318,14 +345,12 @@ class _PostCardState extends State<PostCard> {
 
   // ─── COMPTEUR LIKES ──────────────────────────────────────────────
   Widget _buildLikesCount() {
-    // Affichage basé sur isLiked du widget (source de vérité = controller)
-    final displayCount = widget.post.likesCount;
-    if (displayCount == 0 && !_isLiked) return const SizedBox.shrink();
-
+    final count = widget.post.likesCount;
+    if (count == 0 && !_isLiked) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       child: Text(
-        _formatCount(displayCount),
+        _formatCount(count),
         style: GoogleFonts.inter(
           color: AppColors.pureWhite,
           fontWeight: FontWeight.w600,
@@ -341,8 +366,9 @@ class _PostCardState extends State<PostCard> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: ExpandableText(
-        username: widget.post.displayUsername,
-        caption: widget.post.caption,
+        // ✅ displayNameOrUsername
+        username: widget.post.displayNameOrUsername,
+        caption:  widget.post.caption,
       ),
     );
   }
@@ -355,7 +381,8 @@ class _PostCardState extends State<PostCard> {
         onTap: widget.onComment,
         child: Text(
           'Voir les ${widget.post.commentsCount} commentaires',
-          style: GoogleFonts.inter(color: AppColors.mediumGray, fontSize: 13),
+          style: GoogleFonts.inter(
+              color: AppColors.mediumGray, fontSize: 13),
         ),
       ),
     );
@@ -409,12 +436,18 @@ class _PostCardState extends State<PostCard> {
     );
   }
 
-  Widget _menuItem(IconData icon, String label, VoidCallback onTap, {Color? color}) {
+  Widget _menuItem(
+    IconData icon,
+    String label,
+    VoidCallback onTap, {
+    Color? color,
+  }) {
     return ListTile(
       leading: Icon(icon, color: color ?? AppColors.pureWhite, size: 22),
       title: Text(
         label,
-        style: GoogleFonts.inter(color: color ?? AppColors.pureWhite, fontSize: 15),
+        style: GoogleFonts.inter(
+            color: color ?? AppColors.pureWhite, fontSize: 15),
       ),
       onTap: () {
         Navigator.pop(context);
@@ -428,14 +461,16 @@ class _PostCardState extends State<PostCard> {
     final diff = DateTime.now().difference(date);
     if (diff.inSeconds < 60) return 'À l\'instant';
     if (diff.inMinutes < 60) return 'il y a ${diff.inMinutes} min';
-    if (diff.inHours < 24) return 'il y a ${diff.inHours} h';
-    if (diff.inDays < 7) return 'il y a ${diff.inDays} j';
+    if (diff.inHours < 24)   return 'il y a ${diff.inHours} h';
+    if (diff.inDays < 7)     return 'il y a ${diff.inDays} j';
     return '${date.day}/${date.month}/${date.year}';
   }
 
   String _formatCount(int count) {
-    if (count >= 1000000) return '${(count / 1000000).toStringAsFixed(1)}M j\'aime';
-    if (count >= 1000) return '${(count / 1000).toStringAsFixed(1)}k j\'aime';
+    if (count >= 1000000)
+      return '${(count / 1000000).toStringAsFixed(1)}M j\'aime';
+    if (count >= 1000)
+      return '${(count / 1000).toStringAsFixed(1)}k j\'aime';
     return '$count j\'aime';
   }
 }

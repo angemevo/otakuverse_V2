@@ -193,7 +193,7 @@ class AppTextStyles {
   static TextStyle inputHint = GoogleFonts.inter(
     fontSize: 16,
     fontWeight: FontWeight.w400,
-    color: AppColors.mediumGray,
+    color: AppColors.lightGray,
   );
   
   /// Error Text

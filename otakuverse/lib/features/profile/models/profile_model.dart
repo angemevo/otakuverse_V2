@@ -118,15 +118,16 @@ class ProfileModel {
     String? email,
     String? displayName,
     String? bio,
-    String? avatarUrl,
-    String? bannerUrl,
+    // ✅ Wrapper Object? pour permettre de passer null explicitement
+    Object? avatarUrl  = _undefined,
+    Object? bannerUrl  = _undefined,
     String? birthDate,
     String? gender,
     String? location,
     String? website,
     List<String>? favoriteAnime,
     List<String>? favoriteManga,
-    List<String>? favoriteGames,  // ✅
+    List<String>? favoriteGames,
     List<String>? favoriteGenres,
     bool? isPrivate,
     int? followersCount,
@@ -136,19 +137,20 @@ class ProfileModel {
     return ProfileModel(
       id:             id,
       userId:         userId,
-      username:       username      ?? this.username,
-      email:          email         ?? this.email,
-      displayName:    displayName   ?? this.displayName,
-      bio:            bio           ?? this.bio,
-      avatarUrl:      avatarUrl     ?? this.avatarUrl,
-      bannerUrl:      bannerUrl     ?? this.bannerUrl,
-      birthDate:      birthDate     ?? this.birthDate,
-      gender:         gender        ?? this.gender,
-      location:       location      ?? this.location,
-      website:        website       ?? this.website,
+      username:       username       ?? this.username,
+      email:          email          ?? this.email,
+      displayName:    displayName    ?? this.displayName,
+      bio:            bio            ?? this.bio,
+      // ✅ Si _undefined → garde la valeur actuelle, sinon utilise la nouvelle (même null)
+      avatarUrl:      avatarUrl  == _undefined ? this.avatarUrl  : avatarUrl  as String?,
+      bannerUrl:      bannerUrl  == _undefined ? this.bannerUrl  : bannerUrl  as String?,
+      birthDate:      birthDate      ?? this.birthDate,
+      gender:         gender         ?? this.gender,
+      location:       location       ?? this.location,
+      website:        website        ?? this.website,
       favoriteAnime:  favoriteAnime  ?? this.favoriteAnime,
       favoriteManga:  favoriteManga  ?? this.favoriteManga,
-      favoriteGames:  favoriteGames  ?? this.favoriteGames, // ✅
+      favoriteGames:  favoriteGames  ?? this.favoriteGames,
       favoriteGenres: favoriteGenres ?? this.favoriteGenres,
       followersCount: followersCount ?? this.followersCount,
       followingCount: followingCount ?? this.followingCount,
@@ -163,6 +165,9 @@ class ProfileModel {
   // ─── Getters ───────────────────────────────────────────────────────
   /// Affiche le displayName si défini, sinon le @username
   String get displayNameOrUsername => displayName ?? username;
+
+  // ✅ Sentinel pour distinguer "non passé" de "null explicite"
+  static const _undefined = Object();
 
   /// @username formaté
   String get atUsername => '@$username';

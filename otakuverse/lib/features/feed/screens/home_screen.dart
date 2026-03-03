@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:otakuverse/core/constants/colors.dart';
 import 'package:otakuverse/core/constants/text_styles.dart';
 import 'package:otakuverse/features/feed/controllers/post_controller.dart';
+import 'package:otakuverse/features/feed/screens/comments_sheet.dart';
 import 'package:otakuverse/features/feed/widgets/posts/posts_card.dart';
 import 'package:otakuverse/features/feed/widgets/stories/story_avatar.dart';
 
@@ -58,13 +59,18 @@ class HomeScreen extends StatelessWidget {
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
                       final post = controller.posts[index];
-                      return PostCard(
-                        post: post,
-                        isLiked: post.isLiked,
-                        onLike: () => controller.toggleLike(post.id),
-                        onComment: () {
-                          // TODO: ouvrir écran commentaires
-                        },
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        child: PostCard(
+                          post: post,
+                          isLiked: post.isLiked,
+                          onLike: () => controller.toggleLike(post.id),
+                          onComment: () => showCommentsSheet(
+                            context,
+                            postId:     post.id,
+                            postAuthor: post.displayNameOrUsername,
+                          ),
+                        ),
                       );
                     },
                     childCount: controller.posts.length,
