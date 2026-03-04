@@ -123,7 +123,7 @@ class AppTextStyles {
   static TextStyle link = GoogleFonts.inter(
     fontSize: 14,
     fontWeight: FontWeight.w500,
-    decoration: TextDecoration.underline,
+    // decoration: TextDecoration.underline,
     color: AppColors.infoBlue,
   );
   
