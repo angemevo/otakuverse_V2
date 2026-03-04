@@ -11,19 +11,42 @@ class CommentService {
 
   // ─── RÉCUPÉRER les commentaires d'un post ────────────────────────
   Future<List<CommentModel>> getComments(String postId) async {
-    final data = await _supabase
+    // 1. ✅ Commentaires racine (parent_id IS NULL)
+    final rootData = await _supabase
         .from('comments')
         .select(_select)
-        .eq('post_id', postId)
-        .isFilter('parent_id', null) // ✅ Seulement les commentaires racine
+        .eq('post_id',   postId)
+        .isFilter('parent_id', null)
         .order('created_at', ascending: true);
 
-    final comments = (data as List)
+    final rootComments = (rootData as List)
         .map((e) => CommentModel.fromJson(e))
         .toList();
 
-    // ✅ Charger les likes pour chaque commentaire
-    return _attachLikes(comments);
+    if (rootComments.isEmpty) return [];
+
+    // 2. ✅ Toutes les réponses du post en une seule requête
+    final repliesData = await _supabase
+        .from('comments')
+        .select(_select)
+        .eq('post_id', postId)
+        .not('parent_id', 'is', null) // ✅ Seulement les réponses
+        .order('created_at', ascending: true);
+
+    final allReplies = (repliesData as List)
+        .map((e) => CommentModel.fromJson(e))
+        .toList();
+
+    // 3. ✅ Attacher les réponses à leur commentaire parent
+    final commentsWithReplies = rootComments.map((comment) {
+      final replies = allReplies
+          .where((r) => r.parentId == comment.id)
+          .toList();
+      return comment.copyWith(replies: replies);
+    }).toList();
+
+    // 4. ✅ Attacher les likes
+    return _attachLikes(commentsWithReplies);
   }
 
   // ─── RÉCUPÉRER les réponses d'un commentaire ─────────────────────

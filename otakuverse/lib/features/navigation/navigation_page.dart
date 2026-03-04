@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:otakuverse/core/constants/colors.dart';
 import 'package:otakuverse/features/activity/screens/activity_screen.dart';
+import 'package:otakuverse/features/community/screens/community_screen.dart';
 import 'package:otakuverse/features/feed/screens/home_screen.dart';
 import 'package:otakuverse/features/navigation/widgets/bottom_nav_bar.dart';
 import 'package:otakuverse/features/profile/screens/profile_screen.dart';
-import 'package:otakuverse/features/search/screens/search_screen.dart';
-
 
 class NavigationPage extends StatefulWidget {
   const NavigationPage({super.key});
@@ -16,78 +16,87 @@ class NavigationPage extends StatefulWidget {
 class _NavigationPageState extends State<NavigationPage> {
   int _currentIndex = 0;
 
+  // ✅ Un NavigatorKey par tab
+  final List<GlobalKey<NavigatorState>> _navigatorKeys = [
+    GlobalKey<NavigatorState>(), // Tab 0 — Accueil
+    GlobalKey<NavigatorState>(), // Tab 1 — Recherche
+    GlobalKey<NavigatorState>(), // Tab 2 — Activité
+    GlobalKey<NavigatorState>(), // Tab 3 — Profil
+  ];
+
+  // ✅ Mapping index BottomNav → index tab
+  // BottomNav : 0=Accueil, 1=Recherche, 2=Créer(ignoré), 3=Activité, 4=Profil
+  int _navIndexToTabIndex(int navIndex) {
+    switch (navIndex) {
+      case 0: return 0;
+      case 1: return 1;
+      case 3: return 2;
+      case 4: return 3;
+      default: return 0;
+    }
+  }
+
+  int get _currentTabIndex => _navIndexToTabIndex(_currentIndex);
+
+  // ✅ Bouton retour Android
+  Future<bool> _onWillPop() async {
+    final nav = _navigatorKeys[_currentTabIndex].currentState;
+    if (nav != null && nav.canPop()) {
+      nav.pop();
+      return false;
+    }
+    return true;
+  }
+
+  void _onNavTap(int navIndex) {
+    if (navIndex == 2) return; // CreatePostButton
+
+    final tabIndex = _navIndexToTabIndex(navIndex);
+
+    // ✅ Double tap → retour à la racine du tab
+    if (navIndex == _currentIndex) {
+      _navigatorKeys[tabIndex]
+          .currentState
+          ?.popUntil((route) => route.isFirst);
+      return;
+    }
+
+    setState(() => _currentIndex = navIndex);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF121212),
-      body: _buildScreen(),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          // Index 2 = bouton + (CreatePostButton gère lui-même la navigation)
-          if (index == 2) return;
-          setState(() => _currentIndex = index);
-        },
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: Scaffold(
+        backgroundColor: AppColors.deepBlack,
+        body: Stack(
+          children: [
+            _buildTab(0, const HomeScreen()),
+            _buildTab(1, const CommunityScreen()),
+            _buildTab(2, const ActivityScreen()),
+            _buildTab(3, const ProfileScreen()),
+          ],
+        ),
+        bottomNavigationBar: BottomNavBar(
+          currentIndex: _currentIndex,
+          onTap:        _onNavTap,
+        ),
       ),
     );
   }
 
-  Widget _buildScreen() {
-    switch (_currentIndex) {
-      case 0: return const HomeScreen();
-      case 1: return const SearchScreen();
-      case 3: return const ActivityScreen();
-      case 4: return const ProfileScreen();
-      default: return const HomeScreen();
-    }
+  Widget _buildTab(int tabIndex, Widget screen) {
+    return Offstage(
+      offstage: _currentTabIndex != tabIndex,
+      child: Navigator(
+        key: _navigatorKeys[tabIndex],
+        // ✅ Pas de conflit avec GetMaterialApp router
+        onGenerateRoute: (settings) => MaterialPageRoute(
+          settings: settings,
+          builder:  (_) => screen,
+        ),
+      ),
+    );
   }
 }
-  // void _showCreatePostModal() {
-  //   showModalBottomSheet(
-  //     context: context,
-  //     backgroundColor: const Color(0xFF1E1E1E),
-  //     isScrollControlled: true,
-  //     shape: const RoundedRectangleBorder(
-  //       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-  //     ),
-  //     builder: (_) => Padding(
-  //       padding: const EdgeInsets.all(24),
-  //       child: Column(
-  //         mainAxisSize: MainAxisSize.min,
-  //         children: [
-  //           Container(
-  //             width: 40, height: 4,
-  //             decoration: BoxDecoration(
-  //               color: Colors.grey[700],
-  //               borderRadius: BorderRadius.circular(2),
-  //             ),
-  //           ),
-  //           const SizedBox(height: 24),
-  //           _createOption(Icons.image_outlined, 'Publier une photo', () {}),
-  //           _createOption(Icons.video_camera_back_outlined, 'Publier une vidéo', () {}),
-  //           _createOption(Icons.auto_stories_outlined, 'Ajouter une story', () {}),
-  //           const SizedBox(height: 16),
-  //         ],
-  //       ),
-  //     ),
-  //   );
-  // }
-
-  // Widget _createOption(IconData icon, String label, VoidCallback onTap) {
-  //   return ListTile(
-  //     leading: Container(
-  //       padding: const EdgeInsets.all(8),
-  //       decoration: BoxDecoration(
-  //         color: const Color(0xFF6C63FF).withOpacity(0.15),
-  //         borderRadius: BorderRadius.circular(10),
-  //       ),
-  //       child: Icon(icon, color: const Color(0xFF6C63FF)),
-  //     ),
-  //     title: Text(label, style: const TextStyle(color: Colors.white)),
-  //     trailing: const Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 14),
-  //     onTap: () {
-  //       Navigator.pop(context);
-  //       onTap();
-  //     },
-  //   );
-  // }

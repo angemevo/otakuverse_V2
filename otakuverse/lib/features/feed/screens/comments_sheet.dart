@@ -8,18 +8,21 @@ import 'package:otakuverse/features/feed/models/comment_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 // ─── FONCTION D'OUVERTURE ─────────────────────────────────────────────
-// Appelle simplement showCommentsSheet(context, postId, postAuthor)
-// depuis n'importe où dans l'app
 void showCommentsSheet(
   BuildContext context, {
   required String postId,
   required String postAuthor,
 }) {
+  // ✅ Réinitialiser le controller à chaque ouverture
+  if (Get.isRegistered<CommentController>()) {
+    Get.delete<CommentController>();
+  }
+
   showModalBottomSheet(
-    context:           context,
-    isScrollControlled: true,    // ✅ Hauteur dynamique
-    backgroundColor:   Colors.transparent,
-    enableDrag:        true,
+    context:            context,
+    isScrollControlled: true,
+    backgroundColor:    Colors.transparent,
+    enableDrag:         true,
     builder: (_) => CommentsSheet(
       postId:     postId,
       postAuthor: postAuthor,
@@ -43,10 +46,10 @@ class CommentsSheet extends StatefulWidget {
 }
 
 class _CommentsSheetState extends State<CommentsSheet> {
-  final _controller     = Get.put(CommentController());
-  final _textController = TextEditingController();
-  final _focusNode      = FocusNode();
-  final _scrollController = ScrollController();
+  late final CommentController _controller;
+  final _textController    = TextEditingController();
+  final _focusNode         = FocusNode();
+  final _scrollController  = ScrollController();
 
   String get _myId =>
       Supabase.instance.client.auth.currentUser!.id;
@@ -54,6 +57,7 @@ class _CommentsSheetState extends State<CommentsSheet> {
   @override
   void initState() {
     super.initState();
+    _controller = Get.put(CommentController());
     _controller.loadComments(widget.postId);
   }
 
@@ -93,23 +97,21 @@ class _CommentsSheetState extends State<CommentsSheet> {
   @override
   Widget build(BuildContext context) {
     return DraggableScrollableSheet(
-      initialChildSize: 0.6,  // ✅ 60% de l'écran au départ
-      minChildSize:     0.4,  // ✅ 40% minimum
-      maxChildSize:     0.95, // ✅ 95% maximum
+      initialChildSize: 0.6,
+      minChildSize:     0.4,
+      maxChildSize:     0.95,
       expand:           false,
       snap:             true,
       snapSizes:        const [0.6, 0.95],
       builder: (_, scrollController) => Container(
         decoration: const BoxDecoration(
-          color: Color(0xFF111111),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          color:        Color(0xFF111111),
+          borderRadius: BorderRadius.vertical(
+              top: Radius.circular(20)),
         ),
         child: Column(
           children: [
-            // ─ Handle + Header ────────────────────────────────────
             _buildHeader(),
-
-            // ─ Liste commentaires ─────────────────────────────────
             Expanded(
               child: Obx(() {
                 if (_controller.isLoading.value) {
@@ -124,10 +126,10 @@ class _CommentsSheetState extends State<CommentsSheet> {
                 }
 
                 return ListView.builder(
-                  controller:  scrollController,
-                  padding:     const EdgeInsets.only(
+                  controller: scrollController,
+                  padding:    const EdgeInsets.only(
                       top: 8, bottom: 8),
-                  itemCount:   _controller.comments.length,
+                  itemCount:  _controller.comments.length,
                   itemBuilder: (_, index) {
                     final comment = _controller.comments[index];
                     return _CommentTile(
@@ -141,17 +143,17 @@ class _CommentsSheetState extends State<CommentsSheet> {
                           _controller.toggleLike(comment.id),
                       onDelete:      () =>
                           _controller.deleteComment(comment.id),
-                      onReplyLike:   (id) => _controller.toggleLike(
-                          id, parentId: comment.id),
-                      onReplyDelete: (id) => _controller.deleteComment(
-                          id, parentId: comment.id),
+                      onReplyLike:   (id) =>
+                          _controller.toggleLike(
+                              id, parentId: comment.id),
+                      onReplyDelete: (id) =>
+                          _controller.deleteComment(
+                              id, parentId: comment.id),
                     );
                   },
                 );
               }),
             ),
-
-            // ─ Barre de saisie ────────────────────────────────────
             _buildInputBar(),
           ],
         ),
@@ -163,17 +165,14 @@ class _CommentsSheetState extends State<CommentsSheet> {
   Widget _buildHeader() {
     return Column(
       children: [
-        // Handle
         Container(
           margin: const EdgeInsets.only(top: 12, bottom: 8),
-          width:  40, height: 4,
+          width: 40, height: 4,
           decoration: BoxDecoration(
             color:        Colors.white.withValues(alpha: 0.2),
             borderRadius: BorderRadius.circular(2),
           ),
         ),
-
-        // Titre + nombre
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
           child: Row(children: [
@@ -186,24 +185,31 @@ class _CommentsSheetState extends State<CommentsSheet> {
               ),
             ),
             const SizedBox(width: 8),
-            Obx(() => Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color:        AppColors.darkGray,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                '${_controller.comments.length}',
-                style: GoogleFonts.inter(
-                  color:    AppColors.mediumGray,
-                  fontSize: 12,
+            // ✅ Réactif — se met à jour quand on ajoute/supprime
+            Obx(() {
+              // ✅ Total = racine + toutes les réponses
+              final total = _controller.comments.fold<int>(
+                0,
+                (sum, c) => sum + 1 + c.replies.length,
+              );
+              return Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color:        AppColors.darkGray,
+                  borderRadius: BorderRadius.circular(12),
                 ),
-              ),
-            )),
+                child: Text(
+                  '$total',
+                  style: GoogleFonts.inter(
+                    color:    AppColors.mediumGray,
+                    fontSize: 12,
+                  ),
+                ),
+              );
+            }),
           ]),
         ),
-
         Divider(
           height: 1,
           color:  Colors.white.withValues(alpha: 0.06),
@@ -272,7 +278,8 @@ class _CommentsSheetState extends State<CommentsSheet> {
                 color:        AppColors.darkGray,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: AppColors.crimsonRed.withValues(alpha: 0.3),
+                  color: AppColors.crimsonRed
+                      .withValues(alpha: 0.3),
                   width: 0.5,
                 ),
               ),
@@ -282,7 +289,8 @@ class _CommentsSheetState extends State<CommentsSheet> {
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    'Répondre à ${replying.displayNameOrUsername}',
+                    'Répondre à '
+                    '${replying.displayNameOrUsername}',
                     style: GoogleFonts.inter(
                         color:    AppColors.mediumGray,
                         fontSize: 12),
@@ -333,7 +341,6 @@ class _CommentsSheetState extends State<CommentsSheet> {
             ),
             const SizedBox(width: 8),
 
-            // ─ Bouton envoyer ───────────────────────────────────
             Obx(() => GestureDetector(
               onTap: _controller.isSending.value ? null : _send,
               child: AnimatedContainer(
@@ -341,9 +348,12 @@ class _CommentsSheetState extends State<CommentsSheet> {
                 width: 44, height: 44,
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [AppColors.crimsonRed, Color(0xFFFF4D6D)],
-                    begin:  Alignment.topLeft,
-                    end:    Alignment.bottomRight,
+                    colors: [
+                      AppColors.crimsonRed,
+                      Color(0xFFFF4D6D),
+                    ],
+                    begin: Alignment.topLeft,
+                    end:   Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(22),
                   boxShadow: [
@@ -403,11 +413,11 @@ class _CommentTileState extends State<_CommentTile> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(
+          horizontal: 16, vertical: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ─ Commentaire principal ──────────────────────────────
           _buildCommentRow(
             comment:  widget.comment,
             isReply:  false,
@@ -430,7 +440,9 @@ class _CommentTileState extends State<_CommentTile> {
                   Text(
                     _showReplies
                         ? 'Masquer les réponses'
-                        : 'Voir ${widget.comment.replies.length} réponse(s)',
+                        : 'Voir '
+                          '${widget.comment.replies.length} '
+                          'réponse(s)',
                     style: GoogleFonts.inter(
                       color:      AppColors.mediumGray,
                       fontSize:   12,
@@ -468,7 +480,6 @@ class _CommentTileState extends State<_CommentTile> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ─ Avatar ──────────────────────────────────────────────
         CircleAvatar(
           radius:          isReply ? 14 : 18,
           backgroundColor: AppColors.darkGray,
@@ -488,7 +499,6 @@ class _CommentTileState extends State<_CommentTile> {
         ),
         const SizedBox(width: 10),
 
-        // ─ Contenu ─────────────────────────────────────────────
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -524,7 +534,6 @@ class _CommentTileState extends State<_CommentTile> {
               const SizedBox(height: 6),
 
               Row(children: [
-                // Like
                 GestureDetector(
                   onTap: () {
                     HapticFeedback.lightImpact();

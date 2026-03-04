@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 import 'package:heroicons_flutter/heroicons_flutter.dart';
 import 'package:otakuverse/core/constants/colors.dart';
+import 'package:otakuverse/features/activity/controller/notification_controller.dart';
 import 'package:otakuverse/features/navigation/widgets/create_post_button.dart';
 
 class BottomNavBar extends StatelessWidget {
@@ -15,10 +17,10 @@ class BottomNavBar extends StatelessWidget {
   });
 
   static const _navItems = [
-    _NavData(icon: HeroiconsOutline.home,            solidIcon: HeroiconsSolid.home,            label: 'Accueil',   index: 0),
-    _NavData(icon: HeroiconsOutline.magnifyingGlass, solidIcon: HeroiconsSolid.magnifyingGlass, label: 'Recherche', index: 1),
-    _NavData(icon: HeroiconsOutline.heart,           solidIcon: HeroiconsSolid.heart,           label: 'Activité',  index: 3),
-    _NavData(icon: HeroiconsOutline.user,            solidIcon: HeroiconsSolid.user,            label: 'Profil',    index: 4),
+    _NavData(icon: HeroiconsOutline.home,      solidIcon: HeroiconsSolid.home,      label: 'Accueil',     index: 0),
+    _NavData(icon: HeroiconsOutline.userGroup, solidIcon: HeroiconsSolid.userGroup, label: 'Communautés', index: 1),
+    _NavData(icon: HeroiconsOutline.heart,     solidIcon: HeroiconsSolid.heart,     label: 'Activité',    index: 3),
+    _NavData(icon: HeroiconsOutline.user,      solidIcon: HeroiconsSolid.user,      label: 'Profil',      index: 4),
   ];
 
   @override
@@ -102,21 +104,24 @@ class _NavItem extends StatefulWidget {
 
 class _NavItemState extends State<_NavItem>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
+  late final AnimationController _animController;
   late final Animation<double>   _scaleAnim;
 
-  bool get _isSelected => widget.currentIndex == widget.data.index;
+  bool get _isSelected =>
+      widget.currentIndex == widget.data.index;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
+    _animController = AnimationController(
       vsync:    this,
       duration: const Duration(milliseconds: 250),
       value:    _isSelected ? 1.0 : 0.0,
     );
     _scaleAnim = Tween<double>(begin: 1.0, end: 1.15).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
+      CurvedAnimation(
+          parent: _animController,
+          curve:  Curves.easeOutBack),
     );
   }
 
@@ -125,15 +130,73 @@ class _NavItemState extends State<_NavItem>
     super.didUpdateWidget(oldWidget);
     if (oldWidget.currentIndex != widget.currentIndex) {
       _isSelected
-          ? _controller.forward()
-          : _controller.reverse();
+          ? _animController.forward()
+          : _animController.reverse();
     }
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _animController.dispose();
     super.dispose();
+  }
+
+  // ✅ Icône avec badge pour l'onglet Activité (index 3)
+  Widget _buildIcon() {
+    final icon = Icon(
+      _isSelected
+          ? widget.data.solidIcon
+          : widget.data.icon,
+      color: _isSelected
+          ? AppColors.crimsonRed
+          : Colors.grey[600],
+      size: 24,
+    );
+
+    // ✅ Seulement sur l'onglet Activité
+    if (widget.data.index != 3) return icon;
+
+    // ✅ NotificationController peut ne pas être encore enregistré
+    final controller = Get.isRegistered<NotificationController>()
+        ? Get.find<NotificationController>()
+        : null;
+
+    if (controller == null) return icon;
+
+    return Obx(() {
+      final count = controller.unreadCount.value;
+      return Stack(
+        clipBehavior: Clip.none,
+        children: [
+          icon,
+          if (count > 0)
+            Positioned(
+              top:   -4,
+              right: -6,
+              child: Container(
+                padding: const EdgeInsets.all(3),
+                decoration: const BoxDecoration(
+                  color: AppColors.crimsonRed,
+                  shape: BoxShape.circle,
+                ),
+                constraints: const BoxConstraints(
+                  minWidth:  16,
+                  minHeight: 16,
+                ),
+                child: Text(
+                  count > 99 ? '99+' : '$count',
+                  style: const TextStyle(
+                    color:      Colors.white,
+                    fontSize:   8,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+        ],
+      );
+    });
   }
 
   @override
@@ -145,26 +208,18 @@ class _NavItemState extends State<_NavItem>
       },
       behavior: HitTestBehavior.opaque,
       child: AnimatedBuilder(
-        animation: _controller,
+        animation: _animController,
         builder: (_, __) => Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // ─ Icône ──────────────────────────────────────────────
+            // ─ Icône ────────────────────────────────────────────
             Transform.scale(
               scale: _scaleAnim.value,
-              child: Icon(
-                _isSelected
-                    ? widget.data.solidIcon
-                    : widget.data.icon,
-                color: _isSelected
-                    ? AppColors.crimsonRed
-                    : Colors.grey[600],
-                size: 24,
-              ),
+              child: _buildIcon(), // ✅ Remplace l'Icon direct
             ),
             const SizedBox(height: 4),
 
-            // ─ Label ──────────────────────────────────────────────
+            // ─ Label ────────────────────────────────────────────
             Text(
               widget.data.label,
               style: TextStyle(
@@ -179,7 +234,7 @@ class _NavItemState extends State<_NavItem>
               ),
             ),
 
-            // ─ Indicateur ─────────────────────────────────────────
+            // ─ Indicateur ───────────────────────────────────────
             const SizedBox(height: 3),
             AnimatedContainer(
               duration: const Duration(milliseconds: 250),
@@ -187,14 +242,14 @@ class _NavItemState extends State<_NavItem>
               width:    _isSelected ? 16 : 0,
               height:   2.5,
               decoration: BoxDecoration(
-                color:        _isSelected
+                color: _isSelected
                     ? AppColors.crimsonRed
                     : Colors.transparent,
                 borderRadius: BorderRadius.circular(2),
                 boxShadow: _isSelected
                     ? [
                         BoxShadow(
-                          color:      AppColors.crimsonRed
+                          color: AppColors.crimsonRed
                               .withValues(alpha: 0.6),
                           blurRadius: 6,
                         ),
