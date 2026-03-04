@@ -1,5 +1,5 @@
-import 'dart:ui';
 import 'package:get/get.dart';
+import 'package:otakuverse/features/feed/controllers/post_controller.dart';
 import 'package:otakuverse/features/feed/models/comment_model.dart';
 import 'package:otakuverse/features/feed/services/comment_service.dart';
 
@@ -7,21 +7,25 @@ class CommentController extends GetxController {
   final _service = CommentService();
 
   // ─── STATE ───────────────────────────────────────────────────────
-  final RxList<CommentModel> comments   = <CommentModel>[].obs;
-  final RxBool  isLoading               = false.obs;
-  final RxBool  isSending               = false.obs;
-  final RxString errorMessage           = ''.obs;
-  final Rxn<CommentModel> replyingTo    = Rxn<CommentModel>();
+  final RxList<CommentModel> comments    = <CommentModel>[].obs;
+  final RxBool               isLoading   = false.obs;
+  final RxBool               isSending   = false.obs;
+  final RxString             errorMessage = ''.obs;
+  final Rxn<CommentModel>    replyingTo  = Rxn<CommentModel>();
+
+  String? _currentPostId; // ✅ Sera assigné dans loadComments
 
   // ─── CHARGER les commentaires ────────────────────────────────────
   Future<void> loadComments(String postId) async {
-    isLoading.value = true;
+    _currentPostId     = postId; // ✅ Assignation manquante
+    isLoading.value    = true;
     errorMessage.value = '';
     try {
       final data = await _service.getComments(postId);
       comments.assignAll(data);
     } catch (e) {
-      errorMessage.value = 'Impossible de charger les commentaires';
+      errorMessage.value =
+          'Impossible de charger les commentaires';
       print('🔴 Erreur loadComments : $e');
     } finally {
       isLoading.value = false;
@@ -39,12 +43,12 @@ class CommentController extends GetxController {
     try {
       final comment = await _service.addComment(
         postId:   postId,
-        content:  content,
+        content:  content.trim(),
         parentId: replyingTo.value?.id,
       );
 
       if (replyingTo.value != null) {
-        // ✅ Ajouter la réponse au bon commentaire
+        // ─ Réponse → ajouter dans les replies du parent
         final parentIndex = comments.indexWhere(
             (c) => c.id == replyingTo.value!.id);
         if (parentIndex != -1) {
@@ -55,19 +59,17 @@ class CommentController extends GetxController {
           comments[parentIndex] = updated;
         }
       } else {
-        // ✅ Ajouter en bas de la liste
+        // ─ Commentaire racine → ajouter en bas
         comments.add(comment);
       }
+
+      // ✅ Incrémenter commentsCount dans le feed
+      _incrementPostCommentsCount(postId);
 
       cancelReply();
       return true;
     } catch (e) {
       print('🔴 Erreur sendComment : $e');
-      Get.snackbar(
-        'Erreur', '❌ Impossible d\'envoyer le commentaire',
-        backgroundColor: const Color(0xFF1A1A1A),
-        colorText:        const Color(0xFFFFFFFF),
-      );
       return false;
     } finally {
       isSending.value = false;
@@ -75,13 +77,17 @@ class CommentController extends GetxController {
   }
 
   // ─── SUPPRIMER un commentaire ────────────────────────────────────
-  Future<void> deleteComment(String commentId, {String? parentId}) async {
+  Future<void> deleteComment(
+    String commentId, {
+    String? parentId,
+  }) async {
     try {
       await _service.deleteComment(commentId);
 
       if (parentId != null) {
-        // Supprimer une réponse
-        final parentIndex = comments.indexWhere((c) => c.id == parentId);
+        // ─ Supprimer une réponse
+        final parentIndex =
+            comments.indexWhere((c) => c.id == parentId);
         if (parentIndex != -1) {
           final parent  = comments[parentIndex];
           final updated = parent.copyWith(
@@ -92,20 +98,35 @@ class CommentController extends GetxController {
           comments[parentIndex] = updated;
         }
       } else {
+        // ─ Supprimer un commentaire racine
         comments.removeWhere((c) => c.id == commentId);
       }
+
+      // ✅ Décrémenter commentsCount dans le feed
+      if (_currentPostId != null) {
+        _decrementPostCommentsCount(_currentPostId!);
+      }
+
     } catch (e) {
       print('🔴 Erreur deleteComment : $e');
+      // ✅ Rollback — recharger les commentaires
+      if (_currentPostId != null) {
+        await loadComments(_currentPostId!);
+      }
     }
   }
 
   // ─── LIKER un commentaire ─────────────────────────────────────────
-  Future<void> toggleLike(String commentId, {String? parentId}) async {
+  Future<void> toggleLike(
+    String commentId, {
+    String? parentId,
+  }) async {
     // ✅ Optimistic update
     _updateCommentLike(commentId, parentId: parentId);
 
     try {
-      final comment = _findComment(commentId, parentId: parentId);
+      final comment =
+          _findComment(commentId, parentId: parentId);
       if (comment == null) return;
 
       if (comment.isLiked) {
@@ -120,7 +141,7 @@ class CommentController extends GetxController {
     }
   }
 
-  // ─── RÉPONDRE à un commentaire ───────────────────────────────────
+  // ─── RÉPONDRE ────────────────────────────────────────────────────
   void setReplyingTo(CommentModel comment) {
     replyingTo.value = comment;
   }
@@ -130,17 +151,43 @@ class CommentController extends GetxController {
   }
 
   // ─── HELPERS PRIVÉS ──────────────────────────────────────────────
-  CommentModel? _findComment(String id, {String? parentId}) {
+
+  // ✅ Méthode définie — manquait dans ton code
+  void _incrementPostCommentsCount(String postId) {
+    if (Get.isRegistered<PostsController>()) {
+      Get.find<PostsController>()
+          .incrementCommentsCount(postId);
+    }
+  }
+
+  // ✅ Méthode définie — manquait dans ton code
+  void _decrementPostCommentsCount(String postId) {
+    if (Get.isRegistered<PostsController>()) {
+      Get.find<PostsController>()
+          .decrementCommentsCount(postId);
+    }
+  }
+
+  CommentModel? _findComment(
+    String id, {
+    String? parentId,
+  }) {
     if (parentId != null) {
-      final parent = comments.firstWhereOrNull((c) => c.id == parentId);
-      return parent?.replies.firstWhereOrNull((r) => r.id == id);
+      final parent =
+          comments.firstWhereOrNull((c) => c.id == parentId);
+      return parent?.replies
+          .firstWhereOrNull((r) => r.id == id);
     }
     return comments.firstWhereOrNull((c) => c.id == id);
   }
 
-  void _updateCommentLike(String commentId, {String? parentId}) {
+  void _updateCommentLike(
+    String commentId, {
+    String? parentId,
+  }) {
     if (parentId != null) {
-      final parentIndex = comments.indexWhere((c) => c.id == parentId);
+      final parentIndex =
+          comments.indexWhere((c) => c.id == parentId);
       if (parentIndex == -1) return;
       final parent  = comments[parentIndex];
       final replies = parent.replies.map((r) {
@@ -148,19 +195,21 @@ class CommentController extends GetxController {
         return r.copyWith(
           isLiked:    !r.isLiked,
           likesCount: r.isLiked
-              ? r.likesCount - 1
+              ? (r.likesCount - 1).clamp(0, 999999)
               : r.likesCount + 1,
         );
       }).toList();
-      comments[parentIndex] = parent.copyWith(replies: replies);
+      comments[parentIndex] =
+          parent.copyWith(replies: replies);
     } else {
-      final index = comments.indexWhere((c) => c.id == commentId);
+      final index =
+          comments.indexWhere((c) => c.id == commentId);
       if (index == -1) return;
       final c = comments[index];
       comments[index] = c.copyWith(
         isLiked:    !c.isLiked,
         likesCount: c.isLiked
-            ? c.likesCount - 1
+            ? (c.likesCount - 1).clamp(0, 999999)
             : c.likesCount + 1,
       );
     }

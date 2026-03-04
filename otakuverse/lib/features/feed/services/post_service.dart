@@ -5,71 +5,133 @@ class PostService {
   final _supabase = Supabase.instance.client;
 
   String get _uid => _supabase.auth.currentUser!.id;
-  static const _select = '*, profiles!inner(username, display_name, avatar_url)';
+  static const _select =
+      '*, profiles!inner(username, display_name, avatar_url)';
+
+  // ─── ATTACHER LES LIKES ──────────────────────────────────────────
+  // ✅ Une seule requête pour tous les posts
+  Future<List<PostModel>> _attachLikes(
+      List<PostModel> posts) async {
+    if (posts.isEmpty) return posts;
+
+    final postIds = posts.map((p) => p.id).toList();
+    final data    = await _supabase
+        .from('likes')
+        .select('post_id')
+        .eq('user_id', _uid)
+        .inFilter('post_id', postIds);
+
+    final likedIds = (data as List)
+        .map((e) => e['post_id'] as String)
+        .toSet();
+
+    return posts
+        .map((p) => p.copyWith(
+            isLiked: likedIds.contains(p.id)))
+        .toList();
+  }
 
   // ─── CRÉER UN POST ───────────────────────────────────────────────
   Future<PostModel> createPost({
-    required String caption,
+    required String       caption,
     required List<String> mediaUrls,
-    String? location,
-    bool allowComments = true,
+    String?               location,
+    bool                  allowComments = true,
   }) async {
     final data = await _supabase.from('posts').insert({
-      'user_id': _uid,
-      'caption': caption,
-      'media_urls': mediaUrls,
+      'user_id':        _uid,
+      'caption':        caption,
+      'media_urls':     mediaUrls,
       if (location != null) 'location': location,
       'allow_comments': allowComments,
-    }).select().single();
+    }).select(_select).single();
 
     return PostModel.fromJson(data);
   }
 
-  // ─── FEED PRINCIPAL (tous les posts) ─────────────────────────────
-  Future<List<PostModel>> getFeed() async {
-    final myId = _supabase.auth.currentUser!.id;
-
-    // 1. Récupérer les IDs des gens que je suis
-    final followsData = await _supabase
+  // ─── IDs DES GENS QUE JE SUIS ───────────────────────────────────
+  Future<List<String>> getFollowingIds(String userId) async {
+    final data = await _supabase
         .from('follows')
         .select('following_id')
-        .eq('follower_id', myId);
+        .eq('follower_id', userId);
 
-    final followingIds = (followsData as List)
+    return (data as List)
         .map((e) => e['following_id'] as String)
         .toList();
+  }
 
-    // ✅ Inclure mes propres posts
-    followingIds.add(myId);
+  // ─── FEED PRINCIPAL ──────────────────────────────────────────────
+  Future<List<PostModel>> getFeed({int offset = 0}) async {
+    final followingIds = await getFollowingIds(_uid);
+    if (!followingIds.contains(_uid)) {
+      followingIds.add(_uid);
+    }
 
-    if (followingIds.isEmpty) return [];
-
-    // 2. Récupérer les posts de ces utilisateurs
     final data = await _supabase
         .from('posts')
         .select(_select)
         .inFilter('user_id', followingIds)
         .order('created_at', ascending: false)
-        .limit(30);
+        .range(offset, offset + 19);
 
-    return (data as List)
+    var posts = (data as List)
         .map((e) => PostModel.fromJson(e))
         .toList();
+
+    // ✅ Feed vide à la première page → découverte
+    if (posts.isEmpty && offset == 0) {
+      return _getDiscoveryFeed(
+          excludeIds: followingIds, offset: offset);
+    }
+
+    // ✅ Attacher les likes
+    return _attachLikes(posts);
+  }
+
+  // ─── FEED DE DÉCOUVERTE ──────────────────────────────────────────
+  Future<List<PostModel>> _getDiscoveryFeed({
+    List<String> excludeIds = const [],
+    int          offset     = 0,
+  }) async {
+    final data = await _supabase
+        .from('posts')
+        .select(_select)
+        .not('user_id', 'in', '(${excludeIds.join(',')})')
+        .order('likes_count', ascending: false)
+        .order('created_at',  ascending: false)
+        .range(offset, offset + 19);
+
+    final posts = (data as List)
+        .map((e) => PostModel.fromJson(e))
+        .toList();
+
+    // ✅ Attacher les likes
+    return _attachLikes(posts);
   }
 
   // ─── POSTS D'UN USER ─────────────────────────────────────────────
-  Future<List<PostModel>> getPostsByUser(String userId) async {
+  Future<List<PostModel>> getPostsByUser(
+    String userId, {
+    int offset = 0,
+  }) async {
     final data = await _supabase
         .from('posts')
-        .select('*, profiles(username, avatar_url)') // ← join
+        .select(_select)
         .eq('user_id', userId)
-        .order('created_at', ascending: false);
+        .order('created_at', ascending: false)
+        .range(offset, offset + 19);
 
-    return (data as List).map((e) => PostModel.fromJson(e)).toList();
+    final posts = (data as List)
+        .map((e) => PostModel.fromJson(e))
+        .toList();
+
+    // ✅ Attacher les likes
+    return _attachLikes(posts);
   }
 
   // ─── TOGGLE LIKE ─────────────────────────────────────────────────
-  /// Retourne true si liké, false si unliké
+  // ✅ Plus de RPC — le trigger SQL gère les compteurs
   Future<bool> toggleLike(String postId) async {
     final existing = await _supabase
         .from('likes')
@@ -79,18 +141,17 @@ class PostService {
         .maybeSingle();
 
     if (existing != null) {
-      await _supabase.from('likes')
+      await _supabase
+          .from('likes')
           .delete()
           .eq('user_id', _uid)
           .eq('post_id', postId);
-      await _supabase.rpc('decrement_likes', params: {'post_id': postId});
       return false;
     } else {
       await _supabase.from('likes').insert({
         'user_id': _uid,
         'post_id': postId,
       });
-      await _supabase.rpc('increment_likes', params: {'post_id': postId});
       return true;
     }
   }
@@ -106,50 +167,66 @@ class PostService {
     return data != null;
   }
 
-  // ─── POSTS LIKÉS PAR UN USER ──────────────────────────────────────
+  // ─── POSTS LIKÉS PAR UN USER ─────────────────────────────────────
   Future<List<PostModel>> getLikedPosts(String userId) async {
     final data = await _supabase
         .from('likes')
-        .select('posts(*)')
-        .eq('user_id', userId);
+        .select(
+          // ✅ Inclure le JOIN profiles dans les posts imbriqués
+          'post:posts!post_id(*, profiles!inner(username, display_name, avatar_url))',
+        )
+        .eq('user_id', userId)
+        .order('created_at', ascending: false);
 
-    return (data as List)
-        .where((e) => e['posts'] != null)
-        .map((e) => PostModel.fromJson(e['posts'] as Map<String, dynamic>))
+    final posts = (data as List)
+        .where((e) => e['post'] != null)
+        .map((e) => PostModel.fromJson(
+            e['post'] as Map<String, dynamic>))
         .toList();
+
+    // ✅ Attacher les likes
+    return _attachLikes(posts);
   }
 
-  // ─── MODIFIER UN POST ─────────────────────────────────────────────
+  // ─── MODIFIER UN POST ────────────────────────────────────────────
   Future<PostModel> updatePost({
     required String postId,
-    String? caption,
-    String? location,
-    bool? allowComments,
+    String?         caption,
+    String?         location,
+    bool?           allowComments,
   }) async {
-    final data = await _supabase.from('posts').update({
-      if (caption != null) 'caption': caption,
-      if (location != null) 'location': location,
-      if (allowComments != null) 'allow_comments': allowComments,
-      'updated_at': DateTime.now().toIso8601String(),
-    }).eq('id', postId).select().single();
+    final data = await _supabase
+        .from('posts')
+        .update({
+          if (caption != null)       'caption':        caption,
+          if (location != null)      'location':       location,
+          if (allowComments != null) 'allow_comments': allowComments,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', postId)
+        .select(_select)
+        .single();
 
     return PostModel.fromJson(data);
   }
 
-  // ─── SUPPRIMER UN POST ────────────────────────────────────────────
+  // ─── SUPPRIMER UN POST ───────────────────────────────────────────
   Future<void> deletePost(String postId) async {
     await _supabase.from('posts').delete().eq('id', postId);
   }
 
-  // ─── ÉPINGLER UN POST ─────────────────────────────────────────────
-  Future<void> pinPost(String postId, {required bool isPinned}) async {
-    await _supabase.from('posts')
+  // ─── ÉPINGLER UN POST ────────────────────────────────────────────
+  Future<void> pinPost(
+      String postId, {required bool isPinned}) async {
+    await _supabase
+        .from('posts')
         .update({'is_pinned': isPinned})
         .eq('id', postId);
   }
 
   // ─── INCRÉMENTER COMMENTAIRES ────────────────────────────────────
   Future<void> incrementComments(String postId) async {
-    await _supabase.rpc('increment_comments', params: {'post_id': postId});
+    await _supabase.rpc('increment_comments',
+        params: {'post_id': postId});
   }
 }

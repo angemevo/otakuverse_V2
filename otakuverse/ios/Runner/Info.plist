@@ -1,49 +1,100 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>CFBundleDevelopmentRegion</key>
-	<string>$(DEVELOPMENT_LANGUAGE)</string>
-	<key>CFBundleDisplayName</key>
-	<string>Otakuverse</string>
-	<key>CFBundleExecutable</key>
-	<string>$(EXECUTABLE_NAME)</string>
-	<key>CFBundleIdentifier</key>
-	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
-	<key>CFBundleInfoDictionaryVersion</key>
-	<string>6.0</string>
-	<key>CFBundleName</key>
-	<string>otakuverse</string>
-	<key>CFBundlePackageType</key>
-	<string>APPL</string>
-	<key>CFBundleShortVersionString</key>
-	<string>$(FLUTTER_BUILD_NAME)</string>
-	<key>CFBundleSignature</key>
-	<string>????</string>
-	<key>CFBundleVersion</key>
-	<string>$(FLUTTER_BUILD_NUMBER)</string>
-	<key>LSRequiresIPhoneOS</key>
-	<true/>
-	<key>UILaunchStoryboardName</key>
-	<string>LaunchScreen</string>
-	<key>UIMainStoryboardFile</key>
-	<string>Main</string>
-	<key>UISupportedInterfaceOrientations</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
-	</array>
-	<key>UISupportedInterfaceOrientations~ipad</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationPortraitUpsideDown</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
-	</array>
-	<key>CADisableMinimumFrameDurationOnPhone</key>
-	<true/>
-	<key>UIApplicationSupportsIndirectInputEvents</key>
-	<true/>
+
+    <!-- ✅ Nom affiché sous l'icône -->
+    <key>CFBundleDisplayName</key>
+    <string>Otakuverse</string>
+
+    <!-- ✅ Identifiant unique — à personnaliser -->
+    <key>CFBundleIdentifier</key>
+    <string>com.tonnom.otakuverse</string>
+
+    <key>CFBundleName</key>
+    <string>otakuverse</string>
+
+    <key>CFBundleVersion</key>
+    <string>1</string>
+
+    <key>CFBundleShortVersionString</key>
+    <string>1.0.0</string>
+
+    <!-- ✅ Permission galerie — image_picker -->
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>Otakuverse accède à ta galerie pour publier des photos.</string>
+
+    <key>NSPhotoLibraryAddUsageDescription</key>
+    <string>Otakuverse peut sauvegarder des photos dans ta galerie.</string>
+
+    <!-- ✅ Permission caméra — image_picker -->
+    <key>NSCameraUsageDescription</key>
+    <string>Otakuverse accède à ta caméra pour prendre des photos.</string>
+
+    <!-- ✅ Permission micro — videos Phase 2 -->
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Otakuverse accède au micro pour enregistrer des vidéos.</string>
+
+    <!-- ✅ Face ID — flutter_secure_storage -->
+    <key>NSFaceIDUsageDescription</key>
+    <string>Otakuverse utilise Face ID pour sécuriser ton compte.</string>
+
+    <!-- ✅ Notifications push -->
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>fetch</string>
+        <string>remote-notification</string>
+    </array>
+
+    <!-- ✅ Deep linking — app_links -->
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>otakuverse</string>
+            </array>
+            <key>CFBundleURLName</key>
+            <string>com.tonnom.otakuverse</string>
+        </dict>
+    </array>
+
+    <!-- ✅ Associated domains — deep linking HTTPS -->
+    <key>com.apple.developer.associated-domains</key>
+    <array>
+        <string>applinks:otakuverse.app</string>
+    </array>
+
+    <!-- ✅ Google Sign In -->
+    <key>GIDClientID</key>
+    <string>TON_CLIENT_ID_GOOGLE.apps.googleusercontent.com</string>
+
+    <!-- ✅ Orientation portrait uniquement -->
+    <key>UISupportedInterfaceOrientations</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+    </array>
+
+    <key>UISupportedInterfaceOrientations~ipad</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+        <string>UIInterfaceOrientationPortraitUpsideDown</string>
+    </array>
+
+    <!-- ✅ Status bar style -->
+    <key>UIStatusBarStyle</key>
+    <string>UIStatusBarStyleLightContent</string>
+
+    <key>UIViewControllerBasedStatusBarAppearance</key>
+    <false/>
+
+    <!-- ✅ Requis Flutter -->
+    <key>CADisableMinimumFrameDurationOnPhone</key>
+    <true/>
+
+    <key>UIApplicationSupportsIndirectInputEvents</key>
+    <true/>
+
 </dict>
 </plist>
