@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:otakuverse/features/feed/models/post_model.dart';
 import 'package:otakuverse/features/feed/services/post_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class PostsController extends GetxController {
   final _postService = PostService();
@@ -8,16 +9,24 @@ class PostsController extends GetxController {
   final RxList<PostModel> posts = <PostModel>[].obs;
   final RxBool isLoading = false.obs;
   final RxString errorMessage = ''.obs;
+  final RxBool isDiscoveryFeed = false.obs;
 
   // ─── CHARGER LE FEED ─────────────────────────────────────────────
   Future<void> loadFeed() async {
     isLoading.value = true;
-    errorMessage.value = '';
     try {
       final result = await _postService.getFeed();
-      posts.value = result;
+      posts.assignAll(result);
+
+      // ✅ Détecter si c'est un feed de découverte
+      // (aucun post de mes follows → discovery)
+      final myId      = Supabase.instance.client.auth.currentUser!.id;
+      final myFollows = await _postService.getFollowingIds(myId);
+      isDiscoveryFeed.value = myFollows.isEmpty;
+
     } catch (e) {
       errorMessage.value = 'Impossible de charger le feed';
+      print('🔴 Erreur loadFeed : $e');
     } finally {
       isLoading.value = false;
     }
@@ -38,26 +47,25 @@ class PostsController extends GetxController {
 
   // ─── CRÉER UN POST ───────────────────────────────────────────────
   Future<bool> createPost({
-    required String caption,
+    required String       caption,
     required List<String> mediaUrls,
-    String? location,
-    bool allowComments = true,
+    String?               location,
+    bool                  allowComments = true,
   }) async {
-    isLoading.value = true;
     try {
       final post = await _postService.createPost(
-        caption: caption,
-        mediaUrls: mediaUrls,
-        location: location,
+        caption:       caption,
+        mediaUrls:     mediaUrls,
+        location:      location,
         allowComments: allowComments,
       );
-      posts.insert(0, post);
+      posts.insert(0, post); // ✅ Ajouter en tête de liste
+      isDiscoveryFeed.value = false; // ✅ A maintenant un post
       return true;
     } catch (e) {
-      errorMessage.value = 'Erreur lors de la publication';
+      errorMessage.value = 'Impossible de créer le post';
+      print('🔴 Erreur createPost : $e');
       return false;
-    } finally {
-      isLoading.value = false;
     }
   }
 
@@ -66,23 +74,22 @@ class PostsController extends GetxController {
     final index = posts.indexWhere((p) => p.id == postId);
     if (index == -1) return;
 
-    final wasLiked = posts[index].isLiked;
-    // Mise à jour optimiste immédiate
-    posts[index] = posts[index].copyWith(
-      isLiked: !wasLiked,
-      likesCount: posts[index].likesCount + (wasLiked ? -1 : 1),
+    // ✅ Optimistic update
+    final post    = posts[index];
+    final isLiked = !post.isLiked;
+    posts[index]  = post.copyWith(
+      isLiked:    isLiked,
+      likesCount: isLiked
+          ? post.likesCount + 1
+          : post.likesCount - 1,
     );
-    posts.refresh();
 
     try {
       await _postService.toggleLike(postId);
-    } catch (_) {
-      // Rollback si erreur
-      posts[index] = posts[index].copyWith(
-        isLiked: wasLiked,
-        likesCount: posts[index].likesCount + (wasLiked ? 1 : -1),
-      );
-      posts.refresh();
+    } catch (e) {
+      // ✅ Rollback
+      posts[index] = post;
+      print('🔴 Erreur toggleLike : $e');
     }
   }
 

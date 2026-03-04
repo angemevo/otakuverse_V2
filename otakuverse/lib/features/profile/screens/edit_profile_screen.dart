@@ -7,7 +7,6 @@ import 'package:otakuverse/core/constants/colors.dart';
 import 'package:otakuverse/features/profile/models/profile_model.dart';
 import 'package:otakuverse/features/profile/services/profile_service.dart';
 import 'package:otakuverse/shared/services/storage_upload_service.dart';
-import 'dart:io';
 import 'dart:typed_data';
 import 'package:supabase_flutter/supabase_flutter.dart';
 

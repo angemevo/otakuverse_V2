@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:otakuverse/core/constants/colors.dart';
 import 'package:otakuverse/core/constants/text_styles.dart';
 import 'package:otakuverse/features/feed/controllers/post_controller.dart';
 import 'package:otakuverse/features/feed/screens/comments_sheet.dart';
 import 'package:otakuverse/features/feed/widgets/posts/posts_card.dart';
-import 'package:otakuverse/features/feed/widgets/stories/story_avatar.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -14,7 +14,6 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.find<PostsController>();
 
-    // Charger le feed au premier build
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (controller.posts.isEmpty) controller.loadFeed();
     });
@@ -31,40 +30,56 @@ class HomeScreen extends StatelessWidget {
         title: Text('Otakuverse', style: AppTextStyles.appBarTitle),
       ),
       body: Obx(() {
+        // ─ Chargement initial ──────────────────────────────────────
         if (controller.isLoading.value && controller.posts.isEmpty) {
           return const Center(
-            child: CircularProgressIndicator(color: AppColors.crimsonRed),
+            child: CircularProgressIndicator(
+                color: AppColors.crimsonRed),
           );
         }
 
-        if (controller.errorMessage.value.isNotEmpty && controller.posts.isEmpty) {
+        // ─ Erreur ─────────────────────────────────────────────────
+        if (controller.errorMessage.value.isNotEmpty &&
+            controller.posts.isEmpty) {
           return _buildError(controller);
         }
 
         return RefreshIndicator(
-          color: AppColors.crimsonRed,
+          color:           AppColors.crimsonRed,
           backgroundColor: AppColors.deepBlack,
-          onRefresh: controller.loadFeed,
+          onRefresh:       controller.loadFeed,
           child: CustomScrollView(
             slivers: [
-              // Stories (vide pour l'instant — Phase 2)
-              const SliverToBoxAdapter(
-                child: SizedBox(height: 8),
-              ),
+              const SliverToBoxAdapter(child: SizedBox(height: 8)),
 
+              // ─ Feed vide (aucun post même en découverte) ─────────
               if (controller.posts.isEmpty)
                 const SliverFillRemaining(child: _EmptyFeed())
+
               else
                 SliverList(
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
-                      final post = controller.posts[index];
+                      // ─ Index 0 → bandeau découverte ──────────────
+                      if (index == 0) {
+                        return Obx(() {
+                          if (!controller.isDiscoveryFeed.value) {
+                            return const SizedBox.shrink();
+                          }
+                          return _DiscoveryBanner();
+                        });
+                      }
+
+                      // ─ Posts (index - 1 car bandeau en index 0) ──
+                      final post = controller.posts[index - 1];
                       return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 4),
                         child: PostCard(
-                          post: post,
-                          isLiked: post.isLiked,
-                          onLike: () => controller.toggleLike(post.id),
+                          post:      post,
+                          isLiked:   post.isLiked,
+                          onLike:    () =>
+                              controller.toggleLike(post.id),
                           onComment: () => showCommentsSheet(
                             context,
                             postId:     post.id,
@@ -73,7 +88,8 @@ class HomeScreen extends StatelessWidget {
                         ),
                       );
                     },
-                    childCount: controller.posts.length,
+                    // ✅ +1 pour le bandeau découverte
+                    childCount: controller.posts.length + 1,
                   ),
                 ),
             ],
@@ -83,12 +99,14 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
+  // ─── ERREUR ──────────────────────────────────────────────────────
   Widget _buildError(PostsController controller) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.error_outline, color: AppColors.mediumGray, size: 48),
+          const Icon(Icons.error_outline,
+              color: AppColors.mediumGray, size: 48),
           const SizedBox(height: 12),
           Text(
             controller.errorMessage.value,
@@ -98,7 +116,8 @@ class HomeScreen extends StatelessWidget {
           const SizedBox(height: 16),
           TextButton(
             onPressed: controller.loadFeed,
-            child: const Text('Réessayer', style: TextStyle(color: AppColors.crimsonRed)),
+            child: const Text('Réessayer',
+                style: TextStyle(color: AppColors.crimsonRed)),
           ),
         ],
       ),
@@ -106,22 +125,77 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
+// ─── BANDEAU DÉCOUVERTE ──────────────────────────────────────────────
+class _DiscoveryBanner extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+      padding: const EdgeInsets.symmetric(
+          horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color:        AppColors.darkGray,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppColors.crimsonRed.withValues(alpha: 0.3),
+        ),
+      ),
+      child: Row(children: [
+        const Icon(Icons.explore_outlined,
+            color: AppColors.crimsonRed, size: 18),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Feed de découverte',
+                style: GoogleFonts.poppins(
+                  color:      AppColors.pureWhite,
+                  fontWeight: FontWeight.w600,
+                  fontSize:   13,
+                ),
+              ),
+              Text(
+                'Suis des utilisateurs pour personnaliser ton feed',
+                style: GoogleFonts.inter(
+                  color:    AppColors.mediumGray,
+                  fontSize: 11,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ]),
+    );
+  }
+}
+
+// ─── EMPTY FEED ──────────────────────────────────────────────────────
 class _EmptyFeed extends StatelessWidget {
   const _EmptyFeed();
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.dynamic_feed_outlined, color: AppColors.mediumGray, size: 48),
-          SizedBox(height: 12),
-          Text('Aucun post pour le moment', style: TextStyle(color: AppColors.mediumGray)),
-          SizedBox(height: 8),
+          const Icon(Icons.dynamic_feed_outlined,
+              color: AppColors.mediumGray, size: 48),
+          const SizedBox(height: 12),
           Text(
-            'Suis des utilisateurs pour voir leur contenu',
-            style: TextStyle(color: AppColors.mediumGray, fontSize: 12),
+            'Aucun post pour le moment',
+            style: GoogleFonts.poppins(
+                color:      AppColors.pureWhite,
+                fontWeight: FontWeight.w600,
+                fontSize:   16),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Sois le premier à publier quelque chose !',
+            style: GoogleFonts.inter(
+                color: AppColors.mediumGray, fontSize: 12),
           ),
         ],
       ),
