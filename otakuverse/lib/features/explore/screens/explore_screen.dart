@@ -23,10 +23,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
   @override
   void initState() {
     super.initState();
-    // ✅ Créer le controller local à cet écran
     _controller = Get.put(ExploreController());
 
-    // ✅ Infinite scroll
     _scrollController.addListener(() {
       final position  = _scrollController.position;
       final threshold = position.maxScrollExtent * 0.85;
@@ -39,7 +37,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
   @override
   void dispose() {
     _scrollController.dispose();
-    // ✅ Supprimer le controller quand on quitte l'écran
     Get.delete<ExploreController>();
     super.dispose();
   }
@@ -51,14 +48,13 @@ class _ExploreScreenState extends State<ExploreScreen> {
       child: Scaffold(
         backgroundColor: AppColors.deepBlack,
         appBar: AppBar(
-          backgroundColor: AppColors.deepBlack,
-          elevation:       0,
+          backgroundColor:           AppColors.deepBlack,
+          elevation:                 0,
           automaticallyImplyLeading: false,
-          titleSpacing: 0,
+          titleSpacing:              0,
           title: Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
             child: Row(children: [
-              // ✅ Bouton retour
               GestureDetector(
                 onTap: () => Navigator.of(context).pop(),
                 child: const Icon(
@@ -79,10 +75,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
           children: [
             // ─ Filtres genres ─────────────────────────────────
             _buildGenreFilters(),
-            const Divider(
-              color:  Color(0xFF1F1F1F),
-              height: 1,
-            ),
+            const Divider(color: Color(0xFF1F1F1F), height: 1),
 
             // ─ Feed tendance ──────────────────────────────────
             Expanded(
@@ -96,8 +89,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 }
 
                 // ─ Erreur ─────────────────────────────────────
-                if (_controller.errorMessage.value
-                    .isNotEmpty) {
+                if (_controller.errorMessage.value.isNotEmpty) {
                   return _buildError();
                 }
 
@@ -114,48 +106,42 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   child: ListView.builder(
                     controller: _scrollController,
                     padding:    const EdgeInsets.only(top: 8),
-                    itemCount:
-                        _controller.posts.length + 1,
+                    itemCount:  _controller.posts.length + 1,
                     itemBuilder: (context, index) {
-                      // ─ Footer ───────────────────────────────
-                      if (index ==
-                          _controller.posts.length) {
-                        return Obx(() {
-                          if (_controller
-                              .isLoadingMore.value) {
-                            return const Padding(
-                              padding: EdgeInsets.symmetric(
-                                  vertical: 20),
-                              child: Center(
-                                child:
-                                    CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: AppColors.crimsonRed,
+
+                      // ─ Footer ✅ Pas de Obx imbriqué ────────
+                      if (index == _controller.posts.length) {
+                        // Loading more
+                        if (_controller.isLoadingMore.value) {
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(
+                                vertical: 20),
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.crimsonRed,
+                              ),
+                            ),
+                          );
+                        }
+                        // Fin de liste
+                        if (!_controller.hasMore.value &&
+                            _controller.posts.isNotEmpty) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 24),
+                            child: Center(
+                              child: Text(
+                                'Tu as tout vu ! 🎉',
+                                style: GoogleFonts.inter(
+                                  color:    AppColors.mediumGray,
+                                  fontSize: 13,
                                 ),
                               ),
-                            );
-                          }
-                          if (!_controller.hasMore.value &&
-                              _controller
-                                  .posts.isNotEmpty) {
-                            return Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(
-                                      vertical: 24),
-                              child: Center(
-                                child: Text(
-                                  'Tu as tout vu ! 🎉',
-                                  style: GoogleFonts.inter(
-                                    color:    AppColors
-                                        .mediumGray,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ),
-                            );
-                          }
-                          return const SizedBox(height: 20);
-                        });
+                            ),
+                          );
+                        }
+                        return const SizedBox(height: 20);
                       }
 
                       // ─ Post ─────────────────────────────────
@@ -164,14 +150,13 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 4),
                         child: PostCard(
-                          post:    post,
-                          isLiked: post.isLiked,
-                          onLike:  () => _toggleLike(post.id),
+                          post:      post,
+                          isLiked:   post.isLiked,
+                          onLike:    () => _toggleLike(post.id),
                           onComment: () => showCommentsSheet(
                             context,
                             postId:     post.id,
-                            postAuthor:
-                                post.displayNameOrUsername,
+                            postAuthor: post.displayNameOrUsername,
                           ),
                         ),
                       );
@@ -190,62 +175,66 @@ class _ExploreScreenState extends State<ExploreScreen> {
   Widget _buildGenreFilters() {
     return SizedBox(
       height: 52,
-      child: Obx(() => ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding:         const EdgeInsets.symmetric(
-            horizontal: 12, vertical: 8),
-        itemCount: ExploreController.genres.length,
-        itemBuilder: (_, index) {
-          final genre    = ExploreController.genres[index];
-          final selected =
-              _controller.selectedGenre.value == genre;
+      child: Obx(() {
+        // ✅ Observable accédé DIRECTEMENT dans le scope Obx
+        final currentGenre = _controller.selectedGenre.value;
 
-          return GestureDetector(
-            onTap: () => _controller.selectGenre(genre),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              margin: const EdgeInsets.only(right: 8),
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 16, vertical: 6),
-              decoration: BoxDecoration(
-                color: selected
-                    ? AppColors.crimsonRed
-                    : AppColors.darkGray,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
+        return ListView.builder(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(
+              horizontal: 12, vertical: 8),
+          itemCount:   ExploreController.genres.length,
+          itemBuilder: (_, index) {
+            final genre    = ExploreController.genres[index];
+            // ✅ On utilise currentGenre — pas .value dans le callback
+            final selected = currentGenre == genre;
+
+            return GestureDetector(
+              onTap: () => _controller.selectGenre(genre),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                margin:  const EdgeInsets.only(right: 8),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16, vertical: 6),
+                decoration: BoxDecoration(
                   color: selected
                       ? AppColors.crimsonRed
-                      : Colors.white
-                          .withValues(alpha: 0.1),
-                  width: 1,
+                      : AppColors.darkGray,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: selected
+                        ? AppColors.crimsonRed
+                        : Colors.white.withValues(alpha: 0.1),
+                    width: 1,
+                  ),
+                  boxShadow: selected
+                      ? [
+                          BoxShadow(
+                            color: AppColors.crimsonRed
+                                .withValues(alpha: 0.4),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ]
+                      : null,
                 ),
-                boxShadow: selected
-                    ? [
-                        BoxShadow(
-                          color: AppColors.crimsonRed
-                              .withValues(alpha: 0.4),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ]
-                    : null,
-              ),
-              child: Text(
-                genre,
-                style: GoogleFonts.inter(
-                  color: selected
-                      ? Colors.white
-                      : AppColors.mediumGray,
-                  fontWeight: selected
-                      ? FontWeight.w600
-                      : FontWeight.w400,
-                  fontSize: 13,
+                child: Text(
+                  genre,
+                  style: GoogleFonts.inter(
+                    color: selected
+                        ? Colors.white
+                        : AppColors.mediumGray,
+                    fontWeight: selected
+                        ? FontWeight.w600
+                        : FontWeight.w400,
+                    fontSize: 13,
+                  ),
                 ),
               ),
-            ),
-          );
-        },
-      )),
+            );
+          },
+        );
+      }),
     );
   }
 
@@ -258,7 +247,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
     final post    = _controller.posts[index];
     final isLiked = !post.isLiked;
 
-    // ✅ Mise à jour locale dans ExploreController
     _controller.updateLike(
       postId,
       isLiked:    isLiked,
@@ -267,7 +255,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
           : (post.likesCount - 1).clamp(0, 999999),
     );
 
-    // ✅ Mise à jour dans PostsController si enregistré
     if (Get.isRegistered<PostsController>()) {
       Get.find<PostsController>().toggleLike(postId);
     }
@@ -285,7 +272,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
           Text(
             _controller.selectedGenre.value.isEmpty
                 ? 'Aucun post tendance'
-                : 'Aucun post pour "${_controller.selectedGenre.value}"',
+                : 'Aucun post pour '
+                  '"${_controller.selectedGenre.value}"',
             style: GoogleFonts.poppins(
                 color:      AppColors.pureWhite,
                 fontWeight: FontWeight.w600,
@@ -295,9 +283,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
           const SizedBox(height: 6),
           if (_controller.selectedGenre.value.isNotEmpty)
             TextButton(
-              onPressed: () =>
-                  _controller.selectGenre(
-                      _controller.selectedGenre.value),
+              onPressed: () => _controller.selectGenre(
+                  _controller.selectedGenre.value),
               child: Text('Voir tous les posts',
                   style: GoogleFonts.inter(
                       color:      AppColors.crimsonRed,
