@@ -1,6 +1,8 @@
 import 'package:get/get.dart';
+import 'package:otakuverse/core/services/push_notification_service.dart';
 import 'package:otakuverse/features/auth/repositories/auth_repository.dart';
 import 'package:otakuverse/shared/models/user_model.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthController extends GetxController {
   final AuthRepository _repository;
@@ -74,8 +76,8 @@ class AuthController extends GetxController {
 
   // ─── DÉCONNEXION ─────────────────────────────────────────────────
   Future<void> signOut() async {
-    await _repository.signOut();
-    currentUser.value = null;
+    await PushNotificationService.deleteToken();
+    await Supabase.instance.client.auth.signOut();
     Get.offAllNamed('/login');
   }
 

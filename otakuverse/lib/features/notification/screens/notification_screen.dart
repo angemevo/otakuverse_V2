@@ -5,19 +5,19 @@ import 'package:heroicons_flutter/heroicons_flutter.dart';
 import 'package:otakuverse/core/constants/colors.dart';
 import 'package:otakuverse/core/widgets/cached_image.dart';
 import 'package:otakuverse/core/widgets/connectivity_wrapper.dart';
-import 'package:otakuverse/features/activity/controller/notification_controller.dart';
-import 'package:otakuverse/features/activity/models/notification_model.dart';
+import 'package:otakuverse/features/notification/controller/notification_controller.dart';
+import 'package:otakuverse/features/notification/models/notification_model.dart';
 import 'package:otakuverse/features/feed/screens/comments_sheet.dart';
 import 'package:otakuverse/features/profile/screens/profile_screen.dart';
 
-class ActivityScreen extends StatefulWidget {
-  const ActivityScreen({super.key});
+class NotificationScreen extends StatefulWidget {
+  const NotificationScreen({super.key});
 
   @override
-  State<ActivityScreen> createState() => _ActivityScreenState();
+  State<NotificationScreen> createState() => _NotificationScreenState();
 }
 
-class _ActivityScreenState extends State<ActivityScreen> {
+class _NotificationScreenState extends State<NotificationScreen> {
   late final NotificationController _controller;
   final _scrollController = ScrollController();
 

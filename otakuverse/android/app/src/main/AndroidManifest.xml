@@ -9,6 +9,7 @@
         android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
 
     <!-- ✅ Vibration — pour notifications -->
     <uses-permission android:name="android.permission.VIBRATE" />
@@ -20,7 +21,6 @@
         android:label="Otakuverse"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
-        
         android:enableOnBackInvokedCallback="true"
         android:requestLegacyExternalStorage="true">
 

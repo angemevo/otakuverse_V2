@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:otakuverse/features/feed/models/post_model.dart';
@@ -18,7 +19,7 @@ class PostsController extends GetxController {
   int              _offset   = 0;
   static const int _pageSize = 20;
 
-  // ─── CHARGER le feed (première page) ─────────────────────────────
+  // ─── CHARGER LE FEED (première page) ─────────────────────────────
   Future<void> loadFeed() async {
     isLoading.value    = true;
     errorMessage.value = '';
@@ -37,21 +38,20 @@ class PostsController extends GetxController {
           await _postService.getFollowingIds(myId);
       isDiscoveryFeed.value = following.isEmpty;
 
-      // ✅ Moins de 20 résultats → plus de pages
       if (result.length < _pageSize) {
         hasMore.value = false;
       }
       _offset = result.length;
-
     } catch (e) {
-      errorMessage.value = 'Impossible de charger le feed';
-      print('🔴 Erreur loadFeed : $e');
+      errorMessage.value =
+          'Impossible de charger le feed';
+      debugPrint('🔴 loadFeed: $e');
     } finally {
       isLoading.value = false;
     }
   }
 
-  // ─── CHARGER la page suivante ────────────────────────────────────
+  // ─── CHARGER LA PAGE SUIVANTE ────────────────────────────────────
   Future<void> loadMore() async {
     if (isLoadingMore.value || !hasMore.value) return;
 
@@ -66,9 +66,8 @@ class PostsController extends GetxController {
 
       posts.addAll(result);
       _offset += result.length;
-
     } catch (e) {
-      print('🔴 Erreur loadMore : $e');
+      debugPrint('🔴 loadMore: $e');
     } finally {
       isLoadingMore.value = false;
     }
@@ -76,7 +75,8 @@ class PostsController extends GetxController {
 
   // ─── TOGGLE LIKE ─────────────────────────────────────────────────
   Future<void> toggleLike(String postId) async {
-    final index = posts.indexWhere((p) => p.id == postId);
+    final index =
+        posts.indexWhere((p) => p.id == postId);
     if (index == -1) return;
 
     // ✅ Optimistic update
@@ -94,41 +94,50 @@ class PostsController extends GetxController {
     } catch (e) {
       // ✅ Rollback si erreur
       posts[index] = post;
-      print('🔴 Erreur toggleLike : $e');
+      debugPrint('🔴 toggleLike: $e');
     }
   }
 
-  // ─── CRÉER un post ───────────────────────────────────────────────
-  // ✅ Recharge le feed depuis la DB au lieu d'insérer localement
+  // ─── CRÉER UN POST ───────────────────────────────────────────────
   Future<bool> createPost({
     required String       caption,
     required List<String> mediaUrls,
     String?               location,
-    bool                  allowComments = true,
+    bool                  allowComments  = true,
+    String?               musicTitle,
+    String?               musicArtist,
+    String?               musicTrackId,
+    String?               musicPreviewUrl,
+    String?               musicImageUrl,
   }) async {
     try {
       await _postService.createPost(
-        caption:       caption,
-        mediaUrls:     mediaUrls,
-        location:      location,
-        allowComments: allowComments,
+        caption:         caption,
+        mediaUrls:       mediaUrls,
+        location:        location,
+        allowComments:   allowComments,
+        musicTitle:      musicTitle,
+        musicArtist:     musicArtist,
+        musicTrackId:    musicTrackId,
+        musicPreviewUrl: musicPreviewUrl,
+        musicImageUrl:   musicImageUrl,
       );
 
-      // ✅ Recharger le feed complet
       await loadFeed();
       isDiscoveryFeed.value = false;
       return true;
-
     } catch (e) {
-      errorMessage.value = 'Impossible de créer le post';
-      print('🔴 Erreur createPost : $e');
+      errorMessage.value =
+          'Impossible de créer le post';
+      debugPrint('🔴 createPost: $e');
       return false;
     }
   }
 
-  // ─── METTRE À JOUR commentsCount ─────────────────────────────────
+  // ─── COMPTEURS COMMENTAIRES ──────────────────────────────────────
   void incrementCommentsCount(String postId) {
-    final index = posts.indexWhere((p) => p.id == postId);
+    final index =
+        posts.indexWhere((p) => p.id == postId);
     if (index == -1) return;
     final post   = posts[index];
     posts[index] = post.copyWith(
@@ -136,12 +145,90 @@ class PostsController extends GetxController {
   }
 
   void decrementCommentsCount(String postId) {
-    final index = posts.indexWhere((p) => p.id == postId);
+    final index =
+        posts.indexWhere((p) => p.id == postId);
     if (index == -1) return;
     final post   = posts[index];
     posts[index] = post.copyWith(
       commentsCount:
           (post.commentsCount - 1).clamp(0, 999999),
     );
+  }
+
+  // ─── REFRESH FEED (Realtime) ─────────────────────────────────────
+  // ✅ Utilise getFeed() qui existe déjà dans PostService
+  Future<void> refreshFeed() async {
+    try {
+      final newPosts =
+          await _postService.getFeed(offset: 0);
+
+      // ✅ Merge intelligent
+      for (final newPost in newPosts) {
+        final index =
+            posts.indexWhere((p) => p.id == newPost.id);
+        if (index != -1) {
+          // Mettre à jour si existant
+          posts[index] = newPost;
+        } else {
+          // Nouveau post → insérer en tête
+          posts.insert(0, newPost);
+        }
+      }
+
+      // ✅ Retirer les posts supprimés
+      // uniquement parmi les N premiers
+      if (newPosts.isNotEmpty) {
+        posts.removeWhere((p) =>
+            !newPosts.any((n) => n.id == p.id) &&
+            posts.indexOf(p) < newPosts.length);
+      }
+
+      debugPrint(
+          '✅ refreshFeed: ${posts.length} posts');
+    } catch (e) {
+      debugPrint('❌ refreshFeed: $e');
+    }
+  }
+
+  // ─── UPDATE LIKES (Realtime optimiste) ──────────────────────────
+  void updatePostLikeCount({
+    required String postId,
+    required int    delta,
+  }) {
+    final index =
+        posts.indexWhere((p) => p.id == postId);
+    if (index == -1) return;
+
+    final post = posts[index];
+    posts[index] = post.copyWith(
+      likesCount: (post.likesCount + delta)
+          .clamp(0, 999999),
+    );
+  }
+
+  // ─── UPDATE COMMENTAIRES (Realtime optimiste) ────────────────────
+  void updatePostCommentCount({
+    required String postId,
+    required int    delta,
+  }) {
+    final index =
+        posts.indexWhere((p) => p.id == postId);
+    if (index == -1) return;
+
+    final post = posts[index];
+    posts[index] = post.copyWith(
+      commentsCount: (post.commentsCount + delta)
+          .clamp(0, 999999),
+    );
+  }
+
+  // ─── REFRESH BOOKMARKS (Realtime) ───────────────────────────────
+  // ✅ Émet juste un signal — ProfileTabBookmarks
+  // se recharge lui-même via son propre state
+  final RxInt bookmarksRefreshTrigger = 0.obs;
+
+  void refreshBookmarks() {
+    bookmarksRefreshTrigger.value++;
+    debugPrint('✅ bookmarks refresh trigger');
   }
 }

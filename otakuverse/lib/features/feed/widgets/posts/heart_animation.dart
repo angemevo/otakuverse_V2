@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class HeartAnimation extends StatefulWidget {
-  const HeartAnimation();
+  const HeartAnimation({super.key});
 
   @override
   State<HeartAnimation> createState() => HeartAnimationState();
@@ -43,7 +43,7 @@ class HeartAnimationState extends State<HeartAnimation>
     return Center(
       child: AnimatedBuilder(
         animation: _controller,
-        builder: (_, __) => Opacity(
+        builder: (_, _) => Opacity(
           opacity: _opacity.value,
           child: Transform.scale(
             scale: _scale.value,

@@ -27,43 +27,59 @@ class ProfileService {
 
   // ─── MISE À JOUR COMPLÈTE ────────────────────────────────────────
   Future<ProfileModel> updateProfile({
-    String? username,
-    String? displayName,
-    String? bio,
-    String? website,
-    String? gender,
-    String? avatarUrl,
-    String? bannerUrl,
-    String? location,
-    DateTime? birthDate,
-    bool? isPrivate,
+    String?       username,
+    String?       displayName,
+    String?       bio,
+    String?       website,
+    String?       gender,
+    String?       avatarUrl,   // ✅ String URL
+    String?       bannerUrl,   // ✅ String URL
+    String?       location,
+    DateTime?     birthDate,
+    bool?         isPrivate,
     List<String>? favoriteAnimes,
     List<String>? favoriteMangas,
     List<String>? favoriteGames,
     List<String>? favoriteGenres,
   }) async {
-    // ✅ Construit uniquement les champs non-null
+    // ✅ Syntaxe Dart correcte — if() dans map literal
     final updates = <String, dynamic>{
-      if (username != null)       'username':       username.toLowerCase().trim(),
-      if (displayName != null)    'display_name':   displayName,
-      if (bio != null)            'bio':            bio,
-      if (website != null)        'website':        website,
-      if (gender != null)         'gender':         gender,
-      if (avatarUrl != null)      'avatar_url':     avatarUrl,
-      if (bannerUrl != null)      'banner_url':     bannerUrl,
-      if (location != null)       'location':       location,
-      if (isPrivate != null)      'is_private':     isPrivate,
-      if (birthDate != null)
-        'birth_date': birthDate.toIso8601String().split('T').first,
-      if (favoriteAnimes != null) 'favorite_anime':  favoriteAnimes,
-      if (favoriteMangas != null) 'favorite_manga':  favoriteMangas,
-      if (favoriteGames != null)  'favorite_games':  favoriteGames,
-      if (favoriteGenres != null) 'favorite_genres': favoriteGenres,
+      if (username    != null)
+        'username':     username.toLowerCase().trim(),
+      if (displayName != null)
+        'display_name': displayName,
+      if (bio         != null)
+        'bio':          bio,
+      if (website     != null)
+        'website':      website,
+      if (gender      != null)
+        'gender':       gender,
+      if (avatarUrl   != null)
+        'avatar_url':   avatarUrl,
+      if (bannerUrl   != null)
+        'banner_url':   bannerUrl,
+      if (location    != null)
+        'location':     location,
+      if (isPrivate   != null)
+        'is_private':   isPrivate,
+      if (birthDate   != null)
+        'birth_date':   birthDate
+            .toIso8601String()
+            .split('T')
+            .first,
+      if (favoriteAnimes  != null)
+        'favorite_anime':  favoriteAnimes,
+      if (favoriteMangas  != null)
+        'favorite_manga':  favoriteMangas,
+      if (favoriteGames   != null)
+        'favorite_games':  favoriteGames,
+      if (favoriteGenres  != null)
+        'favorite_genres': favoriteGenres,
       'updated_at': DateTime.now().toIso8601String(),
     };
 
+    // ✅ Rien à mettre à jour sauf updated_at
     if (updates.length == 1) {
-      // Seulement updated_at — rien à faire
       return getMyProfile();
     }
 
@@ -77,13 +93,15 @@ class ProfileService {
     return ProfileModel.fromJson(data);
   }
 
-  // ─── VIDER UN CHAMP (ex: supprimer la bio) ───────────────────────
-  Future<ProfileModel> clearField(String fieldName) async {
+  // ─── VIDER UN CHAMP ──────────────────────────────────────────────
+  Future<ProfileModel> clearField(
+      String fieldName) async {
     final data = await _supabase
         .from('profiles')
         .update({
           fieldName:    null,
-          'updated_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now()
+              .toIso8601String(),
         })
         .eq('user_id', _uid)
         .select()
@@ -91,15 +109,53 @@ class ProfileService {
     return ProfileModel.fromJson(data);
   }
 
-  // ─── RECHERCHE PAR USERNAME ──────────────────────────────────────
-  Future<List<ProfileModel>> searchProfiles(String query) async {
+  // ─── UPLOAD AVATAR ───────────────────────────────────────────────
+  // ✅ Upload fichier → retourne l'URL publique
+  Future<String> uploadAvatar(
+      List<int> bytes, String ext) async {
+    final path = 'avatars/$_uid.$ext';
+    await _supabase.storage
+        .from('avatars')
+        .uploadBinary(
+          path,
+          bytes as dynamic,
+          fileOptions: const FileOptions(
+              upsert: true),
+        );
+    return _supabase.storage
+        .from('avatars')
+        .getPublicUrl(path);
+  }
+
+  // ─── UPLOAD BANNIÈRE ─────────────────────────────────────────────
+  Future<String> uploadBanner(
+      List<int> bytes, String ext) async {
+    final path = 'banners/$_uid.$ext';
+    await _supabase.storage
+        .from('banners')
+        .uploadBinary(
+          path,
+          bytes as dynamic,
+          fileOptions: const FileOptions(
+              upsert: true),
+        );
+    return _supabase.storage
+        .from('banners')
+        .getPublicUrl(path);
+  }
+
+  // ─── RECHERCHE ───────────────────────────────────────────────────
+  Future<List<ProfileModel>> searchProfiles(
+      String query) async {
     final data = await _supabase
         .from('profiles')
         .select()
-        .or('username.ilike.%$query%,display_name.ilike.%$query%')
+        .or('username.ilike.%$query%,'
+            'display_name.ilike.%$query%')
         .limit(20);
     return (data as List)
-        .map((e) => ProfileModel.fromJson(e as Map<String, dynamic>))
+        .map((e) => ProfileModel.fromJson(
+            e as Map<String, dynamic>))
         .toList();
   }
 }

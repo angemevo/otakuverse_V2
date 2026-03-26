@@ -1,3 +1,5 @@
+// ignore_for_file: unused_field
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:otakuverse/features/feed/models/post_model.dart';
 

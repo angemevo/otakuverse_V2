@@ -17,8 +17,7 @@ class AuthRepository {
       password: password,
       data: {
         'username':                    username.toLowerCase().trim(),
-        if (displayName != null)
-          'display_name':              displayName,
+        'display_name':              ?displayName,
       },
     );
 

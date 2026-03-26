@@ -76,7 +76,7 @@ class CommentService {
           'post_id':   postId,
           'user_id':   _uid,
           'content':   content.trim(),
-          if (parentId != null) 'parent_id': parentId,
+          'parent_id': ?parentId,
         })
         .select(_select)
         .single();

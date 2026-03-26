@@ -13,6 +13,11 @@ class PostModel {
   final bool isLiked;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final String? musicTitle;
+  final String? musicArtist;
+  final String? musicTrackId;
+  final String? musicPreviewUrl;
+  final String? musicImageUrl;
 
   // ─── Données du profil (JOIN Supabase) ───────────────────────────
   final String? username;
@@ -37,6 +42,11 @@ class PostModel {
     this.avatarUrl,
     required this.createdAt,
     required this.updatedAt,
+    this.musicTitle,
+    this.musicArtist,
+    this.musicTrackId, 
+    this.musicPreviewUrl, 
+    this.musicImageUrl,
   });
 
   // ─── GETTERS ─────────────────────────────────────────────────────
@@ -78,6 +88,11 @@ class PostModel {
       updatedAt: json['updated_at'] != null
           ? DateTime.parse(json['updated_at'] as String)
           : DateTime.now(),
+      musicTitle:      json['music_title']       as String?,
+      musicArtist:     json['music_artist']      as String?,
+      musicTrackId:    json['music_track_id']    as String?,
+      musicPreviewUrl: json['music_preview_url'] as String?,
+      musicImageUrl:   json['music_image_url']   as String?,
     );
   }
 
@@ -96,6 +111,11 @@ class PostModel {
     'is_pinned':      isPinned,
     'created_at':     createdAt.toIso8601String(),
     'updated_at':     updatedAt.toIso8601String(),
+    'music_title':  musicTitle,
+    'music_artist': musicArtist,
+    'music_track_id': musicTrackId,
+    'music_preview_url': musicPreviewUrl,
+    'music_image_url': musicImageUrl,
   };
 
   // ─── copyWith ────────────────────────────────────────────────────
@@ -113,6 +133,11 @@ class PostModel {
     String? username,
     String? displayName, // ✅
     String? avatarUrl,
+    String? musicTitle,
+    String? musicArtist,
+    String? musicTrackId,
+    String? musicPreviewUrl,
+    String? musicImageUrl
   }) {
     return PostModel(
       id:            id,
@@ -132,6 +157,11 @@ class PostModel {
       avatarUrl:     avatarUrl     ?? this.avatarUrl,
       createdAt:     createdAt,
       updatedAt:     updatedAt,
+      musicTitle:      musicTitle      ?? this.musicTitle,
+      musicArtist:     musicArtist     ?? this.musicArtist,
+      musicTrackId:    musicTrackId    ?? this.musicTrackId,
+      musicPreviewUrl: musicPreviewUrl ?? this.musicPreviewUrl,
+      musicImageUrl:   musicImageUrl   ?? this.musicImageUrl,
     );
   }
 

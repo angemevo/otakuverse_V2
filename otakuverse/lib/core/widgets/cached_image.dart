@@ -36,9 +36,9 @@ class CachedImage extends StatelessWidget {
       height:     height,
       fit:        fit,
       // ✅ Placeholder pendant le chargement
-      placeholder: (_, __) => placeholder ?? _buildPlaceholder(),
+      placeholder: (_, _) => placeholder ?? _buildPlaceholder(),
       // ✅ Widget si erreur
-      errorWidget: (_, __, ___) => errorWidget ?? _buildError(),
+      errorWidget: (_, _, _) => errorWidget ?? _buildError(),
       // ✅ Durée de cache — 7 jours
       cacheKey: url,
     );
@@ -114,8 +114,8 @@ class CachedAvatar extends StatelessWidget {
           width:       radius * 2,
           height:      radius * 2,
           fit:         BoxFit.cover,
-          placeholder: (_, __) => _buildFallback(),
-          errorWidget: (_, __, ___) => _buildFallback(),
+          placeholder: (_, _) => _buildFallback(),
+          errorWidget: (_, _, _) => _buildFallback(),
         ),
       ),
     );

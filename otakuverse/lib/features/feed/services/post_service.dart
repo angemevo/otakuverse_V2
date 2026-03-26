@@ -35,15 +35,25 @@ class PostService {
   Future<PostModel> createPost({
     required String       caption,
     required List<String> mediaUrls,
-    String?               location,
-    bool                  allowComments = true,
+    String? location,
+    bool allowComments = true,
+    String? musicTitle,
+    String? musicArtist,
+    String? musicTrackId,
+    String? musicPreviewUrl,
+    String? musicImageUrl,
   }) async {
     final data = await _supabase.from('posts').insert({
-      'user_id':        _uid,
-      'caption':        caption,
-      'media_urls':     mediaUrls,
-      if (location != null) 'location': location,
+      'user_id': _uid,
+      'caption': caption,
+      'media_urls': mediaUrls,
+      'location': ?location,
       'allow_comments': allowComments,
+      'music_title':      musicTitle,
+      'music_artist':     musicArtist,
+      'music_track_id':   musicTrackId,
+      'music_preview_url': musicPreviewUrl,
+      'music_image_url':  musicImageUrl,
     }).select(_select).single();
 
     return PostModel.fromJson(data);
@@ -198,9 +208,9 @@ class PostService {
     final data = await _supabase
         .from('posts')
         .update({
-          if (caption != null)       'caption':        caption,
-          if (location != null)      'location':       location,
-          if (allowComments != null) 'allow_comments': allowComments,
+          'caption':        ?caption,
+          'location':       ?location,
+          'allow_comments': ?allowComments,
           'updated_at': DateTime.now().toIso8601String(),
         })
         .eq('id', postId)

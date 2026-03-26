@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "775380107022",
+    "project_id": "otakuverse-fafb8",
+    "storage_bucket": "otakuverse-fafb8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:775380107022:android:cb141e1836317e4575e15f",
+        "android_client_info": {
+          "package_name": "com.mevcode.otakuverse"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDsRvep1IF3P5JlktKNS_bI4geHbEb9KLQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
-import 'package:otakuverse/features/activity/models/notification_model.dart';
-import 'package:otakuverse/features/activity/services/notification_service.dart';
+import 'package:otakuverse/features/notification/models/notification_model.dart';
+import 'package:otakuverse/features/notification/services/notification_service.dart';
 
 class NotificationController extends GetxController {
   final _service = NotificationService();

@@ -157,7 +157,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                             context,
                             postId:     post.id,
                             postAuthor: post.displayNameOrUsername,
-                          ),
+                          ), isMe: false,
                         ),
                       );
                     },

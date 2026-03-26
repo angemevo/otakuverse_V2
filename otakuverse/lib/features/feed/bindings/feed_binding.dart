@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:otakuverse/features/activity/controller/notification_controller.dart';
+import 'package:otakuverse/features/notification/controller/notification_controller.dart';
 import 'package:otakuverse/features/feed/controllers/bookmark_controller.dart';
 import 'package:otakuverse/features/feed/controllers/comment_controller.dart';
 import 'package:otakuverse/features/feed/controllers/post_controller.dart';

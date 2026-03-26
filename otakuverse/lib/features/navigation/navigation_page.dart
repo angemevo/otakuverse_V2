@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:otakuverse/core/constants/colors.dart';
-import 'package:otakuverse/features/activity/screens/activity_screen.dart';
+import 'package:otakuverse/features/notification/screens/notification_screen.dart';
 import 'package:otakuverse/features/community/screens/community_screen.dart';
 import 'package:otakuverse/features/feed/screens/home_screen.dart';
 import 'package:otakuverse/features/navigation/widgets/bottom_nav_bar.dart';
@@ -74,7 +74,7 @@ class _NavigationPageState extends State<NavigationPage> {
           children: [
             _buildTab(0, const HomeScreen()),
             _buildTab(1, const CommunityScreen()),
-            _buildTab(2, const ActivityScreen()),
+            _buildTab(2, const NotificationScreen()),
             _buildTab(3, const ProfileScreen()),
           ],
         ),

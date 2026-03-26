@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:heroicons_flutter/heroicons_flutter.dart';
 import 'package:otakuverse/core/constants/colors.dart';
-import 'package:otakuverse/features/activity/controller/notification_controller.dart';
+import 'package:otakuverse/features/notification/controller/notification_controller.dart';
 import 'package:otakuverse/features/navigation/widgets/create_post_button.dart';
 
 class BottomNavBar extends StatelessWidget {
@@ -209,7 +209,7 @@ class _NavItemState extends State<_NavItem>
       behavior: HitTestBehavior.opaque,
       child: AnimatedBuilder(
         animation: _animController,
-        builder: (_, __) => Column(
+        builder: (_, _) => Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // ─ Icône ────────────────────────────────────────────

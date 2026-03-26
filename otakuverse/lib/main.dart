@@ -1,10 +1,15 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:get/get.dart';
 import 'package:otakuverse/core/services/connectivity_service.dart';
+import 'package:otakuverse/core/services/push_notification_service.dart';
+import 'package:otakuverse/core/services/realtime_service.dart';
 import 'package:otakuverse/features/auth/controllers/onboarding_controller.dart';
 import 'package:otakuverse/features/auth/screens/onboarding_screen.dart';
+import 'package:otakuverse/features/stories/controllers/story_controller.dart';
+import 'package:otakuverse/firebase_options.dart'; // ✅ Généré par flutterfire
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:otakuverse/shared/config/api_config.dart';
 import 'package:otakuverse/core/constants/colors.dart';
@@ -16,21 +21,21 @@ import 'package:otakuverse/features/feed/bindings/feed_binding.dart';
 import 'package:otakuverse/features/navigation/navigation_page.dart';
 
 void main() async {
-  // ✅ 1. Doit être la PREMIÈRE ligne — avant tout le reste
+  // 1. Toujours en premier
   final widgetsBinding =
       WidgetsFlutterBinding.ensureInitialized();
 
-  // ✅ 2. Preserves le splash pendant toute l'initialisation
+  // 2. Splash
   FlutterNativeSplash.preserve(
       widgetsBinding: widgetsBinding);
 
-  // ─── Orientation portrait uniquement ────────────────────
+  // 3. Orientation
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
 
-  // ─── Style barre de statut ───────────────────────────────
+  // 4. Status bar
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor:                    Colors.transparent,
@@ -40,16 +45,44 @@ void main() async {
     ),
   );
 
-  // ─── Initialisation Supabase ─────────────────────────────
+  // 5. Firebase — avec options générées par flutterfire
+  print('🔥 Initialisation Firebase...');
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    print('🔥 Firebase initialisé ✅');
+  } catch (e) {
+    print('🔴 Erreur Firebase : $e');
+  }
+
+  // 6. Supabase
   await Supabase.initialize(
     url:     ApiConfig.supabaseUrl,
     anonKey: ApiConfig.supabaseAnonKey,
   );
 
-  // ─── Services globaux ────────────────────────────────────
+  // 7. Services globaux
   await Get.putAsync(() async => ConnectivityService());
 
-  // ✅ 3. Retirer le splash — tout est initialisé
+  // 8. Push notifications — APRÈS Firebase et Supabase
+  print('🔔 Initialisation Push Notifications...');
+  try {
+    await PushNotificationService.initialize();
+    print('🔔 Push Notifications initialisé ✅');
+  } catch (e) {
+    print('🔴 Erreur Push : $e');
+  }
+
+  // 9. Spotify
+  // await dotenv.load(fileName: '.env');
+
+  // ✅ Enregistrer le RealtimeService
+  Get.put(RealtimeService(), permanent: true);
+  
+  Get.put(StoryController(), permanent: true);
+  
+  // 10. Retirer le splash
   FlutterNativeSplash.remove();
 
   runApp(const OtakuverseApp());
@@ -67,14 +100,12 @@ class OtakuverseApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      title:                   'Otakuverse',
+      title:                      'Otakuverse',
       debugShowCheckedModeBanner: false,
-      theme:                   _buildTheme(),
-      initialRoute:            _initialRoute,
-      getPages:                _pages,
+      theme:                      _buildTheme(),
+      initialRoute:               _initialRoute,
+      getPages:                   _pages,
 
-      // ✅ Listener connectivité — dans onInit du GetMaterialApp
-      // pour éviter les doublons lors des rebuilds
       onInit: () {
         ever(
           Get.find<ConnectivityService>().isConnected,
@@ -103,12 +134,11 @@ class OtakuverseApp extends StatelessWidget {
         ),
       ),
 
-      defaultTransition:   Transition.fadeIn,
-      transitionDuration:  const Duration(milliseconds: 250),
+      defaultTransition:  Transition.fadeIn,
+      transitionDuration: const Duration(milliseconds: 250),
     );
   }
 
-  // ─── THÈME ──────────────────────────────────────────────
   ThemeData _buildTheme() {
     return ThemeData(
       useMaterial3:            true,
@@ -160,7 +190,6 @@ class OtakuverseApp extends StatelessWidget {
     );
   }
 
-  // ─── ROUTES ─────────────────────────────────────────────
   List<GetPage> get _pages => [
     GetPage(
       name:    Routes.login,
@@ -195,7 +224,6 @@ class OtakuverseApp extends StatelessWidget {
   ];
 }
 
-// ─── ROUTES ───────────────────────────────────────────────
 abstract class Routes {
   static const login         = '/login';
   static const signup        = '/signup';

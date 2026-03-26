@@ -79,6 +79,19 @@ dependencies:
   image_picker:             ^1.1.2
   photo_view:               ^0.15.0
   flutter_image_compress:   ^2.3.0
+  photo_manager: ^3.3.0 
+  emoji_picker_flutter: ^3.1.0
+
+  # ============================================
+  # Audio
+  # ============================================
+  just_audio: ^0.9.43 
+  visibility_detector: ^0.4.0+2
+
+  # ============================================
+  # Vidéo
+  # ============================================
+  video_player: ^2.9.2
 
   # ============================================
   # FILE MANAGEMENT
@@ -189,6 +202,7 @@ flutter:
     - assets/images/   # ✅ Décommenté — requis pour icon + splash
     - assets/icons/
     - assets/logo/
+    - .env
 
   fonts:
     - family: Poppins

@@ -1,5 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:otakuverse/features/activity/models/notification_model.dart';
+import 'package:otakuverse/features/notification/models/notification_model.dart';
 
 class NotificationService {
   final _supabase = Supabase.instance.client;

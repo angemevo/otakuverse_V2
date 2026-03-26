@@ -2,10 +2,11 @@ plugins {
     id("com.android.application")
     id("kotlin-android")
     id("dev.flutter.flutter-gradle-plugin")
+    id("com.google.gms.google-services")
 }
 
 android {
-    namespace = "com.example.otakuverse"
+    namespace = "com.mevcode.otakuverse"
     compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
@@ -20,7 +21,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.otakuverse"
+        applicationId = "com.mevcode.otakuverse"
         minSdk = flutter.minSdkVersion
         targetSdk = 35
         versionCode = flutter.versionCode
@@ -38,4 +39,13 @@ flutter {
     source = "../.."
 }
 
-// ✅ Plus de bloc dependencies du tout
+dependencies {
+    // ✅ Firebase BoM — gère toutes les versions automatiquement
+    implementation(platform("com.google.firebase:firebase-bom:34.11.0"))
+
+    // ✅ Push notifications — obligatoire
+    implementation("com.google.firebase:firebase-messaging")
+
+    // ✅ Analytics — optionnel, à garder si tu veux les stats Firebase
+    implementation("com.google.firebase:firebase-analytics")
+}
