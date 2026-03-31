@@ -200,9 +200,9 @@ flutter:
 
   assets:
     - assets/images/   # ✅ Décommenté — requis pour icon + splash
-    - assets/icons/
+    # - assets/icons/
     - assets/logo/
-    - .env
+    # - .env
 
   fonts:
     - family: Poppins

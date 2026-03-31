@@ -1,9 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:otakuverse/core/constants/colors.dart';
-import 'package:otakuverse/features/stories/controllers/story_controller.dart';
 
 class CreateStoryBottomBar extends StatelessWidget {
   final Uint8List?           galleryThumb;
@@ -31,7 +28,7 @@ class CreateStoryBottomBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ctrl = Get.find<StoryController>();
+    
 
     return Positioned(
       bottom: 0, left: 0, right: 0,
@@ -42,10 +39,10 @@ class CreateStoryBottomBar extends StatelessWidget {
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(
-                  horizontal: 24, vertical: 12),
+                  horizontal: 24, vertical: 24),
               child: Row(
                 mainAxisAlignment:
-                    MainAxisAlignment.spaceBetween,
+                    MainAxisAlignment.spaceAround,
                 crossAxisAlignment:
                     CrossAxisAlignment.center,
                 children: [
@@ -121,7 +118,7 @@ class CreateStoryBottomBar extends StatelessWidget {
                     ],
                   ),
 
-                  // ─ Switch + Suivant ──────────────────────
+                  // ─ Switch ──────────────────────
                   Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -148,59 +145,7 @@ class CreateStoryBottomBar extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
 
-                      Obx(() {
-                        final uploading =
-                            ctrl.isUploading.value;
-                        final hasContent =
-                            mediaPreview != null ||
-                            textMode;
-
-                        return GestureDetector(
-                          onTap: uploading ? null : onNext,
-                          child: AnimatedContainer(
-                            duration: const Duration(
-                                milliseconds: 200),
-                            padding:
-                                const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical:   8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: hasContent
-                                  ? Colors.white
-                                  : Colors.white
-                                      .withValues(alpha: 0.3),
-                              borderRadius:
-                                  BorderRadius.circular(24),
-                            ),
-                            child: uploading
-                                ? const SizedBox(
-                                    width: 16, height: 16,
-                                    child:
-                                        CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: AppColors
-                                          .crimsonRed,
-                                    ),
-                                  )
-                                : Text(
-                                    'Suivant',
-                                    style: GoogleFonts.inter(
-                                      color: hasContent
-                                          ? Colors.black
-                                          : Colors.white54,
-                                      fontWeight:
-                                          FontWeight.w700,
-                                      fontSize:        13,
-                                      decoration:
-                                          TextDecoration.none,
-                                      decorationColor:
-                                          Colors.transparent,
-                                    ),
-                                  ),
-                          ),
-                        );
-                      }),
+                      
                     ],
                   ),
                 ],

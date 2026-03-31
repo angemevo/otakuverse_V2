@@ -1,4 +1,12 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:get/get_core/src/get_main.dart';
+import 'package:get/get_instance/src/extension_instance.dart';
+import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:otakuverse/core/constants/colors.dart';
+import 'package:otakuverse/features/stories/controllers/story_controller.dart';
 
 class CreateStoryTopBar extends StatelessWidget {
   final bool             textMode;
@@ -8,6 +16,8 @@ class CreateStoryTopBar extends StatelessWidget {
   final VoidCallback     onTextMode;
   final VoidCallback     onCloseText;
   final ValueChanged<Color> onColorChange;
+  final Uint8List?           mediaPreview;
+  final VoidCallback         onNext;
 
   const CreateStoryTopBar({
     super.key,
@@ -18,10 +28,13 @@ class CreateStoryTopBar extends StatelessWidget {
     required this.onTextMode,
     required this.onCloseText,
     required this.onColorChange,
+    required this.mediaPreview,
+    required this.onNext,
   });
 
   @override
   Widget build(BuildContext context) {
+    final ctrl = Get.find<StoryController>();
     return Stack(
       children: [
         // ─ Top bar ───────────────────────────────────────────
@@ -43,9 +56,59 @@ class CreateStoryTopBar extends StatelessWidget {
                         icon: Icons.flash_off_outlined,
                         onTap: () {}),
                     const SizedBox(width: 8),
-                    _NavBtn(
-                        icon: Icons.settings_outlined,
-                        onTap: () {}),
+                    Obx(() {
+                        final uploading =
+                            ctrl.isUploading.value;
+                        final hasContent =
+                            mediaPreview != null ||
+                            textMode;
+
+                        return GestureDetector(
+                          onTap: uploading ? null : onNext,
+                          child: AnimatedContainer(
+                            duration: const Duration(
+                                milliseconds: 200),
+                            padding:
+                                const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical:   8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: hasContent
+                                  ? Colors.white
+                                  : Colors.white
+                                      .withValues(alpha: 0.3),
+                              borderRadius:
+                                  BorderRadius.circular(24),
+                            ),
+                            child: uploading
+                                ? const SizedBox(
+                                    width: 16, height: 16,
+                                    child:
+                                        CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: AppColors
+                                          .crimsonRed,
+                                    ),
+                                  )
+                                : Text(
+                                    'Suivant',
+                                    style: GoogleFonts.inter(
+                                      color: hasContent
+                                          ? Colors.black
+                                          : Colors.white54,
+                                      fontWeight:
+                                          FontWeight.w700,
+                                      fontSize:        13,
+                                      decoration:
+                                          TextDecoration.none,
+                                      decorationColor:
+                                          Colors.transparent,
+                                    ),
+                                  ),
+                          ),
+                        );
+                      }),
                   ]),
                 ],
               ),

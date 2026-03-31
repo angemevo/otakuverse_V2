@@ -485,7 +485,9 @@ class _CreateStoryScreenState
             onCloseText: () =>
                 setState(() => _textMode = false),
             onColorChange: (c) =>
-                setState(() => _textBg = c),
+                setState(() => _textBg = c), 
+            mediaPreview:    _mediaPreview,
+             onNext:         _onNext,
           ),
 
           // ─ Bottom bar ─────────────────────────────────────

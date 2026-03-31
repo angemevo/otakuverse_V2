@@ -6,132 +6,118 @@ import 'package:otakuverse/features/stories/models/story_model.dart';
 class StoryService {
   final _supabase = Supabase.instance.client;
 
-  String get _uid =>
-      _supabase.auth.currentUser!.id;
+  String get _uid => _supabase.auth.currentUser!.id;
 
   // ─── CHARGER LES STORIES DU FEED ─────────────────────────────────
   Future<List<StoryGroup>> getFeedStories() async {
     try {
       final followingIds = await _getFollowingIds();
       final viewedIds    = await _getViewedStoryIds();
-
-      // ─ Étape 1 : Mes stories + abonnés ──────────────────────────
-      final myAndFollowingIds = [...followingIds, _uid];
+      final allIds       = [...followingIds, _uid];
 
       final myAndFollowingStories = await _fetchStories(
-        userIds:   myAndFollowingIds,
+        userIds:   allIds,
         viewedIds: viewedIds,
       );
 
-      // ─ Étape 2 : 5 stories de non-abonnés ───────────────────────
-      // ✅ Exclure : moi, mes abonnés, et les gens sans stories
       final discoveryStories =
           await _fetchDiscoveryStories(
-        excludeIds: myAndFollowingIds,
+        excludeIds: allIds,
         viewedIds:  viewedIds,
         limit:      5,
       );
 
-      // ─ Étape 3 : Stories sponsorisées (pubs) ────────────────────
-      final sponsoredGroups = _buildSponsoredGroups();
-
-      // ─ Étape 4 : Grouper et trier ────────────────────────────────
-      final allGroups = _groupByUser(
+      // ✅ Utiliser la nouvelle méthode avec profils directs
+      final allGroups = await _groupByUserWithProfiles(
         myAndFollowingStories,
         isDiscovery: false,
       );
 
-      final discoveryGroups = _groupByUser(
+      final discoveryGroups = await _groupByUserWithProfiles(
         discoveryStories,
         isDiscovery: true,
       );
 
-      // ─ Ordre final ───────────────────────────────────────────────
-      // ✅ 1. Mes stories
-      // ✅ 2. Abonnés (non vues en premier)
-      // ✅ 3. Découverte (5 non-abonnés)
-      // ✅ 4. Pubs
-      final result = [
-        ...allGroups,
-        ...discoveryGroups,
-        ...sponsoredGroups,
-      ];
-
       debugPrint('✅ Stories: '
           '${allGroups.length} abonnés + '
-          '${discoveryGroups.length} découverte + '
-          '${sponsoredGroups.length} pubs');
+          '${discoveryGroups.length} découverte');
 
-      return result;
+      return [...allGroups, ...discoveryGroups];
     } catch (e) {
       debugPrint('❌ getFeedStories: $e');
       return [];
     }
   }
 
-  // ─── FETCH STORIES POUR UNE LISTE D'IDs ──────────────────────────
+  // ─── FETCH STORIES AVEC JOIN PROFIL ──────────────────────────────
+  // ✅ Grâce à la FK vers profiles, le join est automatique
   Future<List<StoryModel>> _fetchStories({
     required List<String> userIds,
     required Set<String>  viewedIds,
   }) async {
     if (userIds.isEmpty) return [];
 
-    final storiesData = await _supabase
+    // ✅ Join direct — plus besoin de requête séparée
+    final data = await _supabase
         .from('stories')
-        .select()
+        .select('''
+          *,
+          profiles!inner(
+            user_id,
+            username,
+            display_name,
+            avatar_url
+          )
+        ''')
         .inFilter('user_id', userIds)
         .gt('expires_at',
             DateTime.now().toIso8601String())
         .order('created_at', ascending: false);
 
-    if ((storiesData as List).isEmpty) return [];
-
-    // ✅ Profils en une seule requête
-    final ids = storiesData
-        .map((s) => s['user_id'] as String)
-        .toSet()
-        .toList();
-
-    final profilesMap =
-        await _fetchProfilesMap(ids);
-
-    return storiesData.map((s) {
-      final map = s;
+    return (data as List).map((s) {
+      final map = s as Map<String, dynamic>;
       return StoryModel.fromJson({
         ...map,
-        'profiles': profilesMap[map['user_id']],
         'is_viewed': viewedIds.contains(
             map['id'] as String),
       });
     }).toList();
   }
 
-  // ─── FETCH STORIES DE DÉCOUVERTE (non-abonnés) ───────────────────
+  // ─── FETCH STORIES DÉCOUVERTE ────────────────────────────────────
   Future<List<StoryModel>> _fetchDiscoveryStories({
     required List<String> excludeIds,
     required Set<String>  viewedIds,
     required int          limit,
   }) async {
     try {
-      // ✅ Récupérer des users aléatoires avec stories actives
-      // qui ne sont pas dans excludeIds
-      final storiesData = await _supabase
+      if (excludeIds.isEmpty) return [];
+
+      final data = await _supabase
           .from('stories')
-          .select()
+          .select('''
+            *,
+            profiles!inner(
+              user_id,
+              username,
+              display_name,
+              avatar_url
+            )
+          ''')
           .not('user_id', 'in',
               '(${excludeIds.join(',')})')
           .gt('expires_at',
               DateTime.now().toIso8601String())
           .order('created_at', ascending: false)
-          .limit(limit * 5); // ✅ Plus large pour diversifier
+          .limit(limit * 5);
 
-      if ((storiesData as List).isEmpty) return [];
+      if ((data as List).isEmpty) return [];
 
-      // ✅ Garder max 1 story par user pour la diversité
-      final seenUsers  = <String>{};
-      final filtered   = <Map<String, dynamic>>[];
+      // ✅ 1 story max par user pour la découverte
+      final seenUsers = <String>{};
+      final filtered  = <Map<String, dynamic>>[];
 
-      for (final s in storiesData) {
+      for (final s in data) {
         final userId = s['user_id'] as String;
         if (!seenUsers.contains(userId) &&
             filtered.length < limit) {
@@ -140,22 +126,12 @@ class StoryService {
         }
       }
 
-      if (filtered.isEmpty) return [];
-
-      final ids = filtered
-          .map((s) => s['user_id'] as String)
-          .toList();
-
-      final profilesMap =
-          await _fetchProfilesMap(ids);
-
       return filtered.map((map) {
         return StoryModel.fromJson({
           ...map,
-          'profiles':    profilesMap[map['user_id']],
-          'is_viewed':   viewedIds.contains(
+          'is_viewed':    viewedIds.contains(
               map['id'] as String),
-          'is_discovery': true, // ✅ Flag découverte
+          'is_discovery': true,
         });
       }).toList();
     } catch (e) {
@@ -164,67 +140,58 @@ class StoryService {
     }
   }
 
-  // ─── STORIES SPONSORISÉES ────────────────────────────────────────
-  // ✅ Pour l'instant simulées — à brancher sur une vraie table ads
-  List<StoryGroup> _buildSponsoredGroups() {
-    // TODO: Brancher sur une table `ads` ou `sponsored_stories`
-    // Pour l'instant retourne une liste vide
-    // → Décommenter et adapter quand les pubs seront prêtes
-    return [];
-
-    /* Exemple futur :
-    return [
-      StoryGroup(
-        userId:      'ad_1',
-        username:    'otakuverse_ads',
-        displayName: 'Sponsorisé',
-        avatarUrl:   null,
-        stories:     [...],
-        hasUnviewed: true,
-        isMe:        false,
-        isSponsored: true,
-      ),
-    ];
-    */
-  }
-
   // ─── GROUPER PAR UTILISATEUR ─────────────────────────────────────
-  List<StoryGroup> _groupByUser(
+  Future<List<StoryGroup>> _groupByUserWithProfiles(
     List<StoryModel> stories, {
     required bool isDiscovery,
-  }) {
+  }) async {
     if (stories.isEmpty) return [];
 
+    // ─ Grouper les stories ─────────────────────────────────────────
     final Map<String, List<StoryModel>> grouped = {};
-
     for (final story in stories) {
       grouped.putIfAbsent(story.userId, () => []);
       grouped[story.userId]!.add(story);
     }
 
+    // ─ Récupérer les profils directement ──────────────────────────
+    // ✅ Source de vérité = table profiles
+    final userIds = grouped.keys.toList();
+    final profilesData = await _supabase
+        .from('profiles')
+        .select('user_id, username, display_name, avatar_url')
+        .inFilter('user_id', userIds);
+
+    final profilesMap = {
+      for (final p in profilesData as List)
+        p['user_id'] as String: p as Map<String, dynamic>,
+    };
+
+    // ─ Construire les groupes ──────────────────────────────────────
     final groups = grouped.entries.map((e) {
       final userStories = e.value
         ..sort((a, b) =>
             a.createdAt.compareTo(b.createdAt));
-      final first = userStories.first;
+
+      // ✅ Profil depuis la table profiles — pas depuis StoryModel
+      final profile = profilesMap[e.key];
 
       return StoryGroup(
         userId:      e.key,
-        username:    first.username    ?? '',
-        displayName: first.displayName,
-        avatarUrl:   first.avatarUrl,
+        // ✅ Données fraîches depuis profiles
+        username:    profile?['username']     as String? ?? '',
+        displayName: profile?['display_name'] as String?,
+        avatarUrl:   profile?['avatar_url']   as String?,
         stories:     userStories,
-        hasUnviewed: userStories
-            .any((s) => !s.isViewed),
+        hasUnviewed: userStories.any((s) => !s.isViewed),
         isMe:        e.key == _uid,
         isDiscovery: isDiscovery,
       );
     }).toList();
 
-    // ✅ Mes stories en premier, puis non vues
     groups.sort((a, b) {
-      if (a.isMe) return -1;
-      if (b.isMe) return 1;
+      if (a.isMe)  return -1;
+      if (b.isMe)  return 1;
       if (a.hasUnviewed && !b.hasUnviewed) return -1;
       if (!a.hasUnviewed && b.hasUnviewed) return 1;
       return b.latest.createdAt
@@ -234,56 +201,11 @@ class StoryService {
     return groups;
   }
 
-  // ─── FETCH PROFILES MAP ──────────────────────────────────────────
-  Future<Map<String, Map<String, dynamic>>>
-      _fetchProfilesMap(List<String> ids) async {
-    if (ids.isEmpty) return {};
-
-    final profilesData = await _supabase
-        .from('profiles')
-        .select(
-            'id, username, display_name, avatar_url')
-        .inFilter('id', ids);
-
-    return {
-      for (final p in profilesData as List)
-        p['id'] as String: p as Map<String, dynamic>,
-    };
-  }
-
-  // ─── MARQUER COMME VUE ───────────────────────────────────────────
-  Future<void> markAsViewed(String storyId) async {
-    try {
-      await _supabase.from('story_views').upsert({
-        'story_id':  storyId,
-        'viewer_id': _uid,
-      });
-    } catch (e) {
-      debugPrint('❌ markAsViewed: $e');
-    }
-  }
-
   // ─── PUBLIER IMAGE ───────────────────────────────────────────────
   Future<StoryModel?> createImageStory(
       XFile file) async {
     try {
-      final bytes = await file.readAsBytes();
-      final ext   = file.path
-          .split('.')
-          .last
-          .toLowerCase();
-      final path  =
-          'stories/$_uid/${DateTime.now().millisecondsSinceEpoch}.$ext';
-
-      await _supabase.storage
-          .from('stories')
-          .uploadBinary(path, bytes,
-              fileOptions:
-                  const FileOptions(upsert: false));
-
-      final url = _supabase.storage
-          .from('stories')
-          .getPublicUrl(path);
+      final url = await _uploadFile(file, 'image');
 
       final data = await _supabase
           .from('stories')
@@ -293,22 +215,55 @@ class StoryService {
             'media_type': 'image',
             'duration':   5,
           })
-          .select()
+          // ✅ Join direct dans le select retour
+          .select('''
+            *,
+            profiles!inner(
+              user_id,
+              username,
+              display_name,
+              avatar_url
+            )
+          ''')
           .single();
 
-      final profile = await _supabase
-          .from('profiles')
-          .select(
-              'id, username, display_name, avatar_url')
-          .eq('id', _uid)
-          .single();
-
-      return StoryModel.fromJson({
-        ...data,
-        'profiles': profile,
-      });
+      return StoryModel.fromJson(
+          data);
     } catch (e) {
       debugPrint('❌ createImageStory: $e');
+      return null;
+    }
+  }
+
+  // ─── PUBLIER VIDÉO ───────────────────────────────────────────────
+  Future<StoryModel?> createVideoStory(
+      XFile file) async {
+    try {
+      final url = await _uploadFile(file, 'video');
+
+      final data = await _supabase
+          .from('stories')
+          .insert({
+            'user_id':    _uid,
+            'media_url':  url,
+            'media_type': 'video',
+            'duration':   15,
+          })
+          .select('''
+            *,
+            profiles!inner(
+              user_id,
+              username,
+              display_name,
+              avatar_url
+            )
+          ''')
+          .single();
+
+      return StoryModel.fromJson(
+          data);
+    } catch (e) {
+      debugPrint('❌ createVideoStory: $e');
       return null;
     }
   }
@@ -328,73 +283,72 @@ class StoryService {
             'bg_color':     bgColor,
             'duration':     7,
           })
-          .select()
+          .select('''
+            *,
+            profiles!inner(
+              user_id,
+              username,
+              display_name,
+              avatar_url
+            )
+          ''')
           .single();
 
-      final profile = await _supabase
-          .from('profiles')
-          .select(
-              'id, username, display_name, avatar_url')
-          .eq('id', _uid)
-          .single();
-
-      return StoryModel.fromJson({
-        ...data,
-        'profiles': profile,
-      });
+      return StoryModel.fromJson(
+          data);
     } catch (e) {
       debugPrint('❌ createTextStory: $e');
       return null;
     }
   }
 
-  // ─── PUBLIER VIDÉO ───────────────────────────────────────────────
-  Future<StoryModel?> createVideoStory(XFile file) async {
+  // ─── PUBLIER MULTI-MÉDIAS ────────────────────────────────────────
+  Future<StoryModel?> createMultiMediaStory(
+      List<StoryMediaItem> items) async {
     try {
-      final bytes = await file.readAsBytes();
-      final ext   = file.path
-          .split('.').last.toLowerCase();
-      final path  =
-          'stories/$_uid/${DateTime.now().millisecondsSinceEpoch}.$ext';
+      final urls  = <String>[];
+      final types = <String>[];
 
-      await _supabase.storage
-          .from('stories')
-          .uploadBinary(path, bytes,
-              fileOptions:
-                  const FileOptions(upsert: false));
+      for (int i = 0; i < items.length; i++) {
+        final item = items[i];
+        final url  = await _uploadFile(
+            item.file,
+            item.isVideo ? 'video' : 'image',
+            suffix: '_$i');
+        urls.add(url);
+        types.add(item.isVideo ? 'video' : 'image');
+      }
 
-      final url = _supabase.storage
-          .from('stories')
-          .getPublicUrl(path);
+      final hasVideo = types.contains('video');
 
       final data = await _supabase
           .from('stories')
           .insert({
-            'user_id':    _uid,
-            'media_url':  url,
-            'media_type': 'video', // ✅ video
-            'duration':   15,      // ✅ 15s pour vidéo
+            'user_id':     _uid,
+            'media_url':   urls.first,
+            'media_type':  types.first,
+            'media_urls':  urls,
+            'media_types': types,
+            'duration':    hasVideo ? 15 : 5,
           })
-          .select()
+          .select('''
+            *,
+            profiles!inner(
+              user_id,
+              username,
+              display_name,
+              avatar_url
+            )
+          ''')
           .single();
 
-      final profile = await _supabase
-          .from('profiles')
-          .select(
-              'id, username, display_name, avatar_url')
-          .eq('id', _uid)
-          .single();
-
-      return StoryModel.fromJson({
-        ...data,
-        'profiles': profile,
-      });
+      return StoryModel.fromJson(
+          data);
     } catch (e) {
-      debugPrint('❌ createVideoStory: $e');
+      debugPrint('❌ createMultiMediaStory: $e');
       return null;
     }
   }
-  
 
   // ─── SUPPRIMER ───────────────────────────────────────────────────
   Future<void> deleteStory(String storyId) async {
@@ -403,6 +357,26 @@ class StoryService {
         .delete()
         .eq('id', storyId)
         .eq('user_id', _uid);
+  }
+
+  // ─── UPLOAD FICHIER ──────────────────────────────────────────────
+  // ✅ Méthode centralisée pour tous les uploads
+  Future<String> _uploadFile(
+      XFile file, String type, {String suffix = ''}) async {
+    final bytes = await file.readAsBytes();
+    final ext   = file.path.split('.').last.toLowerCase();
+    final ts    = DateTime.now().millisecondsSinceEpoch;
+    final path  = 'stories/$_uid/${ts}$suffix.$ext';
+
+    await _supabase.storage
+        .from('stories')
+        .uploadBinary(path, bytes,
+            fileOptions:
+                const FileOptions(upsert: false));
+
+    return _supabase.storage
+        .from('stories')
+        .getPublicUrl(path);
   }
 
   // ─── HELPERS ─────────────────────────────────────────────────────
@@ -425,4 +399,30 @@ class StoryService {
         .map((e) => e['story_id'] as String)
         .toSet();
   }
+
+  Future<void> markAsViewed(String storyId) async {
+    try {
+      await _supabase
+      .from('story_views')
+      .upsert({
+        'story_id': storyId,
+        'viewer_id': _uid
+      },
+      onConflict: 'story_id,viewer_id',
+      );
+    } catch (e) {
+      debugPrint('❌ markAsViewed: $e');
+    }
+  }
+}
+
+
+// ─── MODÈLE MEDIA ITEM ───────────────────────────────────────────────
+class StoryMediaItem {
+  final XFile file;
+  final bool  isVideo;
+  const StoryMediaItem({
+    required this.file,
+    required this.isVideo,
+  });
 }
