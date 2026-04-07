@@ -3,13 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart' show GoogleFonts;
 import 'package:otakuverse/core/services/connectivity_service.dart';
 import 'package:otakuverse/core/services/push_notification_service.dart';
 import 'package:otakuverse/core/services/realtime_service.dart';
 import 'package:otakuverse/features/auth/controllers/onboarding_controller.dart';
 import 'package:otakuverse/features/auth/screens/onboarding_screen.dart';
 import 'package:otakuverse/features/stories/controllers/story_controller.dart';
-import 'package:otakuverse/firebase_options.dart'; // ✅ Généré par flutterfire
+import 'package:otakuverse/firebase_options.dart'; 
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:otakuverse/shared/config/api_config.dart';
 import 'package:otakuverse/core/constants/colors.dart';
@@ -21,6 +22,10 @@ import 'package:otakuverse/features/feed/bindings/feed_binding.dart';
 import 'package:otakuverse/features/navigation/navigation_page.dart';
 
 void main() async {
+
+  // ✅ Désactiver le warning Noto
+  // GoogleFonts.config.allowRuntimeFetching = false;
+
   // 1. Toujours en premier
   final widgetsBinding =
       WidgetsFlutterBinding.ensureInitialized();

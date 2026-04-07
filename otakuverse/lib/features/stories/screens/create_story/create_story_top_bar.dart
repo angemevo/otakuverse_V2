@@ -1,23 +1,14 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
-import 'package:get/get_core/src/get_main.dart';
-import 'package:get/get_instance/src/extension_instance.dart';
-import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:otakuverse/core/constants/colors.dart';
-import 'package:otakuverse/features/stories/controllers/story_controller.dart';
 
 class CreateStoryTopBar extends StatelessWidget {
-  final bool             textMode;
-  final List<Color>      bgColors;
-  final Color            textBg;
-  final VoidCallback     onClose;
-  final VoidCallback     onTextMode;
-  final VoidCallback     onCloseText;
+  final bool                textMode;
+  final List<Color>         bgColors;
+  final Color               textBg;
+  final VoidCallback        onClose;
+  final VoidCallback        onTextMode;
+  final VoidCallback        onCloseText;
   final ValueChanged<Color> onColorChange;
-  final Uint8List?           mediaPreview;
-  final VoidCallback         onNext;
 
   const CreateStoryTopBar({
     super.key,
@@ -28,13 +19,10 @@ class CreateStoryTopBar extends StatelessWidget {
     required this.onTextMode,
     required this.onCloseText,
     required this.onColorChange,
-    required this.mediaPreview,
-    required this.onNext,
   });
 
   @override
   Widget build(BuildContext context) {
-    final ctrl = Get.find<StoryController>();
     return Stack(
       children: [
         // ─ Top bar ───────────────────────────────────────────
@@ -49,66 +37,22 @@ class CreateStoryTopBar extends StatelessWidget {
                 mainAxisAlignment:
                     MainAxisAlignment.spaceBetween,
                 children: [
+                  // ─ Fermer ──────────────────────────────
                   _NavBtn(
-                      icon: Icons.close, onTap: onClose),
+                    icon:  Icons.close,
+                    onTap: onClose,
+                  ),
+                  // ─ Flash + Paramètres ──────────────────
                   Row(children: [
                     _NavBtn(
-                        icon: Icons.flash_off_outlined,
-                        onTap: () {}),
+                      icon:  Icons.flash_off_outlined,
+                      onTap: () {},
+                    ),
                     const SizedBox(width: 8),
-                    Obx(() {
-                        final uploading =
-                            ctrl.isUploading.value;
-                        final hasContent =
-                            mediaPreview != null ||
-                            textMode;
-
-                        return GestureDetector(
-                          onTap: uploading ? null : onNext,
-                          child: AnimatedContainer(
-                            duration: const Duration(
-                                milliseconds: 200),
-                            padding:
-                                const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical:   8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: hasContent
-                                  ? Colors.white
-                                  : Colors.white
-                                      .withValues(alpha: 0.3),
-                              borderRadius:
-                                  BorderRadius.circular(24),
-                            ),
-                            child: uploading
-                                ? const SizedBox(
-                                    width: 16, height: 16,
-                                    child:
-                                        CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: AppColors
-                                          .crimsonRed,
-                                    ),
-                                  )
-                                : Text(
-                                    'Suivant',
-                                    style: GoogleFonts.inter(
-                                      color: hasContent
-                                          ? Colors.black
-                                          : Colors.white54,
-                                      fontWeight:
-                                          FontWeight.w700,
-                                      fontSize:        13,
-                                      decoration:
-                                          TextDecoration.none,
-                                      decorationColor:
-                                          Colors.transparent,
-                                    ),
-                                  ),
-                          ),
-                        );
-                      }),
+                    _NavBtn(
+                      icon:  Icons.settings_outlined,
+                      onTap: () {},
+                    ),
                   ]),
                 ],
               ),
@@ -130,16 +74,19 @@ class CreateStoryTopBar extends StatelessWidget {
                 ),
                 const SizedBox(height: 18),
                 _ToolBtn(
-                    icon: Icons.all_inclusive,
-                    onTap: () {}),
+                  icon:  Icons.all_inclusive,
+                  onTap: () {},
+                ),
                 const SizedBox(height: 18),
                 _ToolBtn(
-                    icon: Icons.grid_view_outlined,
-                    onTap: () {}),
+                  icon:  Icons.grid_view_outlined,
+                  onTap: () {},
+                ),
                 const SizedBox(height: 18),
                 _ToolBtn(
-                    icon: Icons.keyboard_arrow_down_rounded,
-                    onTap: () {}),
+                  icon:  Icons.keyboard_arrow_down_rounded,
+                  onTap: () {},
+                ),
               ],
             ),
           ),
@@ -155,6 +102,7 @@ class CreateStoryTopBar extends StatelessWidget {
                 mainAxisAlignment:
                     MainAxisAlignment.spaceEvenly,
                 children: [
+                  // ─ Fermer mode texte ───────────────────
                   GestureDetector(
                     onTap: onCloseText,
                     child: Container(
@@ -164,10 +112,15 @@ class CreateStoryTopBar extends StatelessWidget {
                             .withValues(alpha: 0.15),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.close,
-                          color: Colors.white, size: 16),
+                      child: const Icon(
+                        Icons.close,
+                        color: Colors.white,
+                        size:  16,
+                      ),
                     ),
                   ),
+
+                  // ─ Couleurs ────────────────────────────
                   ...bgColors.map((color) {
                     final bool sel = textBg == color;
                     return GestureDetector(
@@ -191,9 +144,10 @@ class CreateStoryTopBar extends StatelessWidget {
                               ? [
                                   BoxShadow(
                                     color: color
-                                        .withValues(alpha: 0.6),
+                                        .withValues(
+                                            alpha: 0.6),
                                     blurRadius: 10,
-                                  )
+                                  ),
                                 ]
                               : null,
                         ),
@@ -213,24 +167,30 @@ class CreateStoryTopBar extends StatelessWidget {
 class _NavBtn extends StatelessWidget {
   final IconData     icon;
   final VoidCallback onTap;
-  const _NavBtn({required this.icon, required this.onTap});
+
+  const _NavBtn({
+    required this.icon,
+    required this.onTap,
+  });
 
   @override
-  Widget build(BuildContext context) => GestureDetector(
-    onTap: onTap,
-    child: Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color:  Colors.black.withValues(alpha: 0.35),
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.15),
-          width: 1,
+  Widget build(BuildContext context) =>
+      GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color:  Colors.black.withValues(alpha: 0.35),
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.15),
+              width: 1,
+            ),
+          ),
+          child: Icon(icon,
+              color: Colors.white, size: 20),
         ),
-      ),
-      child: Icon(icon, color: Colors.white, size: 20),
-    ),
-  );
+      );
 }
 
 // ─── TOOL BUTTON ─────────────────────────────────────────────────────
@@ -241,36 +201,39 @@ class _ToolBtn extends StatelessWidget {
   final VoidCallback onTap;
 
   const _ToolBtn({
-    this.icon, this.label,
+    this.icon,
+    this.label,
     this.isText = false,
     required this.onTap,
   });
 
   @override
-  Widget build(BuildContext context) => GestureDetector(
-    onTap: onTap,
-    child: Container(
-      width: 42, height: 42,
-      decoration: BoxDecoration(
-        color:  Colors.black.withValues(alpha: 0.45),
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.15),
-          width: 1,
+  Widget build(BuildContext context) =>
+      GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: 42, height: 42,
+          decoration: BoxDecoration(
+            color:  Colors.black.withValues(alpha: 0.45),
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.15),
+              width: 1,
+            ),
+          ),
+          child: Center(
+            child: isText
+                ? const Text('Aa',
+                    style: TextStyle(
+                      color:           Colors.white,
+                      fontSize:        15,
+                      fontWeight:      FontWeight.w700,
+                      decoration:      TextDecoration.none,
+                      decorationColor: Colors.transparent,
+                    ))
+                : Icon(icon,
+                    color: Colors.white, size: 20),
+          ),
         ),
-      ),
-      child: Center(
-        child: isText
-            ? const Text('Aa',
-                style: TextStyle(
-                  color:           Colors.white,
-                  fontSize:        15,
-                  fontWeight:      FontWeight.w700,
-                  decoration:      TextDecoration.none,
-                  decorationColor: Colors.transparent,
-                ))
-            : Icon(icon, color: Colors.white, size: 20),
-      ),
-    ),
-  );
+      );
 }
