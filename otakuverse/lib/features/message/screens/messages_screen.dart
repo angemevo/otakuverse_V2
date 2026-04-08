@@ -1,404 +1,363 @@
-// ignore_for_file: unused_local_variable
-
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:heroicons_flutter/heroicons_flutter.dart';
 import 'package:otakuverse/core/constants/colors.dart';
-import 'package:otakuverse/features/message/models/conversation_model.dart';
-import 'package:otakuverse/features/message/widgets/conversation_card.dart';
+import 'package:otakuverse/core/widgets/cached_image.dart';
+import 'package:otakuverse/features/message/screens/new_conversation_screen.dart';
+import '../controllers/message_controller.dart';
+import '../models/conversation_model.dart';
+import 'chat_screen.dart';
 
-
-class MessagesScreen extends StatefulWidget {
+class MessagesScreen extends StatelessWidget {
   const MessagesScreen({super.key});
 
   @override
-  State<MessagesScreen> createState() => _MessagesScreenState();
+  Widget build(BuildContext context) {
+    final ctrl = Get.put(MessageController());
+
+    return Scaffold(
+      backgroundColor: AppColors.deepBlack,
+      appBar: _AppBar(ctrl: ctrl),
+      body: Column(
+        children: [
+          _SearchBar(ctrl: ctrl),
+          Expanded(
+            child: Obx(() {
+              if (ctrl.isLoading.value &&
+                  ctrl.conversations.isEmpty) {
+                return const Center(
+                  child: CircularProgressIndicator(
+                      color: AppColors.crimsonRed),
+                );
+              }
+
+              if (ctrl.filtered.isEmpty) {
+                return _EmptyState(
+                  hasSearch: ctrl
+                      .searchQuery.value.isNotEmpty,
+                );
+              }
+
+              return RefreshIndicator(
+                color:           AppColors.crimsonRed,
+                backgroundColor: AppColors.deepBlack,
+                onRefresh: ctrl.loadConversations,
+                child: ListView.separated(
+                  itemCount: ctrl.filtered.length,
+                  separatorBuilder: (_, __) =>
+                      const Divider(
+                    color:  Color(0xFF1A1A1A),
+                    height: 1,
+                    indent: 76,
+                  ),
+                  itemBuilder: (_, i) =>
+                      _ConversationTile(
+                    conv: ctrl.filtered[i],
+                  ),
+                ),
+              );
+            }),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: AppColors.crimsonRed,
+        elevation:       4,
+        // ✅ Ouvrir NewConversationScreen
+        onPressed: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const NewConversationScreen(),
+          ),
+        ),
+        child: const Icon(
+            Icons.edit_outlined,
+            color: Colors.white),
+      ),
+    );
+  }
 }
 
-class _MessagesScreenState extends State<MessagesScreen> 
-    with SingleTickerProviderStateMixin {
-  
-  late TabController _tabController;
-  final List<ConversationModel> _conversations = [];
-  bool _isLoading = true;
+// ─── APP BAR ─────────────────────────────────────────────────────────
+class _AppBar extends StatelessWidget
+    implements PreferredSizeWidget {
+  final MessageController ctrl;
+  const _AppBar({required this.ctrl});
 
   @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-    _loadConversations();
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _loadConversations() async {
-    setState(() => _isLoading = true);
-    
-    try {
-      // TODO: Appeler le service pour récupérer les conversations
-      // final result = await MessagesService().getConversations();
-      
-      // Simuler un délai
-      await Future.delayed(const Duration(seconds: 1));
-      
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    } catch (e) {
-      print('❌ Error loading conversations: $e');
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
+  Size get preferredSize =>
+      const Size.fromHeight(56);
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AppBar(
       backgroundColor: AppColors.deepBlack,
-      appBar: AppBar(
-        backgroundColor: AppColors.deepBlack,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(
-            HeroiconsOutline.arrowLeft,
-            color: AppColors.pureWhite,
-          ),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          'Messages',
-          style: GoogleFonts.poppins(
-            color: AppColors.pureWhite,
-            fontWeight: FontWeight.w600,
-            fontSize: 18,
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(
-              HeroiconsOutline.pencilSquare,
-              color: AppColors.pureWhite,
+      elevation:       0,
+      leading: IconButton(
+        icon: const Icon(
+            Icons.arrow_back_ios_new,
+            color: AppColors.pureWhite, size: 20),
+        onPressed: () => Navigator.pop(context),
+      ),
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Messages',
+            style: GoogleFonts.poppins(
+              color:      AppColors.pureWhite,
+              fontWeight: FontWeight.w700,
+              fontSize:   18,
             ),
-            onPressed: _showNewMessageSheet,
           ),
+          Obx(() {
+            final n = ctrl.totalUnread;
+            if (n == 0) return const SizedBox.shrink();
+            return Text(
+              '$n non lu${n > 1 ? 's' : ''}',
+              style: GoogleFonts.inter(
+                color:    AppColors.crimsonRed,
+                fontSize: 11,
+              ),
+            );
+          }),
         ],
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: AppColors.crimsonRed,
-          labelColor: AppColors.pureWhite,
-          unselectedLabelColor: AppColors.mediumGray,
-          labelStyle: GoogleFonts.inter(
-            fontWeight: FontWeight.w600,
+      ),
+    );
+  }
+}
+
+// ─── BARRE DE RECHERCHE ──────────────────────────────────────────────
+class _SearchBar extends StatelessWidget {
+  final MessageController ctrl;
+  const _SearchBar({required this.ctrl});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+          16, 8, 16, 4),
+      child: Container(
+        height: 40,
+        decoration: BoxDecoration(
+          color:        AppColors.darkGray,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: TextField(
+          onChanged: (v) =>
+              ctrl.searchQuery.value = v,
+          style: GoogleFonts.inter(
+            color:    AppColors.pureWhite,
             fontSize: 14,
           ),
-          tabs: const [
-            Tab(text: 'Tous'),
-            Tab(text: 'Non lus'),
+          decoration: InputDecoration(
+            hintText: 'Rechercher...',
+            hintStyle: GoogleFonts.inter(
+              color:    AppColors.mediumGray,
+              fontSize: 14,
+            ),
+            prefixIcon: const Icon(
+              Icons.search,
+              color: AppColors.mediumGray,
+              size:  18,
+            ),
+            border:         InputBorder.none,
+            contentPadding: const EdgeInsets.symmetric(
+                vertical: 10),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── TUILE CONVERSATION ──────────────────────────────────────────────
+class _ConversationTile extends StatelessWidget {
+  final ConversationModel conv;
+  const _ConversationTile({required this.conv});
+
+  @override
+  Widget build(BuildContext context) {
+    final hasUnread = conv.unreadCount > 0;
+
+    return InkWell(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ChatScreen(conv: conv),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+            horizontal: 16, vertical: 10),
+        child: Row(
+          children: [
+            // ─ Avatar ────────────────────────────────────
+            CachedAvatar(
+              url:           conv.displayAvatar,
+              radius:        26,
+              fallbackLetter: conv.displayName,
+            ),
+            const SizedBox(width: 12),
+
+            // ─ Contenu ───────────────────────────────────
+            Expanded(
+              child: Column(
+                crossAxisAlignment:
+                    CrossAxisAlignment.start,
+                children: [
+                  // ─ Nom + Heure ──────────────────────
+                  Row(
+                    mainAxisAlignment:
+                        MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          conv.displayName,
+                          style: GoogleFonts.inter(
+                            color:      AppColors.pureWhite,
+                            fontWeight: hasUnread
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                            fontSize: 15,
+                          ),
+                          maxLines: 1,
+                          overflow:
+                              TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        _fmtTime(conv.lastMessageAt),
+                        style: GoogleFonts.inter(
+                          color: hasUnread
+                              ? AppColors.crimsonRed
+                              : AppColors.mediumGray,
+                          fontSize:   11,
+                          fontWeight: hasUnread
+                              ? FontWeight.w600
+                              : FontWeight.w400,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 3),
+
+                  // ─ Dernier message + Badge ──────────
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          conv.lastMessageText ??
+                              'Nouvelle conversation',
+                          style: GoogleFonts.inter(
+                            color: hasUnread
+                                ? AppColors.pureWhite
+                                : AppColors.mediumGray,
+                            fontSize:   13,
+                            fontWeight: hasUnread
+                                ? FontWeight.w500
+                                : FontWeight.w400,
+                          ),
+                          maxLines: 1,
+                          overflow:
+                              TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (hasUnread) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          constraints:
+                              const BoxConstraints(
+                            minWidth:  20,
+                            minHeight: 20,
+                          ),
+                          padding:
+                              const EdgeInsets.symmetric(
+                                  horizontal: 6),
+                          decoration: BoxDecoration(
+                            color: AppColors.crimsonRed,
+                            borderRadius:
+                                BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            conv.unreadCount > 99
+                                ? '99+'
+                                : '${conv.unreadCount}',
+                            style: GoogleFonts.inter(
+                              color:      Colors.white,
+                              fontSize:   11,
+                              fontWeight: FontWeight.w700,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildConversationsList(showUnreadOnly: false),
-          _buildConversationsList(showUnreadOnly: true),
-        ],
-      ),
     );
   }
 
-  Widget _buildConversationsList({required bool showUnreadOnly}) {
-    if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(
-          color: AppColors.crimsonRed,
-        ),
-      );
+  String _fmtTime(DateTime? t) {
+    if (t == null) return '';
+    final now  = DateTime.now();
+    final diff = now.difference(t);
+    if (diff.inMinutes < 1)  return 'maintenant';
+    if (diff.inHours   < 1)  return '${diff.inMinutes}min';
+    if (diff.inDays    < 1)  return '${diff.inHours}h';
+    if (diff.inDays    < 7) {
+      const j = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+      return j[t.weekday - 1];
     }
-
-    final filteredConversations = showUnreadOnly
-        ? _conversations.where((c) => c.unreadCount > 0).toList()
-        : _conversations;
-
-    if (filteredConversations.isEmpty) {
-      return _buildEmptyState(showUnreadOnly);
-    }
-
-    return RefreshIndicator(
-      color: AppColors.crimsonRed,
-      backgroundColor: AppColors.deepBlack,
-      onRefresh: _loadConversations,
-      child: ListView.builder(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        itemCount: filteredConversations.length,
-        itemBuilder: (context, index) {
-          return ConversationCard(
-            conversation: filteredConversations[index],
-            onTap: () => _openConversation(filteredConversations[index]),
-          );
-        },
-      ),
-    );
+    return '${t.day}/${t.month}';
   }
+}
 
-  Widget _buildEmptyState(bool showUnreadOnly) {
+// ─── EMPTY STATE ─────────────────────────────────────────────────────
+class _EmptyState extends StatelessWidget {
+  final bool hasSearch;
+  const _EmptyState({required this.hasSearch});
+
+  @override
+  Widget build(BuildContext context) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            showUnreadOnly 
-                ? HeroiconsOutline.checkCircle 
-                : HeroiconsOutline.chatBubbleLeftRight,
+            hasSearch
+                ? Icons.search_off_outlined
+                : Icons.chat_bubble_outline_rounded,
             color: AppColors.mediumGray,
-            size: 64,
+            size:  56,
           ),
           const SizedBox(height: 16),
           Text(
-            showUnreadOnly 
-                ? 'Aucun message non lu'
+            hasSearch
+                ? 'Aucun résultat'
                 : 'Aucune conversation',
             style: GoogleFonts.poppins(
-              color: AppColors.pureWhite,
+              color:      AppColors.pureWhite,
               fontWeight: FontWeight.w600,
-              fontSize: 16,
+              fontSize:   16,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            showUnreadOnly
-                ? 'Tous vos messages sont lus'
-                : 'Commencez une conversation !',
+            hasSearch
+                ? 'Essaie un autre nom'
+                : 'Appuie sur ✏️ pour démarrer',
             style: GoogleFonts.inter(
-              color: AppColors.mediumGray,
+              color:    AppColors.mediumGray,
               fontSize: 13,
             ),
-          ),
-          if (!showUnreadOnly) ...[
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: _showNewMessageSheet,
-              icon: const Icon(
-                HeroiconsOutline.pencilSquare,
-                size: 18,
-              ),
-              label: const Text('Nouveau message'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.crimsonRed,
-                foregroundColor: AppColors.pureWhite,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  void _showNewMessageSheet() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (_) => _NewMessageSheet(),
-    );
-  }
-
-  void _openConversation(ConversationModel conversation) {
-    // TODO: Navigator vers ChatScreen
-    print('Open conversation with: ${conversation.displayNameOrUsername}');
-  }
-}
-
-// ════════════════════════════════════════════════════════════════════
-// NOUVEAU MESSAGE SHEET
-// ════════════════════════════════════════════════════════════════════
-class _NewMessageSheet extends StatefulWidget {
-  @override
-  State<_NewMessageSheet> createState() => _NewMessageSheetState();
-}
-
-class _NewMessageSheetState extends State<_NewMessageSheet> {
-  final _searchController = TextEditingController();
-  final List<dynamic> _searchResults = [];
-  bool _isSearching = false;
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  void _search(String query) async {
-    if (query.isEmpty) {
-      setState(() {
-        _searchResults.clear();
-        _isSearching = false;
-      });
-      return;
-    }
-
-    setState(() => _isSearching = true);
-
-    try {
-      // TODO: Appeler le service de recherche
-      await Future.delayed(const Duration(milliseconds: 500));
-      
-      if (mounted) {
-        setState(() => _isSearching = false);
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isSearching = false);
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.8,
-      decoration: const BoxDecoration(
-        color: AppColors.darkGray,
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(24),
-        ),
-      ),
-      child: Column(
-        children: [
-          const SizedBox(height: 12),
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: AppColors.mediumGray,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(height: 20),
-          
-          // Titre
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                Text(
-                  'Nouveau message',
-                  style: GoogleFonts.poppins(
-                    color: AppColors.pureWhite,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 18,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          
-          const SizedBox(height: 16),
-          
-          // Barre de recherche
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: TextField(
-              controller: _searchController,
-              autofocus: true,
-              style: GoogleFonts.inter(
-                color: AppColors.pureWhite,
-                fontSize: 15,
-              ),
-              decoration: InputDecoration(
-                hintText: 'Rechercher un utilisateur...',
-                hintStyle: GoogleFonts.inter(
-                  color: AppColors.mediumGray,
-                ),
-                prefixIcon: const Icon(
-                  HeroiconsOutline.magnifyingGlass,
-                  color: AppColors.mediumGray,
-                ),
-                filled: true,
-                fillColor: AppColors.deepBlack,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-              onChanged: _search,
-            ),
-          ),
-          
-          const SizedBox(height: 16),
-          
-          // Résultats
-          Expanded(
-            child: _isSearching
-                ? const Center(
-                    child: CircularProgressIndicator(
-                      color: AppColors.crimsonRed,
-                    ),
-                  )
-                : _searchResults.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(
-                              HeroiconsOutline.userGroup,
-                              color: AppColors.mediumGray,
-                              size: 48,
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              _searchController.text.isEmpty
-                                  ? 'Recherchez un utilisateur'
-                                  : 'Aucun résultat',
-                              style: GoogleFonts.inter(
-                                color: AppColors.mediumGray,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        itemCount: _searchResults.length,
-                        itemBuilder: (context, index) {
-                          final user = _searchResults[index];
-                          return ListTile(
-                            contentPadding: EdgeInsets.zero,
-                            leading: CircleAvatar(
-                              backgroundColor: AppColors.mediumGray,
-                              child: const Icon(
-                                HeroiconsOutline.user,
-                                color: AppColors.pureWhite,
-                                size: 20,
-                              ),
-                            ),
-                            title: Text(
-                              'Username',
-                              style: GoogleFonts.inter(
-                                color: AppColors.pureWhite,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            onTap: () {
-                              Navigator.pop(context);
-                              // TODO: Ouvrir conversation
-                            },
-                          );
-                        },
-                      ),
           ),
         ],
       ),

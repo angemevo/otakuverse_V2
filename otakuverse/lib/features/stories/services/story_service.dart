@@ -404,13 +404,18 @@ class StoryService {
     try {
       await _supabase
       .from('story_views')
-      .upsert({
+      .insert({
         'story_id': storyId,
         'viewer_id': _uid
       },
-      onConflict: 'story_id,viewer_id',
-      );
+      defaultToNull: false,
+      ).select();
     } catch (e) {
+      if (e.toString().contains('23505') ||
+          e.toString().contains('duplicate')) {
+        debugPrint('⚠️ Story déjà marquée comme vue: $storyId');
+        return;
+      }
       debugPrint('❌ markAsViewed: $e');
     }
   }
@@ -421,8 +426,10 @@ class StoryService {
 class StoryMediaItem {
   final XFile file;
   final bool  isVideo;
+  final Uint8List bytes;
   const StoryMediaItem({
     required this.file,
     required this.isVideo,
+    required this.bytes,
   });
 }

@@ -12,9 +12,22 @@ import 'package:otakuverse/core/constants/colors.dart';
 import 'package:otakuverse/features/feed/screens/create_short_screen.dart';
 import 'package:otakuverse/features/feed/screens/media_picker_screen.dart';
 import 'package:otakuverse/features/stories/controllers/story_controller.dart';
+import 'package:otakuverse/features/stories/services/story_service.dart';
 import 'create_story_background.dart';
 import 'create_story_bottom_bar.dart';
 import 'create_story_top_bar.dart';
+
+// ─── MODÈLE LOCAL ────────────────────────────────────────────────────
+// class _StoryMediaItem {
+//   final XFile     file;
+//   final Uint8List bytes;
+//   final bool      isVideo;
+//   const _StoryMediaItem({
+//     required this.file,
+//     required this.bytes,
+//     required this.isVideo,
+//   });
+// }
 
 class CreateStoryScreen extends StatefulWidget {
   final XFile? preselectedFile;
@@ -32,10 +45,18 @@ class CreateStoryScreen extends StatefulWidget {
 class _CreateStoryScreenState
     extends State<CreateStoryScreen> {
 
-  // ─── Media ───────────────────────────────────────────────────────
-  XFile?     _mediaFile;
-  Uint8List? _mediaPreview;
-  bool       _isVideo = false;
+  // ─── Media (multi) ───────────────────────────────────────────────
+  List<StoryMediaItem> _mediaItems   = [];
+  int                   _currentSlide = 0;
+
+  // ✅ Helpers pour compatibilité avec CreateStoryBackground
+  Uint8List? get _mediaPreview =>
+      _mediaItems.isNotEmpty
+          ? _mediaItems[_currentSlide].bytes
+          : null;
+  bool get _isVideo =>
+      _mediaItems.isNotEmpty &&
+      _mediaItems[_currentSlide].isVideo;
 
   // ─── Video player ────────────────────────────────────────────────
   VideoPlayerController? _videoController;
@@ -72,7 +93,7 @@ class _CreateStoryScreenState
   @override
   void dispose() {
     _textCtrl.dispose();
-    _videoController?.dispose(); // ✅ Fix : dispose vidéo
+    _videoController?.dispose();
     super.dispose();
   }
 
@@ -94,20 +115,21 @@ class _CreateStoryScreenState
       final bytes = await assets.first
           .thumbnailDataWithSize(
               const ThumbnailSize(150, 150));
-
       if (mounted) setState(() => _galleryThumb = bytes);
     } catch (_) {}
   }
 
   // ─── PRÉSELECTIONNÉ ──────────────────────────────────────────────
   Future<void> _loadPreselected() async {
-    final bytes =
-        await widget.preselectedFile!.readAsBytes();
+    final file  = widget.preselectedFile!;
+    final bytes = await file.readAsBytes();
     if (!mounted) return;
     setState(() {
-      _mediaFile    = widget.preselectedFile;
-      _mediaPreview = bytes;
-      _isVideo      = false;
+      _mediaItems = [
+        StoryMediaItem(
+            file: file, bytes: bytes, isVideo: false)
+      ];
+      _currentSlide = 0;
     });
   }
 
@@ -120,20 +142,50 @@ class _CreateStoryScreenState
       _videoPlaying    = false;
     });
 
-    final ctrl = VideoPlayerController.file(
-        File(file.path));
-    await ctrl.initialize();
-    ctrl.setLooping(true);
+    try {
+      final ctrl = VideoPlayerController.file(
+          File(file.path));
 
-    if (!mounted) return;
+      await ctrl.initialize().timeout(
+        const Duration(seconds: 10),
+        onTimeout: () =>
+            throw Exception('Video init timeout'),
+      );
 
-    setState(() {
-      _videoController = ctrl;
-      _videoReady      = true;
-    });
+      ctrl.setLooping(true);
+      if (!mounted) return;
 
-    await ctrl.play();
-    if (mounted) setState(() => _videoPlaying = true);
+      setState(() {
+        _videoController = ctrl;
+        _videoReady      = true;
+      });
+
+      await ctrl.play();
+      if (mounted) setState(() => _videoPlaying = true);
+    } catch (e) {
+      debugPrint('❌ Load error: $e');
+      if (mounted) {
+        Get.snackbar(
+          'Erreur vidéo',
+          'Impossible de charger cette vidéo',
+          backgroundColor: AppColors.errorRed,
+          colorText:       AppColors.pureWhite,
+          snackPosition:   SnackPosition.BOTTOM,
+          margin:          const EdgeInsets.all(16),
+          borderRadius:    12,
+        );
+        // ✅ Retirer le media ajouté si erreur
+        setState(() {
+          if (_mediaItems.isNotEmpty) {
+            _mediaItems.removeLast();
+            _currentSlide =
+                (_mediaItems.length - 1).clamp(0, 9);
+          }
+          _videoReady   = false;
+          _videoPlaying = false;
+        });
+      }
+    }
   }
 
   // ─── CAPTURE PHOTO ───────────────────────────────────────────────
@@ -146,14 +198,12 @@ class _CreateStoryScreenState
     final bytes = await file.readAsBytes();
     if (!mounted) return;
 
-    // ✅ Stopper la vidéo si une était en cours
     await _videoController?.pause();
-
     setState(() {
-      _mediaFile    = file;
-      _mediaPreview = bytes;
+      _mediaItems.add(StoryMediaItem(
+          file: file, bytes: bytes, isVideo: false));
+      _currentSlide = _mediaItems.length - 1;
       _textMode     = false;
-      _isVideo      = false;
       _videoReady   = false;
     });
   }
@@ -170,13 +220,43 @@ class _CreateStoryScreenState
     if (!mounted) return;
 
     setState(() {
-      _mediaFile    = file;
-      _mediaPreview = bytes;
+      _mediaItems.add(StoryMediaItem(
+          file: file, bytes: bytes, isVideo: true));
+      _currentSlide = _mediaItems.length - 1;
       _textMode     = false;
-      _isVideo      = true;
     });
 
     await _initVideoPlayer(file);
+  }
+
+  // ─── CHANGER DE SLIDE ────────────────────────────────────────────
+  Future<void> _onSlideChanged(int index) async {
+    if (index == _currentSlide) return;
+    await _videoController?.pause();
+
+    setState(() => _currentSlide = index);
+
+    final item = _mediaItems[index];
+    if (item.isVideo) {
+      await _initVideoPlayer(item.file);
+    } else {
+      setState(() {
+        _videoReady   = false;
+        _videoPlaying = false;
+      });
+    }
+  }
+
+  // ─── SUPPRIMER UN SLIDE ──────────────────────────────────────────
+  void _removeSlide(int index) {
+    setState(() {
+      _mediaItems.removeAt(index);
+      _currentSlide =
+          (_currentSlide >= _mediaItems.length
+              ? _mediaItems.length - 1
+              : _currentSlide)
+          .clamp(0, 9);
+    });
   }
 
   // ─── SWITCH CAMÉRA ───────────────────────────────────────────────
@@ -224,61 +304,59 @@ class _CreateStoryScreenState
             ),
             const SizedBox(height: 16),
 
-            // ─ Photo ─────────────────────────────────────
             ListTile(
               leading: const Icon(
                   Icons.image_outlined,
                   color: Colors.white),
               title: const Text('Photo',
-                  style:
-                      TextStyle(color: Colors.white)),
+                  style: TextStyle(color: Colors.white)),
               onTap: () async {
                 Navigator.pop(context);
                 final file = await ImagePicker()
                     .pickImage(
                         source: ImageSource.gallery);
                 if (file == null) return;
-                final bytes =
-                    await file.readAsBytes();
+                final bytes = await file.readAsBytes();
                 if (!mounted) return;
                 await _videoController?.pause();
                 setState(() {
-                  _mediaFile    = file;
-                  _mediaPreview = bytes;
+                  _mediaItems.add(StoryMediaItem(
+                    file:    file,
+                    bytes:   bytes,
+                    isVideo: false,
+                  ));
+                  _currentSlide = _mediaItems.length - 1;
                   _textMode     = false;
-                  _isVideo      = false;
                   _videoReady   = false;
                 });
               },
             ),
 
-            // ─ Vidéo ─────────────────────────────────────
             ListTile(
               leading: const Icon(
                   Icons.videocam_outlined,
                   color: Colors.white),
               title: const Text('Vidéo',
-                  style:
-                      TextStyle(color: Colors.white)),
+                  style: TextStyle(color: Colors.white)),
               onTap: () async {
                 Navigator.pop(context);
-                final file = await ImagePicker()
-                    .pickVideo(
+                final file = await ImagePicker().pickVideo(
                   source:      ImageSource.gallery,
-                  maxDuration: const Duration(
-                      seconds: 30),
+                  maxDuration:
+                      const Duration(seconds: 30),
                 );
                 if (file == null) return;
-                final bytes =
-                    await file.readAsBytes();
+                final bytes = await file.readAsBytes();
                 if (!mounted) return;
                 setState(() {
-                  _mediaFile    = file;
-                  _mediaPreview = bytes;
+                  _mediaItems.add(StoryMediaItem(
+                    file:    file,
+                    bytes:   bytes,
+                    isVideo: true,
+                  ));
+                  _currentSlide = _mediaItems.length - 1;
                   _textMode     = false;
-                  _isVideo      = true;
                 });
-                // ✅ Initialiser le player
                 await _initVideoPlayer(file);
               },
             ),
@@ -292,8 +370,7 @@ class _CreateStoryScreenState
   // ─── NAVIGATION ──────────────────────────────────────────────────
   void _navigateToTab(String tab) {
     if (tab == 'PUBLIER') {
-      Navigator.pushReplacement(
-        context,
+      Navigator.pushReplacement(context,
         PageRouteBuilder(
           pageBuilder: (_, __, ___) =>
               const MediaPickerScreen(),
@@ -304,8 +381,7 @@ class _CreateStoryScreenState
         ),
       );
     } else if (tab == 'REEL') {
-      Navigator.pushReplacement(
-        context,
+      Navigator.pushReplacement(context,
         PageRouteBuilder(
           pageBuilder: (_, __, ___) =>
               const CreateShortScreen(),
@@ -331,7 +407,7 @@ class _CreateStoryScreenState
 
   // ─── PUBLIER ─────────────────────────────────────────────────────
   Future<void> _onNext() async {
-    if (_mediaPreview == null && !_textMode) {
+    if (_mediaItems.isEmpty && !_textMode) {
       Get.snackbar(
         'Aucun contenu',
         'Prends une photo/vidéo ou écris quelque chose',
@@ -345,29 +421,27 @@ class _CreateStoryScreenState
     }
 
     HapticFeedback.mediumImpact();
-
-    // ✅ Stopper la vidéo avant de publier
     await _videoController?.pause();
 
     final ctrl = Get.find<StoryController>();
 
+    // ─ Texte ───────────────────────────────────────────────────────
     if (_textMode) {
       final text = _textCtrl.text.trim();
       if (text.isEmpty) {
         Get.snackbar('Texte vide',
             'Écris quelque chose avant de publier',
             backgroundColor: AppColors.darkGray,
-            colorText: AppColors.pureWhite,
-            snackPosition: SnackPosition.TOP,
-            margin: const EdgeInsets.all(16),
-            borderRadius: 12);
+            colorText:       AppColors.pureWhite,
+            snackPosition:   SnackPosition.TOP,
+            margin:          const EdgeInsets.all(16),
+            borderRadius:    12);
         return;
       }
 
       Get.dialog(
-        const Center(
-            child: CircularProgressIndicator(
-                color: AppColors.crimsonRed)),
+        const Center(child: CircularProgressIndicator(
+            color: AppColors.crimsonRed)),
         barrierDismissible: false,
       );
 
@@ -383,29 +457,43 @@ class _CreateStoryScreenState
       return;
     }
 
-    if (_mediaFile != null) {
-      Get.dialog(
-        const Center(
-            child: CircularProgressIndicator(
-                color: AppColors.crimsonRed)),
-        barrierDismissible: false,
+    // ─ Médias ──────────────────────────────────────────────────────
+    Get.dialog(
+      const Center(child: CircularProgressIndicator(
+          color: AppColors.crimsonRed)),
+      barrierDismissible: false,
+    );
+
+    final bool ok;
+
+    if (_mediaItems.length == 1) {
+      // ✅ Un seul média
+      final item = _mediaItems.first;
+      ok = item.isVideo
+          ? await ctrl.publishVideoStory(item.file)
+          : await ctrl.publishImageStory(item.file);
+    } else {
+      // ✅ Plusieurs médias
+      ok = await ctrl.publishMultiStory(
+        _mediaItems.map((m) => StoryMediaItem(
+          file:    m.file,
+          isVideo: m.isVideo, 
+          bytes:   m.bytes, 
+        )).toList(),
       );
-
-      final bool ok = _isVideo
-          ? await ctrl.publishVideoStory(_mediaFile!)
-          : await ctrl.publishImageStory(_mediaFile!);
-
-      Get.back();
-      if (!mounted) return;
-      _showResult(ok);
-      if (ok) Navigator.pop(context);
     }
+
+    Get.back();
+    if (!mounted) return;
+    _showResult(ok);
+    if (ok) Navigator.pop(context);
   }
 
   void _showResult(bool ok) {
     Get.snackbar(
       ok ? '✅ Story publiée !' : 'Erreur',
-      ok ? 'Visible pendant 24h'
+      ok
+          ? 'Visible pendant 24h'
           : 'Impossible de publier la story',
       backgroundColor: ok
           ? AppColors.successGreen
@@ -435,6 +523,11 @@ class _CreateStoryScreenState
               videoReady:      _videoReady,
               videoPlaying:    _videoPlaying,
               onToggleVideo:   _toggleVideoPlay,
+              // ✅ Params multi-slides
+              mediaItems:      _mediaItems,
+              currentSlide:    _currentSlide,
+              onSlideChanged:  _onSlideChanged,
+              onRemoveSlide:   _removeSlide,
             ),
           ),
 
@@ -475,32 +568,31 @@ class _CreateStoryScreenState
           ),
 
           // ─ Top bar ────────────────────────────────────────
+          // ✅ mediaPreview et onNext retirés
           CreateStoryTopBar(
-            textMode:  _textMode,
-            bgColors:  _bgColors,
-            textBg:    _textBg,
-            onClose:   () => Navigator.pop(context),
-            onTextMode: () =>
+            textMode:      _textMode,
+            bgColors:      _bgColors,
+            textBg:        _textBg,
+            onClose:       () => Navigator.pop(context),
+            onTextMode:    () =>
                 setState(() => _textMode = true),
-            onCloseText: () =>
+            onCloseText:   () =>
                 setState(() => _textMode = false),
             onColorChange: (c) =>
-                setState(() => _textBg = c), 
-            mediaPreview:    _mediaPreview,
-             onNext:         _onNext,
+                setState(() => _textBg = c),
           ),
 
           // ─ Bottom bar ─────────────────────────────────────
           CreateStoryBottomBar(
-            galleryThumb:    _galleryThumb,
-            mediaPreview:    _mediaPreview,
-            textMode:        _textMode,
-            onGallery:       _openGallery,
-            onCapturePhoto:  _capturePhoto,
-            onCaptureVideo:  _captureVideo,
-            onSwitchCamera:  _switchCamera,
-            onNext:          _onNext,
-            onNavigateTab:   _navigateToTab,
+            galleryThumb:   _galleryThumb,
+            mediaPreview:   _mediaPreview,
+            textMode:       _textMode,
+            onGallery:      _openGallery,
+            onCapturePhoto: _capturePhoto,
+            onCaptureVideo: _captureVideo,
+            onSwitchCamera: _switchCamera,
+            onNext:         _onNext,
+            onNavigateTab:  _navigateToTab,
           ),
         ],
       ),
