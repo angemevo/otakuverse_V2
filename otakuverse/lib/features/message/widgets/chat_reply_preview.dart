@@ -19,65 +19,51 @@ class ChatReplyPreview extends StatelessWidget {
       padding: const EdgeInsets.symmetric(
           horizontal: 16, vertical: 8),
       decoration: const BoxDecoration(
-        color: AppColors.darkGray,
+        color: AppColors.bgCard,
         border: Border(
-          top: BorderSide(
-              color: Color(0xFF2A2A2A), width: 1),
+          top: BorderSide(color: Color(0xFF2A2A2A), width: 1),
         ),
       ),
-      child: Row(
-        children: [
-          // ─ Barre colorée ─────────────────────────────────
-          Container(
-            width: 3, height: 36,
-            color: AppColors.crimsonRed,
-          ),
-          const SizedBox(width: 10),
-
-          // ─ Contenu ───────────────────────────────────────
-          Expanded(
-            child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  message.senderName.isNotEmpty
-                      ? message.senderName
-                      : 'Utilisateur',
-                  style: GoogleFonts.inter(
-                    color:      AppColors.crimsonRed,
-                    fontSize:   12,
-                    fontWeight: FontWeight.w600,
-                  ),
+      child: Row(children: [
+        // ─ Barre colorée ───────────────────────────────────
+        Container(width: 3, height: 36, color: AppColors.primary),
+        const SizedBox(width: 10),
+        // ─ Contenu ─────────────────────────────────────────
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize:       MainAxisSize.min,
+            children: [
+              Text(
+                message.senderName.isNotEmpty
+                    ? message.senderName
+                    : 'Utilisateur',
+                style: GoogleFonts.inter(
+                  color:      AppColors.primary,
+                  fontSize:   12,
+                  fontWeight: FontWeight.w600,
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  message.imageUrl != null
-                      ? '📷 Photo'
-                      : message.text ?? '',
-                  style: GoogleFonts.inter(
-                    color:    AppColors.mediumGray,
-                    fontSize: 12,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                message.imageUrl != null
+                    ? '📷 Photo'
+                    : message.text ?? '',
+                style: GoogleFonts.inter(
+                    color: AppColors.textMuted, fontSize: 12),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
           ),
-
-          // ─ Fermer ────────────────────────────────────────
-          GestureDetector(
-            onTap: onCancel,
-            child: const Icon(
-              Icons.close,
-              color: AppColors.mediumGray,
-              size:  18,
-            ),
-          ),
-        ],
-      ),
+        ),
+        // ─ Fermer ──────────────────────────────────────────
+        GestureDetector(
+          onTap: onCancel,
+          child: const Icon(Icons.close,
+              color: AppColors.textMuted, size: 18),
+        ),
+      ]),
     );
   }
 }

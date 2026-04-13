@@ -8,15 +8,15 @@ import '../models/conversation_model.dart';
 import '../models/message_model.dart';
 
 class ChatMessagesList extends StatelessWidget {
-  final List<MessageModel>        messages;
-  final bool                      isLoading;
-  final bool                      hasMore;
-  final String                    uid;
-  final ConversationModel         conv;
-  final ScrollController          scrollCtrl;
+  final List<MessageModel>             messages;
+  final bool                           isLoading;
+  final bool                           hasMore;
+  final String                         uid;
+  final ConversationModel              conv;
+  final ScrollController               scrollCtrl;
   final bool Function(DateTime, DateTime) isSameDay;
-  final VoidCallback              onLoadMore;
-  final ValueChanged<MessageModel> onReply;
+  final VoidCallback                   onLoadMore;
+  final ValueChanged<MessageModel>     onReply;
 
   const ChatMessagesList({
     super.key,
@@ -35,14 +35,10 @@ class ChatMessagesList extends StatelessWidget {
   Widget build(BuildContext context) {
     if (isLoading) {
       return const Center(
-        child: CircularProgressIndicator(
-            color: AppColors.crimsonRed),
+        child: CircularProgressIndicator(color: AppColors.primary),
       );
     }
-
-    if (messages.isEmpty) {
-      return _EmptyChat(conv: conv);
-    }
+    if (messages.isEmpty) return _EmptyChat(conv: conv);
 
     return NotificationListener<ScrollNotification>(
       onNotification: (n) {
@@ -59,43 +55,36 @@ class ChatMessagesList extends StatelessWidget {
             horizontal: 12, vertical: 8),
         itemCount: messages.length,
         itemBuilder: (_, i) {
-          final msg   = messages[i];
-          final isMe  = msg.senderId == uid;
-          final prev  = i > 0 ? messages[i - 1] : null;
-          final next  = i < messages.length - 1
+          final msg  = messages[i];
+          final isMe = msg.senderId == uid;
+          final prev = i > 0 ? messages[i - 1] : null;
+          final next = i < messages.length - 1
               ? messages[i + 1] : null;
 
-          final showAvatar = !isMe &&
-              (next == null ||
-                  next.senderId != msg.senderId);
-          final isFirst = prev == null ||
-              prev.senderId != msg.senderId;
-          final isLast  = next == null ||
-              next.senderId != msg.senderId;
-          final showDate = prev == null ||
-              !isSameDay(prev.createdAt, msg.createdAt);
-
-          return Column(
-            children: [
-              if (showDate)
-                DateSeparator(date: msg.createdAt),
-              MessageBubble(
-                message:    msg,
-                isMe:       isMe,
-                showAvatar: showAvatar,
-                isFirst:    isFirst,
-                isLast:     isLast,
-                onReply:    () => onReply(msg),
-              ),
-            ],
-          );
+          return Column(children: [
+            if (prev == null ||
+                !isSameDay(prev.createdAt, msg.createdAt))
+              DateSeparator(date: msg.createdAt),
+            MessageBubble(
+              message:    msg,
+              isMe:       isMe,
+              showAvatar: !isMe &&
+                  (next == null || next.senderId != msg.senderId),
+              isFirst:    prev == null ||
+                  prev.senderId != msg.senderId,
+              isLast:     next == null ||
+                  next.senderId != msg.senderId,
+              onReply:    () => onReply(msg),
+            ),
+          ]);
         },
       ),
     );
   }
 }
 
-// ─── EMPTY STATE ─────────────────────────────────────────────────────
+// ─── Empty state ─────────────────────────────────────────────────────
+
 class _EmptyChat extends StatelessWidget {
   final ConversationModel conv;
   const _EmptyChat({required this.conv});
@@ -107,15 +96,15 @@ class _EmptyChat extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           CachedAvatar(
-            url:           conv.displayAvatar,
-            radius:        36,
+            url:            conv.displayAvatar,
+            radius:         36,
             fallbackLetter: conv.displayName,
           ),
           const SizedBox(height: 16),
           Text(
             conv.displayName,
             style: GoogleFonts.poppins(
-              color:      AppColors.pureWhite,
+              color:      AppColors.textPrimary,
               fontWeight: FontWeight.w600,
               fontSize:   18,
             ),
@@ -124,9 +113,7 @@ class _EmptyChat extends StatelessWidget {
           Text(
             'Commence la conversation !',
             style: GoogleFonts.inter(
-              color:    AppColors.mediumGray,
-              fontSize: 13,
-            ),
+                color: AppColors.textMuted, fontSize: 13),
           ),
         ],
       ),

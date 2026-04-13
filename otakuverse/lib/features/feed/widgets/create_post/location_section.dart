@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:otakuverse/core/constants/app_colors.dart';
+import 'widgets/location_picker_sheet.dart';
 
 class LocationSection extends StatefulWidget {
   final TextEditingController controller;
@@ -25,50 +26,38 @@ class _LocationSectionState extends State<LocationSection> {
     'Yopougon',
   ];
 
-  void _showLocationPicker() {
-    showModalBottomSheet(
-      context:         context,
-      backgroundColor: AppColors.darkGray,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-            top: Radius.circular(20)),
-      ),
-      builder: (ctx) => _LocationPickerSheet(
-        controller:       widget.controller,
-        suggestions:      _suggestions,
-        onLocationPicked: (loc) {
-          widget.controller.text = loc;
-          widget.onLocationChanged();
-          Navigator.pop(ctx);
-        },
-        onClear: () {
-          widget.controller.clear();
-          widget.onLocationChanged();
-          Navigator.pop(ctx);
-        },
-      ),
+  void _openPicker() {
+    LocationPickerSheet.show(
+      context,
+      currentValue: widget.controller.text,
+      suggestions:  _suggestions,
+      onPicked: (loc) {
+        widget.controller.text = loc;
+        widget.onLocationChanged();
+      },
+      onClear: () {
+        widget.controller.clear();
+        widget.onLocationChanged();
+      },
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final hasLocation =
-        widget.controller.text.trim().isNotEmpty;
+    final hasLocation = widget.controller.text.trim().isNotEmpty;
 
     return Container(
-      color: AppColors.deepBlack,
+      color: AppColors.bgPrimary,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ─ Row lieu ────────────────────────────────────────
           ListTile(
-            tileColor: AppColors.deepBlack,
-            leading:   Icon(
+            tileColor: AppColors.bgPrimary,
+            leading: Icon(
               Icons.location_on_outlined,
               color: hasLocation
-                  ? AppColors.crimsonRed
-                  : AppColors.pureWhite,
+                  ? AppColors.primary
+                  : AppColors.textPrimary,
               size: 22,
             ),
             title: Text(
@@ -76,9 +65,7 @@ class _LocationSectionState extends State<LocationSection> {
                   ? widget.controller.text
                   : 'Ajouter un lieu',
               style: GoogleFonts.inter(
-                color: hasLocation
-                    ? AppColors.pureWhite
-                    : AppColors.pureWhite,
+                color:      AppColors.textPrimary,
                 fontSize:   15,
                 fontWeight: hasLocation
                     ? FontWeight.w500
@@ -92,31 +79,25 @@ class _LocationSectionState extends State<LocationSection> {
                       widget.onLocationChanged();
                     },
                     child: const Icon(Icons.close,
-                        color: AppColors.mediumGray,
-                        size:  20),
+                        color: AppColors.textMuted, size: 20),
                   )
                 : const Icon(Icons.chevron_right,
-                    color: AppColors.mediumGray, size: 22),
-            onTap: _showLocationPicker,
+                    color: AppColors.textMuted, size: 22),
+            onTap: _openPicker,
           ),
-
-          // ─ Suggestions chips ─────────────────────────────
           Padding(
             padding: const EdgeInsets.only(
                 left: 16, right: 16, bottom: 12),
             child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     children: _suggestions
                         .map((loc) => _LocationChip(
-                              label: loc,
-                              isSelected:
-                                  widget.controller.text ==
-                                  loc,
+                              label:      loc,
+                              isSelected: widget.controller.text == loc,
                               onTap: () {
                                 widget.controller.text = loc;
                                 widget.onLocationChanged();
@@ -129,18 +110,18 @@ class _LocationSectionState extends State<LocationSection> {
                 RichText(
                   text: TextSpan(
                     style: GoogleFonts.inter(
-                        color:    AppColors.mediumGray,
+                        color:    AppColors.textMuted,
                         fontSize: 11),
                     children: const [
                       TextSpan(
-                          text:
-                              'Les profils avec lesquels tu partages ce contenu '
-                              'peuvent voir le lieu identifié. '),
+                        text: 'Les profils avec lesquels tu partages ce '
+                            'contenu peuvent voir le lieu identifié. ',
+                      ),
                       TextSpan(
                         text: 'En savoir plus',
                         style: TextStyle(
                           decoration:      TextDecoration.underline,
-                          decorationColor: AppColors.mediumGray,
+                          decorationColor: AppColors.textMuted,
                         ),
                       ),
                     ],
@@ -155,146 +136,11 @@ class _LocationSectionState extends State<LocationSection> {
   }
 }
 
-// ─── LOCATION PICKER SHEET ───────────────────────────────────────────
-class _LocationPickerSheet extends StatefulWidget {
-  final TextEditingController controller;
-  final List<String>          suggestions;
-  final ValueChanged<String>  onLocationPicked;
-  final VoidCallback          onClear;
+// ─── Chip lieu ────────────────────────────────────────────────────────
 
-  const _LocationPickerSheet({
-    required this.controller,
-    required this.suggestions,
-    required this.onLocationPicked,
-    required this.onClear,
-  });
-
-  @override
-  State<_LocationPickerSheet> createState() =>
-      _LocationPickerSheetState();
-}
-
-class _LocationPickerSheetState
-    extends State<_LocationPickerSheet> {
-  late final TextEditingController _search;
-  List<String> _filtered = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _search   = TextEditingController(
-        text: widget.controller.text);
-    _filtered = widget.suggestions;
-  }
-
-  @override
-  void dispose() {
-    _search.dispose();
-    super.dispose();
-  }
-
-  void _filter(String query) {
-    setState(() {
-      _filtered = query.isEmpty
-          ? widget.suggestions
-          : widget.suggestions
-              .where((s) => s.toLowerCase()
-                  .contains(query.toLowerCase()))
-              .toList();
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom:
-            MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const SizedBox(height: 8),
-          Container(
-            width: 40, height: 4,
-            decoration: BoxDecoration(
-              color:        AppColors.mediumGray,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // ─ Champ de recherche ──────────────────────────
-          Padding(
-            padding: const EdgeInsets.symmetric(
-                horizontal: 16),
-            child: Container(
-              decoration: BoxDecoration(
-                color:        AppColors.deepBlack,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: TextField(
-                controller: _search,
-                autofocus:  true,
-                style: GoogleFonts.inter(
-                    color: AppColors.pureWhite),
-                onChanged: _filter,
-                decoration: InputDecoration(
-                  hintText:  'Chercher un lieu...',
-                  hintStyle: GoogleFonts.inter(
-                      color: AppColors.mediumGray),
-                  prefixIcon: const Icon(
-                    Icons.search,
-                    color: AppColors.mediumGray,
-                  ),
-                  border:         InputBorder.none,
-                  contentPadding: const EdgeInsets
-                      .symmetric(vertical: 14),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-
-          // ─ Liste suggestions ───────────────────────────
-          ..._filtered.map((loc) => ListTile(
-                tileColor: AppColors.darkGray,
-                leading: const Icon(
-                    Icons.location_on_outlined,
-                    color: AppColors.crimsonRed,
-                    size:  20),
-                title: Text(loc,
-                    style: GoogleFonts.inter(
-                        color:    AppColors.pureWhite,
-                        fontSize: 14)),
-                onTap: () =>
-                    widget.onLocationPicked(loc),
-              )),
-
-          // ─ Effacer ─────────────────────────────────────
-          if (widget.controller.text.isNotEmpty)
-            ListTile(
-              tileColor: AppColors.darkGray,
-              leading: const Icon(Icons.close,
-                  color: AppColors.mediumGray, size: 20),
-              title: Text('Effacer la localisation',
-                  style: GoogleFonts.inter(
-                      color:    AppColors.mediumGray,
-                      fontSize: 14)),
-              onTap: widget.onClear,
-            ),
-
-          const SizedBox(height: 16),
-        ],
-      ),
-    );
-  }
-}
-
-// ─── LOCATION CHIP ───────────────────────────────────────────────────
 class _LocationChip extends StatelessWidget {
-  final String     label;
-  final bool       isSelected;
+  final String       label;
+  final bool         isSelected;
   final VoidCallback onTap;
 
   const _LocationChip({
@@ -308,26 +154,26 @@ class _LocationChip extends StatelessWidget {
     onTap: onTap,
     child: AnimatedContainer(
       duration: const Duration(milliseconds: 150),
-      margin: const EdgeInsets.only(right: 8),
-      padding: const EdgeInsets.symmetric(
+      margin:   const EdgeInsets.only(right: 8),
+      padding:  const EdgeInsets.symmetric(
           horizontal: 14, vertical: 7),
       decoration: BoxDecoration(
         color: isSelected
-            ? AppColors.crimsonRed.withValues(alpha: 0.15)
-            : AppColors.darkGray,
+            ? AppColors.primary.withValues(alpha: 0.15)
+            : AppColors.bgCard,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: isSelected
-              ? AppColors.crimsonRed
-              : AppColors.mediumGray.withValues(alpha: 0.3),
+              ? AppColors.primary
+              : AppColors.textMuted.withValues(alpha: 0.3),
           width: isSelected ? 1.5 : 1,
         ),
       ),
       child: Text(label,
           style: GoogleFonts.inter(
             color: isSelected
-                ? AppColors.crimsonRed
-                : AppColors.pureWhite,
+                ? AppColors.primary
+                : AppColors.textPrimary,
             fontSize:   13,
             fontWeight: FontWeight.w500,
           )),

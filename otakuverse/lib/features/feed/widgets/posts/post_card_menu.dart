@@ -20,7 +20,7 @@ void showPostMenu({
 
   showModalBottomSheet(
     context:         context,
-    backgroundColor: AppColors.darkGray,
+    backgroundColor: AppColors.bgCard,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
@@ -32,7 +32,7 @@ void showPostMenu({
         Container(
           width: 40, height: 4,
           decoration: BoxDecoration(
-            color:        AppColors.mediumGray,
+            color:        AppColors.textMuted,
             borderRadius: BorderRadius.circular(2),
           ),
         ),
@@ -49,7 +49,7 @@ void showPostMenu({
                   : HeroiconsOutline.bookmark,
               label:   saved ? 'Retirer la sauvegarde' : 'Sauvegarder',
               onTap:   () => bookmarkCtrl.toggleBookmark(post.id),
-              color:   saved ? AppColors.crimsonRed : null,
+              color:   saved ? AppColors.primary : null,
             );
           })
         else
@@ -76,7 +76,7 @@ void showPostMenu({
           onTap:   () {},
         ),
 
-        const Divider(color: AppColors.mediumGray, height: 1),
+        const Divider(color: AppColors.textMuted, height: 1),
 
         // ─ Signaler ────────────────────────────────────────────
         _menuItem(
@@ -84,7 +84,7 @@ void showPostMenu({
           icon:    HeroiconsOutline.flag,
           label:   'Signaler',
           onTap:   () {},
-          color:   AppColors.crimsonRed,
+          color:   AppColors.primary,
         ),
 
         // ─ Supprimer (propriétaire uniquement) ─────────────────
@@ -95,7 +95,7 @@ void showPostMenu({
             icon:    HeroiconsOutline.trash,
             label:   'Supprimer',
             onTap:   onDelete ?? () {},
-            color:   AppColors.crimsonRed,
+            color:   AppColors.primary,
           ),
 
         const SizedBox(height: 16),
@@ -112,11 +112,11 @@ Widget _menuItem({
   Color?                color,
 }) {
   return ListTile(
-    leading: Icon(icon, color: color ?? AppColors.pureWhite, size: 22),
+    leading: Icon(icon, color: color ?? AppColors.textPrimary, size: 22),
     title: Text(
       label,
       style: GoogleFonts.inter(
-          color: color ?? AppColors.pureWhite, fontSize: 15),
+          color: color ?? AppColors.textPrimary, fontSize: 15),
     ),
     onTap: () {
       Navigator.pop(context);

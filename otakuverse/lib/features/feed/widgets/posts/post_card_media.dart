@@ -141,20 +141,20 @@ class _PostCardMediaState extends State<PostCardMedia> {
           height:   constraints.maxHeight,
           fit:      BoxFit.cover,
           placeholder: (_, __) => Container(
-            color: AppColors.darkGray,
+            color: AppColors.bgCard,
             child: const Center(
               child: CircularProgressIndicator(
                 strokeWidth: 2,
-                color:       AppColors.crimsonRed,
+                color:       AppColors.primary,
               ),
             ),
           ),
           errorWidget: (_, __, ___) => Container(
-            color: AppColors.darkGray,
+            color: AppColors.bgCard,
             child: const Center(
               child: Icon(
                 HeroiconsOutline.photo,
-                color: AppColors.mediumGray,
+                color: AppColors.textMuted,
                 size:  48,
               ),
             ),
@@ -193,7 +193,7 @@ class _PostCardMediaState extends State<PostCardMedia> {
                 height:   6,
                 decoration: BoxDecoration(
                   color: _currentPage == i
-                      ? AppColors.crimsonRed
+                      ? AppColors.primary
                       : Colors.white38,
                   borderRadius: BorderRadius.circular(3),
                 ),

@@ -1,8 +1,11 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
-// ✅ Modèle identique — rien à changer dans le reste du code
-class SpotifyTrack {
+// ─── Modèle ───────────────────────────────────────────────────────────
+// ⚠️ Renommé SpotifyTrack → MusicTrack
+// Mettre à jour les imports dans : create_post_screen.dart, music_section.dart
+
+class MusicTrack {
   final String  id;
   final String  title;
   final String  artist;
@@ -10,7 +13,7 @@ class SpotifyTrack {
   final String? imageUrl;
   final int     durationMs;
 
-  const SpotifyTrack({
+  const MusicTrack({
     required this.id,
     required this.title,
     required this.artist,
@@ -21,24 +24,28 @@ class SpotifyTrack {
 
   String get durationFormatted {
     final d = Duration(milliseconds: durationMs);
-    final m = d.inMinutes.remainder(60)
-        .toString().padLeft(2, '0');
-    final s = d.inSeconds.remainder(60)
-        .toString().padLeft(2, '0');
+    final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
     return '$m:$s';
   }
 }
 
-// ✅ Renommé MusicService — Deezer API
-class SpotifyService {
+// ─── Service ─────────────────────────────────────────────────────────
+
+class MusicService {
+  MusicService._();
+
   static final _dio = Dio(BaseOptions(
     connectTimeout: const Duration(seconds: 15),
     receiveTimeout: const Duration(seconds: 15),
   ));
 
-  // ─── RECHERCHE ─────────────────────────────────────────────────────
-  static Future<List<SpotifyTrack>> search(
-      String query) async {
+  // ✅ Cache en mémoire pour les suggestions (évite un appel API à chaque ouverture)
+  static List<MusicTrack>? _cachedSuggestions;
+
+  // ─── Recherche ───────────────────────────────────────────────────────
+
+  static Future<List<MusicTrack>> search(String query) async {
     if (query.trim().isEmpty) return [];
 
     try {
@@ -46,94 +53,78 @@ class SpotifyService {
 
       final response = await _dio.get(
         'https://api.deezer.com/search',
-        queryParameters: {
-          'q':     query,
-          'limit': 25,
-        },
-        options: Options(
-          validateStatus: (s) => s != null,
-        ),
+        queryParameters: {'q': query, 'limit': 25},
+        options: Options(validateStatus: (s) => s != null),
       );
 
       if (response.statusCode != 200) {
-        debugPrint(
-            '❌ Deezer ${response.statusCode}');
+        debugPrint('❌ Deezer ${response.statusCode}');
         return [];
       }
 
-      final items =
-          response.data['data'] as List? ?? [];
-
-      debugPrint(
-          '✅ Deezer: ${items.length} résultats');
+      final items = response.data['data'] as List? ?? [];
+      debugPrint('✅ Deezer: ${items.length} résultats');
 
       return items
-          .map((t) => _fromDeezer(t))
+          .map(_fromDeezer)
+          .whereType<MusicTrack>() // ✅ filtre les null silencieusement
           .toList();
     } on DioException catch (e) {
-      debugPrint('❌ Deezer DioException: '
-          '${e.response?.statusCode} — $e');
+      debugPrint('❌ DioException: ${e.response?.statusCode} — $e');
       return [];
     } catch (e) {
-      debugPrint('❌ Deezer error: $e');
+      debugPrint('❌ Deezer search error: $e');
       return [];
     }
   }
 
-  // ─── SUGGESTIONS ───────────────────────────────────────────────────
-  static Future<List<SpotifyTrack>>
-      getSuggestions() async {
-    // ✅ Chart Deezer Anime — gratuit sans clé
+  // ─── Suggestions ─────────────────────────────────────────────────────
+
+  static Future<List<MusicTrack>> getSuggestions() async {
+    // ✅ Retourner le cache si disponible
+    if (_cachedSuggestions != null) return _cachedSuggestions!;
+
+    debugPrint('🎵 Chargement suggestions Deezer...');
+
+    // ✅ Essai 1 — chart anime
+    var results = await search('anime opening');
+
+    // ✅ Essai 2 — fallback générique (sans année codée en dur)
+    if (results.isEmpty) {
+      results = await search('trending music');
+    }
+
+    if (results.isNotEmpty) {
+      _cachedSuggestions = results;
+    }
+
+    return results;
+  }
+
+  /// Vide le cache (à appeler si besoin de forcer un rechargement)
+  static void clearCache() => _cachedSuggestions = null;
+
+  // ─── Mapping Deezer ─────────────────────────────────────────────────
+
+  // ✅ Retourne null si les données sont invalides (filtrées par whereType)
+  static MusicTrack? _fromDeezer(dynamic t) {
     try {
-      debugPrint('🎵 Deezer suggestions...');
+      final id    = t['id']?.toString();
+      final title = t['title'] as String?;
+      if (id == null || title == null) return null;
 
-      // ✅ Essai 1 — chart anime
-      final chart = await _dio.get(
-        'https://api.deezer.com/search',
-        queryParameters: {
-          'q':     'anime opening',
-          'limit': 25,
-        },
-        options: Options(
-          validateStatus: (s) => s != null,
-        ),
+      return MusicTrack(
+        id:         id,
+        title:      title,
+        artist:     (t['artist']?['name'] as String?) ?? 'Artiste inconnu',
+        previewUrl: t['preview']              as String?,
+        imageUrl:   t['album']?['cover_medium'] as String?,
+        // ✅ Deezer renvoie la durée en secondes → convertir en ms
+        durationMs: ((t['duration'] as int? ?? 30) * 1000),
       );
-
-      if (chart.statusCode == 200) {
-        final items =
-            chart.data['data'] as List? ?? [];
-        if (items.isNotEmpty) {
-          return items
-              .map((t) => _fromDeezer(t))
-              .toList();
-        }
-      }
-
-      // ✅ Essai 2 — trending
-      return search('trending 2024');
     } catch (e) {
-      debugPrint(
-          '❌ Deezer suggestions error: $e');
-      return [];
+      debugPrint('⚠️ _fromDeezer parsing error: $e');
+      return null;
     }
-  }
-
-  // ─── CONVERTIR UN ITEM DEEZER ──────────────────────────────────────
-  static SpotifyTrack _fromDeezer(
-      dynamic t) {
-    return SpotifyTrack(
-      id:    t['id'].toString(),
-      title: t['title']            as String,
-      artist: (t['artist']?['name']
-              as String?) ??
-          'Artiste inconnu',
-      // ✅ Deezer fournit TOUJOURS un preview 30s
-      previewUrl: t['preview']     as String?,
-      imageUrl:   t['album']
-              ?['cover_medium']    as String?,
-      durationMs:
-          ((t['duration'] as int? ?? 30) *
-              1000),
-    );
   }
 }

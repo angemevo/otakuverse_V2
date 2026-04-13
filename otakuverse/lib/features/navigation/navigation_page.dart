@@ -4,7 +4,7 @@ import 'package:otakuverse/core/constants/app_colors.dart';
 import 'package:otakuverse/core/constants/app_text_styles.dart';
 import 'package:otakuverse/core/widgets/app_bottom_nav.dart';
 import 'package:otakuverse/core/widgets/app_bar_widget.dart';
-import 'package:otakuverse/features/feed/screens/home_screen.dart';
+import 'package:otakuverse/features/feed/screens/home/home_screen.dart';
 import 'package:otakuverse/features/notification/screens/notification_screen.dart';
 import 'package:otakuverse/features/profile/screens/profile_screen.dart';
 import 'package:otakuverse/features/search/screens/search_screen.dart';

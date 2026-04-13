@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:typed_data';
 import 'package:otakuverse/core/constants/app_colors.dart';
+import 'package:otakuverse/core/utils/helpers.dart';
 import 'package:otakuverse/core/services/music_service.dart';
 import 'package:otakuverse/features/feed/controllers/post_controller.dart';
 import 'package:otakuverse/features/feed/widgets/create_post/caption_section.dart';
@@ -25,13 +26,12 @@ class CreatePostScreen extends StatefulWidget {
   });
 
   @override
-  State<CreatePostScreen> createState() =>
-      _CreatePostScreenState();
+  State<CreatePostScreen> createState() => _CreatePostScreenState();
 }
 
 class _CreatePostScreenState extends State<CreatePostScreen> {
-  final _captionController  = TextEditingController();
-  final _locationController = TextEditingController();
+  final _captionCtrl  = TextEditingController();
+  final _locationCtrl = TextEditingController();
 
   final List<XFile>     _selectedImages = [];
   final List<Uint8List> _imagePreviews  = [];
@@ -39,111 +39,71 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   bool          _allowComments  = true;
   bool          _isPublishing   = false;
   int           _currentPreview = 0;
-  SpotifyTrack? _selectedTrack; // ✅ Nom correct
+  MusicTrack? _selectedSong;
 
-  final _postsController = Get.find<PostsController>();
-  final _uploadService   = StorageUploadService();
+  final _postsCtrl     = Get.find<PostsController>();
+  final _uploadService = StorageUploadService();
 
   @override
   void initState() {
     super.initState();
-    if (widget.preselectedFiles.isNotEmpty) {
-      _loadPreselected();
-    }
+    if (widget.preselectedFiles.isNotEmpty) _loadPreselected();
   }
 
   @override
   void dispose() {
-    _captionController.dispose();
-    _locationController.dispose();
+    _captionCtrl.dispose();
+    _locationCtrl.dispose();
     super.dispose();
   }
 
-  // ─── CHARGER FICHIERS PRÉSÉLECTIONNÉS ────────────────────────────
   Future<void> _loadPreselected() async {
     final previews = await Future.wait(
-      widget.preselectedFiles.map((f) => f.readAsBytes()),
-    );
+        widget.preselectedFiles.map((f) => f.readAsBytes()));
     if (!mounted) return;
     setState(() {
-      _selectedImages
-        ..clear()
-        ..addAll(widget.preselectedFiles);
-      _imagePreviews
-        ..clear()
-        ..addAll(previews);
+      _selectedImages..clear()..addAll(widget.preselectedFiles);
+      _imagePreviews..clear()..addAll(previews);
     });
   }
 
-  // ─── PUBLIER ─────────────────────────────────────────────────────
   Future<void> _publish() async {
-    if (_captionController.text.trim().isEmpty &&
-        _selectedImages.isEmpty) {
-      Get.snackbar(
-        'Champ requis',
-        'Ajoute une légende ou une image',
-        backgroundColor: AppColors.errorRed,
-        colorText:       AppColors.pureWhite,
-        snackPosition:   SnackPosition.BOTTOM,
-        margin:          const EdgeInsets.all(16),
-        borderRadius:    12,
-      );
+    if (_captionCtrl.text.trim().isEmpty && _selectedImages.isEmpty) {
+      Helpers.showWarningSnackbar('Ajoute une légende ou une image');
       return;
     }
 
     setState(() => _isPublishing = true);
-
     try {
-      final userId =
-          Supabase.instance.client.auth.currentUser!.id;
-
+      final userId = Supabase.instance.client.auth.currentUser!.id;
       List<String> mediaUrls = [];
       if (_selectedImages.isNotEmpty) {
-        mediaUrls = await _uploadService.uploadImages(
-          _selectedImages, userId,
-        );
+        mediaUrls = await _uploadService
+            .uploadImages(_selectedImages, userId);
       }
 
-      final success = await _postsController.createPost(
-        caption:         _captionController.text.trim(),
+      final ok = await _postsCtrl.createPost(
+        caption:         _captionCtrl.text.trim(),
         mediaUrls:       mediaUrls,
-        location:        _locationController.text.trim().isEmpty
-            ? null
-            : _locationController.text.trim(),
+        location:        _locationCtrl.text.trim().isEmpty
+            ? null : _locationCtrl.text.trim(),
         allowComments:   _allowComments,
-        musicTitle:      _selectedTrack?.title,      // ✅
-        musicArtist:     _selectedTrack?.artist,     // ✅
-        musicTrackId:    _selectedTrack?.id,         // ✅
-        musicPreviewUrl: _selectedTrack?.previewUrl, // ✅
-        musicImageUrl:   _selectedTrack?.imageUrl,   // ✅
+        musicTitle:      _selectedSong?.title,
+        musicArtist:     _selectedSong?.artist,
+        musicTrackId:    _selectedSong?.id,
+        musicPreviewUrl: _selectedSong?.previewUrl,
+        musicImageUrl:   _selectedSong?.imageUrl,
       );
 
       if (!mounted) return;
-
-      if (success) {
+      if (ok) {
         Get.offAllNamed(Routes.home);
-        Get.snackbar(
-          '✅ Post publié !',
-          'Ton post est maintenant visible',
-          backgroundColor: AppColors.successGreen,
-          colorText:       AppColors.pureWhite,
-          snackPosition:   SnackPosition.BOTTOM,
-          margin:          const EdgeInsets.all(16),
-          borderRadius:    12,
-        );
+        Helpers.showSuccessSnackbar('Ton post est maintenant visible');
       } else {
-        Get.snackbar(
-          'Erreur',
-          _postsController.errorMessage.value,
-          backgroundColor: AppColors.errorRed,
-          colorText:       AppColors.pureWhite,
-        );
+        Helpers.showErrorSnackbar(_postsCtrl.errorMessage.value);
       }
     } catch (e) {
-      if (!mounted) return;
-      Get.snackbar('Erreur', '❌ $e',
-          backgroundColor: AppColors.errorRed,
-          colorText:       AppColors.pureWhite);
+      if (mounted) Helpers.showErrorSnackbar('❌ $e');
     } finally {
       if (mounted) setState(() => _isPublishing = false);
     }
@@ -152,84 +112,53 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.deepBlack,
-      appBar:          _buildAppBar(),
+      backgroundColor:    AppColors.bgPrimary,
+      appBar:             _buildAppBar(),
+      bottomNavigationBar: ShareButton(isPublishing: _isPublishing, onTap: _publish),
       body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // ─ Preview ────────────────────────────────────
-            PostPreviewWidget(
-              imagePreviews:  _imagePreviews,
-              currentPreview: _currentPreview,
-              onPageChanged:  (i) =>
-                  setState(() => _currentPreview = i),
-            ),
-
-            const Divider(
-                color: Color(0xFF1F1F1F), height: 1),
-
-            // ─ Caption ────────────────────────────────────
-            CaptionSection(
-              controller: _captionController,
-            ),
-
-            const Divider(
-                color: Color(0xFF1F1F1F), height: 1),
-
-            // ─ Sondage / Invite ───────────────────────────
-            const QuickOptionsWidget(),
-
-            const Divider(
-                color: Color(0xFF1F1F1F), height: 1),
-
-            // ─ Musique Spotify ────────────────────────────
-            MusicSection(
-              selectedTrack:   _selectedTrack,           // ✅
-              onTrackSelected: (track) =>
-                  setState(() => _selectedTrack = track), // ✅
-            ),
-
-            const Divider(
-                color: Color(0xFF1F1F1F), height: 1),
-
-            // ─ Localisation ───────────────────────────────
-            LocationSection(
-              controller:        _locationController,
-              onLocationChanged: () => setState(() {}),
-            ),
-
-            const Divider(
-                color: Color(0xFF1F1F1F), height: 1),
-
-            // ─ Commentaires ───────────────────────────────
-            _buildCommentsOption(),
-
-            const SizedBox(height: 20),
-          ],
-        ),
-      ),
-      bottomNavigationBar: ShareButton(
-        isPublishing: _isPublishing,
-        onTap:        _publish,
+        child: Column(children: [
+          PostPreviewWidget(
+            imagePreviews:  _imagePreviews,
+            currentPreview: _currentPreview,
+            onPageChanged:  (i) => setState(() => _currentPreview = i),
+          ),
+          const Divider(color: Color(0xFF1F1F1F), height: 1),
+          CaptionSection(controller: _captionCtrl),
+          const Divider(color: Color(0xFF1F1F1F), height: 1),
+          const QuickOptionsWidget(),
+          const Divider(color: Color(0xFF1F1F1F), height: 1),
+          MusicSection(
+            selectedSong:   _selectedSong,
+            onSongSelected: (t) => setState(() => _selectedSong = t),
+          ),
+          const Divider(color: Color(0xFF1F1F1F), height: 1),
+          LocationSection(
+            controller:        _locationCtrl,
+            onLocationChanged: () => setState(() {}),
+          ),
+          const Divider(color: Color(0xFF1F1F1F), height: 1),
+          _buildCommentsOption(),
+          const SizedBox(height: 20),
+        ]),
       ),
     );
   }
 
-  // ─── APP BAR ─────────────────────────────────────────────────────
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: AppColors.deepBlack,
+      backgroundColor: AppColors.bgPrimary,
       elevation:       0,
       leading: IconButton(
         icon: const Icon(Icons.close,
-            color: AppColors.pureWhite, size: 24),
+            color: AppColors.textPrimary, size: 24),
         onPressed: () => Navigator.pop(context),
       ),
       title: Text('Nouvelle publication',
           style: GoogleFonts.poppins(
-              color:      AppColors.pureWhite,
-              fontWeight: FontWeight.w600,
-              fontSize:   16)),
+            color:      AppColors.textPrimary,
+            fontWeight: FontWeight.w600,
+            fontSize:   16,
+          )),
       actions: [
         Padding(
           padding: const EdgeInsets.only(right: 12),
@@ -240,17 +169,15 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                   horizontal: 16, vertical: 7),
               decoration: BoxDecoration(
                 color: _isPublishing
-                    ? AppColors.crimsonRed
-                        .withValues(alpha: 0.4)
-                    : AppColors.crimsonRed,
+                    ? AppColors.primary.withValues(alpha: 0.4)
+                    : AppColors.primary,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: _isPublishing
                   ? const SizedBox(
                       width: 16, height: 16,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color:       Colors.white))
+                          strokeWidth: 2, color: Colors.white))
                   : Text('Partager',
                       style: GoogleFonts.inter(
                         color:      Colors.white,
@@ -264,32 +191,24 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     );
   }
 
-  // ─── OPTION COMMENTAIRES ─────────────────────────────────────────
   Widget _buildCommentsOption() {
     return Container(
-      color: AppColors.deepBlack,
+      color: AppColors.bgPrimary,
       child: SwitchListTile(
         contentPadding: const EdgeInsets.symmetric(
             horizontal: 16, vertical: 0),
         title: Text('Autoriser les commentaires',
             style: GoogleFonts.inter(
-                color:    AppColors.pureWhite,
-                fontSize: 15)),
-        subtitle: Text(
-          'Les gens peuvent commenter ton post',
-          style: GoogleFonts.inter(
-              color:    AppColors.mediumGray,
-              fontSize: 12),
-        ),
+                color: AppColors.textPrimary, fontSize: 15)),
+        subtitle: Text('Les gens peuvent commenter ton post',
+            style: GoogleFonts.inter(
+                color: AppColors.textMuted, fontSize: 12)),
         value:              _allowComments,
-        activeColor:        AppColors.crimsonRed,
-        activeTrackColor:   AppColors.crimsonRed
-            .withValues(alpha: 0.3),
-        inactiveThumbColor: AppColors.mediumGray,
-        inactiveTrackColor: AppColors.mediumGray
-            .withValues(alpha: 0.2),
-        onChanged: (val) =>
-            setState(() => _allowComments = val),
+        activeColor:        AppColors.primary,
+        activeTrackColor:   AppColors.primary.withValues(alpha: 0.3),
+        inactiveThumbColor: AppColors.textMuted,
+        inactiveTrackColor: AppColors.textMuted.withValues(alpha: 0.2),
+        onChanged: (v) => setState(() => _allowComments = v),
       ),
     );
   }

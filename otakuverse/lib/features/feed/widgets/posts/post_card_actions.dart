@@ -37,8 +37,8 @@ class PostCardActions extends StatelessWidget {
                 ? HeroiconsSolid.heart
                 : HeroiconsOutline.heart,
             color: isLiked
-                ? AppColors.crimsonRed
-                : AppColors.pureWhite,
+                ? AppColors.primary
+                : AppColors.textPrimary,
             onPressed: onLike,
             animate:   true,
           ),
@@ -46,14 +46,14 @@ class PostCardActions extends StatelessWidget {
           // ─ Commentaire ────────────────────────────────────────
           _actionIconButton(
             icon:      HeroiconsOutline.chatBubbleOvalLeft,
-            color:     AppColors.pureWhite,
+            color:     AppColors.textPrimary,
             onPressed: onComment,
           ),
 
           // ─ Partage ────────────────────────────────────────────
           _actionIconButton(
             icon:      HeroiconsOutline.paperAirplane,
-            color:     AppColors.pureWhite,
+            color:     AppColors.textPrimary,
             onPressed: onShare,
           ),
 
@@ -68,8 +68,8 @@ class PostCardActions extends StatelessWidget {
                         ? HeroiconsSolid.bookmark
                         : HeroiconsOutline.bookmark,
                     color: saved
-                        ? AppColors.crimsonRed
-                        : AppColors.pureWhite,
+                        ? AppColors.primary
+                        : AppColors.textPrimary,
                     onPressed: () =>
                         bookmarkCtrl.toggleBookmark(post.id),
                     animate: true,
@@ -77,7 +77,7 @@ class PostCardActions extends StatelessWidget {
                 })
               : _actionIconButton(
                   icon:      HeroiconsOutline.bookmark,
-                  color:     AppColors.pureWhite,
+                  color:     AppColors.textPrimary,
                   onPressed: null,
                 ),
         ],

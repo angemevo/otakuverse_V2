@@ -30,28 +30,28 @@ class ProfileSliverAppBar extends StatelessWidget {
 
     return SliverAppBar(
       expandedHeight:            200,
-      backgroundColor:           AppColors.deepBlack,
+      backgroundColor:           AppColors.bgPrimary,
       automaticallyImplyLeading: false,
       pinned:                    true,
       elevation:                 0,
       leading: canPop
           ? IconButton(
               icon: const Icon(Icons.arrow_back_ios_new,
-                  color: AppColors.pureWhite, size: 20),
+                  color: AppColors.textPrimary, size: 20),
               onPressed: () => Navigator.of(context).pop(),
             )
           : null,
       title: Text(
         profile.displayNameOrUsername,
         style: GoogleFonts.poppins(
-            color:      AppColors.pureWhite,
+            color:      AppColors.textPrimary,
             fontWeight: FontWeight.w600),
       ),
       actions: [
         if (isMe)
           IconButton(
             icon: const Icon(Icons.menu,
-                color: AppColors.pureWhite),
+                color: AppColors.textPrimary),
             onPressed: onSettingsTap,
           ),
       ],
@@ -87,7 +87,7 @@ class ProfileSliverAppBar extends StatelessWidget {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
-                            color: AppColors.crimsonRed,
+                            color: AppColors.primary,
                             width: 3),
                       ),
                       child: CachedAvatar(
@@ -105,11 +105,11 @@ class ProfileSliverAppBar extends StatelessWidget {
                           child: Container(
                             padding: const EdgeInsets.all(4),
                             decoration: const BoxDecoration(
-                                color: AppColors.crimsonRed,
+                                color: AppColors.primary,
                                 shape: BoxShape.circle),
                             child: const Icon(
                                 Icons.camera_alt,
-                                color: AppColors.pureWhite,
+                                color: AppColors.textPrimary,
                                 size:  12),
                           ),
                         ),
@@ -145,18 +145,18 @@ class ProfileSliverAppBar extends StatelessWidget {
         decoration: BoxDecoration(
           color: outlined
               ? Colors.transparent
-              : AppColors.crimsonRed,
+              : AppColors.primary,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
             color: outlined
-                ? AppColors.pureWhite
-                : AppColors.crimsonRed,
+                ? AppColors.textPrimary
+                : AppColors.primary,
             width: 2,
           ),
         ),
         child: Text(label,
             style: GoogleFonts.inter(
-                color:      AppColors.pureWhite,
+                color:      AppColors.textPrimary,
                 fontWeight: FontWeight.w700,
                 fontSize:   14)),
       ),
@@ -182,12 +182,12 @@ class ProfileSliverAppBar extends StatelessWidget {
           decoration: BoxDecoration(
             color: following
                 ? Colors.transparent
-                : AppColors.crimsonRed,
+                : AppColors.primary,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
               color: following
-                  ? AppColors.pureWhite.withValues(alpha: 0.5)
-                  : AppColors.crimsonRed,
+                  ? AppColors.textPrimary.withValues(alpha: 0.5)
+                  : AppColors.primary,
               width: 2,
             ),
           ),
@@ -204,14 +204,14 @@ class ProfileSliverAppBar extends StatelessWidget {
                       following
                           ? Icons.check
                           : Icons.person_add_outlined,
-                      color: AppColors.pureWhite,
+                      color: AppColors.textPrimary,
                       size:  16,
                     ),
                     const SizedBox(width: 6),
                     Text(
                       following ? 'Abonné' : 'Suivre',
                       style: GoogleFonts.inter(
-                        color:      AppColors.pureWhite,
+                        color:      AppColors.textPrimary,
                         fontWeight: FontWeight.w700,
                         fontSize:   14,
                       ),

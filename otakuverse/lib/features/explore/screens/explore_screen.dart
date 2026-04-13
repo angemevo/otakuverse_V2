@@ -6,7 +6,7 @@ import 'package:otakuverse/core/constants/app_colors.dart';
 import 'package:otakuverse/core/widgets/connectivity_wrapper.dart';
 import 'package:otakuverse/features/explore/controller/explore_controller.dart';
 import 'package:otakuverse/features/feed/controllers/post_controller.dart';
-import 'package:otakuverse/features/feed/screens/comments_sheet.dart';
+import 'package:otakuverse/features/feed/screens/comments/comments_sheet.dart';
 import 'package:otakuverse/features/feed/widgets/posts/posts_card.dart';
 
 class ExploreScreen extends StatefulWidget {

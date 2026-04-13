@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:otakuverse/core/constants/app_colors.dart';
 import 'package:otakuverse/features/stories/controllers/story_controller.dart';
 import 'package:otakuverse/features/stories/models/story_model.dart';
 import 'package:otakuverse/features/stories/screens/create_story/create_story_screen.dart';
 import 'package:otakuverse/features/stories/screens/story_viewer_screen.dart';
 import 'package:otakuverse/features/stories/widgets/story_circle.dart';
-import 'package:otakuverse/core/constants/app_colors.dart';
 
 class StoriesRow extends StatelessWidget {
   const StoriesRow({super.key});
@@ -22,7 +22,7 @@ class StoriesRow extends StatelessWidget {
             child: SizedBox(
               width: 20, height: 20,
               child: CircularProgressIndicator(
-                color:       AppColors.crimsonRed,
+                color:       AppColors.primary,
                 strokeWidth: 2,
               ),
             ),
@@ -30,47 +30,40 @@ class StoriesRow extends StatelessWidget {
         );
       }
 
-      final groups = ctrl.storyGroups;
-
-      // ✅ Toujours afficher le bouton "Ajouter"
-      final hasMyStory =
-          groups.any((g) => g.isMe);
+      // ✅ Obx rule : extraire .value avant le build
+      final groups     = ctrl.storyGroups;
+      final hasMyStory = groups.any((g) => g.isMe);
 
       return SizedBox(
         height: 96,
         child: ListView.builder(
-          scrollDirection:    Axis.horizontal,
-          padding: const EdgeInsets.symmetric(
-              horizontal: 12),
-          itemCount: groups.length +
-              (hasMyStory ? 0 : 1),
+          scrollDirection: Axis.horizontal,
+          padding:         const EdgeInsets.symmetric(horizontal: 12),
+          itemCount:       groups.length + (hasMyStory ? 0 : 1),
           itemBuilder: (_, index) {
-            // ✅ Si pas de story perso → bouton créer
+            // ─ Bouton créer (si pas encore de story perso) ───
             if (!hasMyStory && index == 0) {
               return _AddStoryButton(
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) =>
-                        const CreateStoryScreen(),
-                  ),
+                      builder: (_) => const CreateStoryScreen()),
                 ),
               );
             }
 
-            final groupIndex =
-                hasMyStory ? index : index - 1;
-            final group = groups[groupIndex];
+            final groupIndex = hasMyStory ? index : index - 1;
+            final group      = groups[groupIndex];
 
             return Padding(
               padding: const EdgeInsets.only(right: 8),
               child: StoryCircle(
                 group: group,
-                onTap: () => _openStories(
+                onTap: () => _openViewer(
                   context,
-                  groups: groups,
+                  groups:            groups,
                   initialGroupIndex: groupIndex,
-                  ctrl: ctrl,
+                  ctrl:              ctrl,
                 ),
               ),
             );
@@ -80,7 +73,7 @@ class StoriesRow extends StatelessWidget {
     });
   }
 
-  void _openStories(
+  void _openViewer(
     BuildContext context, {
     required List<StoryGroup> groups,
     required int              initialGroupIndex,
@@ -98,14 +91,14 @@ class StoriesRow extends StatelessWidget {
         ),
         transitionsBuilder: (_, anim, __, child) =>
             FadeTransition(opacity: anim, child: child),
-        transitionDuration:
-            const Duration(milliseconds: 200),
+        transitionDuration: const Duration(milliseconds: 200),
       ),
     );
   }
 }
 
-// ─── BOUTON AJOUTER UNE STORY ────────────────────────────────────────
+// ─── Bouton "Ajouter une story" ───────────────────────────────────────
+
 class _AddStoryButton extends StatelessWidget {
   final VoidCallback onTap;
   const _AddStoryButton({required this.onTap});
@@ -123,16 +116,15 @@ class _AddStoryButton extends StatelessWidget {
               width: 62, height: 62,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.darkGray,
+                color: AppColors.bgCard,
                 border: Border.all(
-                  color: AppColors.crimsonRed
-                      .withValues(alpha: 0.5),
+                  color: AppColors.primary.withValues(alpha: 0.5),
                   width: 2,
                 ),
               ),
               child: const Icon(
                 Icons.add,
-                color: AppColors.crimsonRed,
+                color: AppColors.primary,
                 size:  28,
               ),
             ),
@@ -140,7 +132,7 @@ class _AddStoryButton extends StatelessWidget {
             const Text(
               'Ajouter',
               style: TextStyle(
-                color:    AppColors.mediumGray,
+                color:    AppColors.textMuted,
                 fontSize: 11,
               ),
               textAlign: TextAlign.center,

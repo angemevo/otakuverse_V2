@@ -80,7 +80,7 @@ class _PostCardState extends State<PostCard> {
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        color:        AppColors.darkGray,
+        color:        AppColors.bgCard,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

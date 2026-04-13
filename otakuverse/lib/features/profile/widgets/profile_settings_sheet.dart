@@ -13,7 +13,7 @@ void showSettingsSheet({
 }) {
   showModalBottomSheet(
     context:         context,
-    backgroundColor: AppColors.darkGray,
+    backgroundColor: AppColors.bgCard,
     shape: const RoundedRectangleBorder(
       borderRadius:
           BorderRadius.vertical(top: Radius.circular(20)),
@@ -25,7 +25,7 @@ void showSettingsSheet({
         Container(
           width: 40, height: 4,
           decoration: BoxDecoration(
-            color:        AppColors.mediumGray,
+            color:        AppColors.textMuted,
             borderRadius: BorderRadius.circular(2),
           ),
         ),
@@ -67,7 +67,7 @@ void showSettingsSheet({
           onTap: () => Navigator.pop(sheetCtx),
         ),
 
-        const Divider(color: AppColors.mediumGray, height: 1),
+        const Divider(color: AppColors.textMuted, height: 1),
 
         _settingsItem(
           context: sheetCtx,
@@ -77,7 +77,7 @@ void showSettingsSheet({
             Navigator.pop(sheetCtx);
             onLogoutRequested();
           },
-          color: AppColors.crimsonRed,
+          color: AppColors.primary,
         ),
 
         const SizedBox(height: 16),
@@ -95,15 +95,15 @@ Widget _settingsItem({
 }) {
   return ListTile(
     leading: Icon(icon,
-        color: color ?? AppColors.pureWhite, size: 22),
+        color: color ?? AppColors.textPrimary, size: 22),
     title: Text(
       label,
       style: GoogleFonts.inter(
-          color: color ?? AppColors.pureWhite, fontSize: 15),
+          color: color ?? AppColors.textPrimary, fontSize: 15),
     ),
     trailing: color == null
         ? const Icon(Icons.arrow_forward_ios,
-            color: AppColors.mediumGray, size: 14)
+            color: AppColors.textMuted, size: 14)
         : null,
     onTap: onTap,
   );

@@ -8,7 +8,7 @@ class ProfileTabBarDelegate extends SliverPersistentHeaderDelegate {
   @override
   Widget build(BuildContext context, double shrinkOffset,
           bool overlapsContent) =>
-      Container(color: AppColors.deepBlack, child: tabBar);
+      Container(color: AppColors.bgPrimary, child: tabBar);
 
   @override
   double get maxExtent => tabBar.preferredSize.height;

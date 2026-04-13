@@ -34,14 +34,14 @@ class ProfileInfoSection extends StatelessWidget {
             Text(
               profile.displayNameOrUsername,
               style: GoogleFonts.poppins(
-                  color:      AppColors.pureWhite,
+                  color:      AppColors.textPrimary,
                   fontSize:   22,
                   fontWeight: FontWeight.bold),
             ),
             if (profile.isVerified) ...[
               const SizedBox(width: 8),
               const Icon(Icons.verified,
-                  color: AppColors.crimsonRed, size: 20),
+                  color: AppColors.primary, size: 20),
             ],
           ]),
           if (profile.location != null || profile.website != null) ...[
@@ -49,24 +49,24 @@ class ProfileInfoSection extends StatelessWidget {
             Row(children: [
               if (profile.location != null) ...[
                 const Icon(Icons.location_on_outlined,
-                    color: AppColors.mediumGray, size: 14),
+                    color: AppColors.textMuted, size: 14),
                 const SizedBox(width: 4),
                 Text(profile.location!,
                     style: GoogleFonts.inter(
-                        color:    AppColors.mediumGray,
+                        color:    AppColors.textMuted,
                         fontSize: 13)),
                 const SizedBox(width: 12),
               ],
               if (profile.website != null) ...[
                 const Icon(Icons.link,
-                    color: AppColors.crimsonRed, size: 14),
+                    color: AppColors.primary, size: 14),
                 const SizedBox(width: 4),
                 Text(profile.website!,
                     style: GoogleFonts.inter(
-                      color:           AppColors.crimsonRed,
+                      color:           AppColors.primary,
                       fontSize:        13,
                       decoration:      TextDecoration.underline,
-                      decorationColor: AppColors.crimsonRed,
+                      decorationColor: AppColors.primary,
                     )),
               ],
             ]),
@@ -96,12 +96,12 @@ class ProfileInfoSection extends StatelessWidget {
       children: [
         Text(count,
             style: GoogleFonts.poppins(
-                color:      AppColors.pureWhite,
+                color:      AppColors.textPrimary,
                 fontWeight: FontWeight.w700,
                 fontSize:   18)),
         Text(label,
             style: GoogleFonts.inter(
-                color: AppColors.mediumGray, fontSize: 12)),
+                color: AppColors.textMuted, fontSize: 12)),
       ],
     );
   }
@@ -114,7 +114,7 @@ class ProfileInfoSection extends StatelessWidget {
       child: Text(
         profile.bio!,
         style: GoogleFonts.inter(
-            color:    AppColors.lightGray,
+            color:    AppColors.textDisabled,
             fontSize: 14,
             height:   1.5),
       ),
@@ -132,14 +132,14 @@ class ProfileInfoSection extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
-                    color: AppColors.crimsonWithOpacity(0.1),
+                    color: AppColors.primaryAlpha(0.1),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                        color: AppColors.crimsonWithOpacity(0.4)),
+                        color: AppColors.primaryAlpha(0.4)),
                   ),
                   child: Text('#$g',
                       style: GoogleFonts.inter(
-                        color:      AppColors.lightCrimson,
+                        color:      AppColors.primaryLight,
                         fontSize:   12,
                         fontWeight: FontWeight.w500,
                       )),

@@ -7,7 +7,7 @@ import 'package:otakuverse/core/widgets/cached_image.dart';
 import 'package:otakuverse/core/widgets/connectivity_wrapper.dart';
 import 'package:otakuverse/features/notification/controller/notification_controller.dart';
 import 'package:otakuverse/features/notification/models/notification_model.dart';
-import 'package:otakuverse/features/feed/screens/comments_sheet.dart';
+import 'package:otakuverse/features/feed/screens/comments/comments_sheet.dart';
 import 'package:otakuverse/features/profile/screens/profile_screen.dart';
 
 class NotificationScreen extends StatefulWidget {
@@ -52,13 +52,13 @@ class _NotificationScreenState extends State<NotificationScreen> {
     return ConnectivityWrapper(
       onRetry: _controller.loadNotifications,
       child: Scaffold(
-        backgroundColor: AppColors.deepBlack,
+        backgroundColor: AppColors.bgPrimary,
         appBar: AppBar(
-          backgroundColor: AppColors.deepBlack,
+          backgroundColor: AppColors.bgPrimary,
           elevation:       0,
           title: Text('Activité',
               style: GoogleFonts.poppins(
-                  color:      AppColors.pureWhite,
+                  color:      AppColors.textPrimary,
                   fontWeight: FontWeight.w600)),
           actions: [
             Obx(() {
@@ -69,7 +69,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                 onPressed: _controller.markAllAsRead,
                 child: Text('Tout lire',
                     style: GoogleFonts.inter(
-                        color:      AppColors.crimsonRed,
+                        color:      AppColors.primary,
                         fontWeight: FontWeight.w600,
                         fontSize:   13)),
               );
@@ -80,7 +80,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
           if (_controller.isLoading.value) {
             return const Center(
               child: CircularProgressIndicator(
-                  color: AppColors.crimsonRed),
+                  color: AppColors.primary),
             );
           }
 
@@ -89,8 +89,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
           }
 
           return RefreshIndicator(
-            color:           AppColors.crimsonRed,
-            backgroundColor: AppColors.deepBlack,
+            color:           AppColors.primary,
+            backgroundColor: AppColors.bgPrimary,
             onRefresh:       _controller.loadNotifications,
             child: ListView.builder(
               controller: _scrollController,
@@ -107,7 +107,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                         child: Center(
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: AppColors.crimsonRed,
+                            color: AppColors.primary,
                           ),
                         ),
                       );
@@ -122,7 +122,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                           child: Text('Tu es à jour ! ✅',
                               style: GoogleFonts.inter(
                                   color:    AppColors
-                                      .mediumGray,
+                                      .textMuted,
                                   fontSize: 13)),
                         ),
                       );
@@ -151,17 +151,17 @@ class _NotificationScreenState extends State<NotificationScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const Icon(HeroiconsOutline.bell,
-              color: AppColors.mediumGray, size: 48),
+              color: AppColors.textMuted, size: 48),
           const SizedBox(height: 12),
           Text('Aucune activité',
               style: GoogleFonts.poppins(
-                  color:      AppColors.pureWhite,
+                  color:      AppColors.textPrimary,
                   fontWeight: FontWeight.w600,
                   fontSize:   16)),
           const SizedBox(height: 6),
           Text('Tes notifications apparaîtront ici',
               style: GoogleFonts.inter(
-                  color:    AppColors.mediumGray,
+                  color:    AppColors.textMuted,
                   fontSize: 13)),
         ],
       ),
@@ -187,7 +187,7 @@ class _NotifTile extends StatelessWidget {
       background: Container(
         alignment: Alignment.centerRight,
         padding:   const EdgeInsets.only(right: 20),
-        color:     AppColors.crimsonRed,
+        color:     AppColors.primary,
         child: const Icon(HeroiconsOutline.trash,
             color: Colors.white, size: 22),
       ),
@@ -200,7 +200,7 @@ class _NotifTile extends StatelessWidget {
           duration: const Duration(milliseconds: 300),
           color: notif.isRead
               ? Colors.transparent
-              : AppColors.crimsonRed
+              : AppColors.primary
                   .withValues(alpha: 0.06),
           padding: const EdgeInsets.symmetric(
               horizontal: 16, vertical: 12),
@@ -229,7 +229,7 @@ class _NotifTile extends StatelessWidget {
                         color:  _badgeColor,
                         shape:  BoxShape.circle,
                         border: Border.all(
-                          color: AppColors.deepBlack,
+                          color: AppColors.bgPrimary,
                           width: 1.5,
                         ),
                       ),
@@ -252,7 +252,7 @@ class _NotifTile extends StatelessWidget {
                         TextSpan(
                           text: notif.actorName,
                           style: GoogleFonts.inter(
-                            color:      AppColors.pureWhite,
+                            color:      AppColors.textPrimary,
                             fontWeight: FontWeight.w700,
                             fontSize:   14,
                           ),
@@ -260,7 +260,7 @@ class _NotifTile extends StatelessWidget {
                         TextSpan(
                           text: ' ${notif.message}',
                           style: GoogleFonts.inter(
-                            color:    AppColors.lightGray,
+                            color:    AppColors.primaryLight,
                             fontSize: 14,
                           ),
                         ),
@@ -270,7 +270,7 @@ class _NotifTile extends StatelessWidget {
                     Text(
                       _formatDate(notif.createdAt),
                       style: GoogleFonts.inter(
-                          color:    AppColors.mediumGray,
+                          color:    AppColors.textMuted,
                           fontSize: 11),
                     ),
                   ],
@@ -295,7 +295,7 @@ class _NotifTile extends StatelessWidget {
                 Container(
                   width: 8, height: 8,
                   decoration: const BoxDecoration(
-                    color: AppColors.crimsonRed,
+                    color: AppColors.primary,
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -333,11 +333,11 @@ class _NotifTile extends StatelessWidget {
 
   Color get _badgeColor {
     switch (notif.type) {
-      case 'like':    return AppColors.crimsonRed;
+      case 'like':    return AppColors.primary;
       case 'comment': return const Color(0xFF7C6FFF);
       case 'reply':   return const Color(0xFF7C6FFF);
       case 'follow':  return const Color(0xFF22C55E);
-      default:        return AppColors.mediumGray;
+      default:        return AppColors.textMuted;
     }
   }
 

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:otakuverse/core/constants/app_colors.dart';
 import 'package:otakuverse/features/feed/models/post_model.dart';
-import 'package:otakuverse/features/feed/screens/comments_sheet.dart';
+import 'package:otakuverse/features/feed/screens/comments/comments_sheet.dart';
 import 'package:otakuverse/features/feed/widgets/posts/posts_card.dart';
 
 class ProfileTabLikes extends StatelessWidget {
@@ -28,11 +28,11 @@ class ProfileTabLikes extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Icon(Icons.lock_outline,
-                color: AppColors.mediumGray, size: 48),
+                color: AppColors.textMuted, size: 48),
             const SizedBox(height: 12),
             Text('Privé',
                 style: GoogleFonts.poppins(
-                    color:      AppColors.pureWhite,
+                    color:      AppColors.textPrimary,
                     fontWeight: FontWeight.w600,
                     fontSize:   16)),
           ],
@@ -46,11 +46,11 @@ class ProfileTabLikes extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Icon(Icons.favorite_border,
-                color: AppColors.mediumGray, size: 48),
+                color: AppColors.textMuted, size: 48),
             const SizedBox(height: 12),
             Text('Aucun post liké',
                 style: GoogleFonts.poppins(
-                    color:      AppColors.pureWhite,
+                    color:      AppColors.textPrimary,
                     fontWeight: FontWeight.w600,
                     fontSize:   16)),
           ],
@@ -97,33 +97,33 @@ class _DeleteDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: AppColors.darkGray,
+      backgroundColor: AppColors.bgPrimary,
       shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16)),
       title: Text('Supprimer ce post ?',
           style: GoogleFonts.poppins(
-              color:      AppColors.pureWhite,
+              color:      AppColors.textPrimary,
               fontWeight: FontWeight.w600)),
       content: Text('Cette action est irréversible.',
           style: GoogleFonts.inter(
-              color: AppColors.mediumGray)),
+              color: AppColors.textMuted)),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, false),
           child: Text('Annuler',
               style: GoogleFonts.inter(
-                  color: AppColors.mediumGray)),
+                  color: AppColors.textMuted)),
         ),
         ElevatedButton(
           onPressed: () => Navigator.pop(context, true),
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.crimsonRed,
+            backgroundColor: AppColors.primary,
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8)),
           ),
           child: Text('Supprimer',
               style: GoogleFonts.inter(
-                  color: AppColors.pureWhite)),
+                  color: AppColors.textPrimary)),
         ),
       ],
     );

@@ -24,45 +24,37 @@ class ChatInput extends StatelessWidget {
       padding: EdgeInsets.only(
         left:   12, right: 12,
         top:    8,
-        bottom:
-            MediaQuery.of(context).padding.bottom + 8,
+        bottom: MediaQuery.of(context).padding.bottom + 8,
       ),
       decoration: const BoxDecoration(
-        color: AppColors.deepBlack,
+        color: AppColors.bgPrimary,
         border: Border(
-          top: BorderSide(
-              color: Color(0xFF1A1A1A), width: 1),
+          top: BorderSide(color: Color(0xFF1A1A1A), width: 1),
         ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          // ─ Image ─────────────────────────────────────────
+          // ─ Bouton image ────────────────────────────────────
           GestureDetector(
             onTap: onImage,
             child: Container(
               width: 38, height: 38,
-              margin: const EdgeInsets.only(
-                  right: 8, bottom: 1),
+              margin: const EdgeInsets.only(right: 8, bottom: 1),
               decoration: const BoxDecoration(
-                color: AppColors.darkGray,
+                color: AppColors.bgCard,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
-                Icons.image_outlined,
-                color: AppColors.mediumGray,
-                size:  20,
-              ),
+              child: const Icon(Icons.image_outlined,
+                  color: AppColors.textMuted, size: 20),
             ),
           ),
-
-          // ─ Champ texte ───────────────────────────────────
+          // ─ Champ texte ─────────────────────────────────────
           Expanded(
             child: Container(
-              constraints: const BoxConstraints(
-                  maxHeight: 120),
+              constraints: const BoxConstraints(maxHeight: 120),
               decoration: BoxDecoration(
-                color:        AppColors.darkGray,
+                color:        AppColors.bgCard,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: ListenableBuilder(
@@ -72,61 +64,48 @@ class ChatInput extends StatelessWidget {
                   focusNode:  focusNode,
                   maxLines:   null,
                   style: GoogleFonts.inter(
-                    color:    AppColors.pureWhite,
-                    fontSize: 15,
-                  ),
+                      color: AppColors.textPrimary, fontSize: 15),
                   onSubmitted: (_) => onSend(),
                   decoration: InputDecoration(
-                    hintText: 'Message...',
+                    hintText:  'Message...',
                     hintStyle: GoogleFonts.inter(
-                      color:    AppColors.mediumGray,
-                      fontSize: 15,
-                    ),
+                        color: AppColors.textMuted, fontSize: 15),
                     border:         InputBorder.none,
-                    contentPadding:
-                        const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical:   10,
-                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 10),
                   ),
                 ),
               ),
             ),
           ),
           const SizedBox(width: 8),
-
-          // ─ Bouton envoyer ────────────────────────────────
+          // ─ Bouton envoyer ──────────────────────────────────
           ListenableBuilder(
             listenable: textCtrl,
             builder: (_, __) {
-              final hasText =
-                  textCtrl.text.trim().isNotEmpty;
+              final hasText = textCtrl.text.trim().isNotEmpty;
               return GestureDetector(
                 onTap: onSend,
                 child: AnimatedContainer(
-                  duration: const Duration(
-                      milliseconds: 200),
+                  duration: const Duration(milliseconds: 200),
                   width: 38, height: 38,
                   decoration: BoxDecoration(
                     color: hasText
-                        ? AppColors.crimsonRed
-                        : AppColors.darkGray,
+                        ? AppColors.primary
+                        : AppColors.bgCard,
                     shape: BoxShape.circle,
                   ),
                   child: isSending
                       ? const Padding(
                           padding: EdgeInsets.all(10),
-                          child:
-                              CircularProgressIndicator(
-                            color:       Colors.white,
-                            strokeWidth: 2,
-                          ),
+                          child: CircularProgressIndicator(
+                              color: Colors.white, strokeWidth: 2),
                         )
                       : Icon(
                           Icons.send_rounded,
                           color: hasText
                               ? Colors.white
-                              : AppColors.mediumGray,
+                              : AppColors.textMuted,
                           size: 18,
                         ),
                 ),

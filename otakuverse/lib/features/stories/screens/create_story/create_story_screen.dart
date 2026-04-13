@@ -9,7 +9,7 @@ import 'package:video_player/video_player.dart';
 import 'package:otakuverse/core/constants/app_colors.dart';
 import 'package:otakuverse/core/utils/helpers.dart';
 import 'package:otakuverse/features/feed/screens/create_short_screen.dart';
-import 'package:otakuverse/features/feed/screens/media_picker_screen.dart';
+import 'package:otakuverse/features/feed/screens/media/media_picker_screen.dart';
 import 'package:otakuverse/features/stories/controllers/story_controller.dart';
 import 'package:otakuverse/features/stories/services/story_service.dart';
 import 'create_story_background.dart';

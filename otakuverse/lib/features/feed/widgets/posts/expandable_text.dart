@@ -48,7 +48,7 @@ class _ExpandableTextState extends State<ExpandableText> {
               child: Text(
                 _expanded ? 'voir moins' : 'voir plus',
                 style: GoogleFonts.inter(
-                  color:      AppColors.mediumGray,
+                  color:      AppColors.textMuted,
                   fontSize:   13,
                   fontWeight: FontWeight.w500,
                 ),
@@ -82,36 +82,36 @@ class _ExpandableTextState extends State<ExpandableText> {
       styleSheet: MarkdownStyleSheet(
         // ─ Texte normal ──────────────────────────────────
         p: GoogleFonts.inter(
-          color:    AppColors.pureWhite,
+          color:    AppColors.textPrimary,
           fontSize: 14,
           height:   1.4,
         ),
         // ─ Gras ──────────────────────────────────────────
         strong: GoogleFonts.inter(
-          color:      AppColors.pureWhite,
+          color:      AppColors.textPrimary,
           fontSize:   14,
           fontWeight: FontWeight.w700,
           height:     1.4,
         ),
         // ─ Italique ──────────────────────────────────────
         em: GoogleFonts.inter(
-          color:      AppColors.pureWhite,
+          color:      AppColors.textPrimary,
           fontSize:   14,
           fontStyle:  FontStyle.italic,
           height:     1.4,
         ),
         // ─ Souligné via del ──────────────────────────────
         del: GoogleFonts.inter(
-          color:      AppColors.pureWhite,
+          color:      AppColors.textPrimary,
           fontSize:   14,
           decoration: TextDecoration.underline,
           height:     1.4,
         ),
         // ─ Code inline ───────────────────────────────────
         code: GoogleFonts.inter(
-          color:           AppColors.lightCrimson,
+          color:           AppColors.primaryLight,
           fontSize:        13,
-          backgroundColor: AppColors.darkGray,
+          backgroundColor: AppColors.bgCard,
         ),
         blockSpacing:        0,
         pPadding:            EdgeInsets.zero,

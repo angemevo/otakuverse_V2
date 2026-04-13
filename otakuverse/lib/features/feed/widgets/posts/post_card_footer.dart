@@ -45,7 +45,7 @@ class PostCardFooter extends StatelessWidget {
       child: Text(
         _formatCount(displayCount),
         style: GoogleFonts.inter(
-          color:      AppColors.pureWhite,
+          color:      AppColors.textPrimary,
           fontWeight: FontWeight.w600,
           fontSize:   14,
         ),
@@ -76,7 +76,7 @@ class PostCardFooter extends StatelessWidget {
         child: Text(
           'Voir les ${post.commentsCount} commentaires',
           style: GoogleFonts.inter(
-              color:    AppColors.mediumGray,
+              color:    AppColors.textMuted,
               fontSize: 13),
         ),
       ),
@@ -91,7 +91,7 @@ class PostCardFooter extends StatelessWidget {
       child: Text(
         _formatDate(post.createdAt),
         style: GoogleFonts.inter(
-          color:    AppColors.mediumGray
+          color:    AppColors.textMuted
               .withValues(alpha: 0.7),
           fontSize: 11,
         ),

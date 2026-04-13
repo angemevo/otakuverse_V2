@@ -244,13 +244,13 @@ class _PostCardMusicPlayerState
           padding: const EdgeInsets.symmetric(
               horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
-            color:        AppColors.darkGray,
+            color:        AppColors.bgCard,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: _isPlaying
-                  ? AppColors.crimsonRed
+                  ? AppColors.primary
                       .withValues(alpha: 0.6)
-                  : AppColors.crimsonRed
+                  : AppColors.primary
                       .withValues(alpha: 0.2),
               width: _isPlaying ? 1.5 : 1,
             ),
@@ -272,15 +272,15 @@ class _PostCardMusicPlayerState
                       fit:    BoxFit.cover,
                       placeholder: (_, __) => Container(
                         width: 44, height: 44,
-                        color: AppColors.deepBlack,
+                        color: AppColors.bgPrimary,
                       ),
                       errorWidget: (_, __, ___) =>
                           Container(
                         width: 44, height: 44,
-                        color: AppColors.deepBlack,
+                        color: AppColors.bgPrimary,
                         child: const Icon(
                           Icons.music_note,
-                          color: AppColors.mediumGray,
+                          color: AppColors.textMuted,
                           size:  20,
                         ),
                       ),
@@ -297,8 +297,8 @@ class _PostCardMusicPlayerState
                   width: 38, height: 38,
                   decoration: BoxDecoration(
                     color: _isPlaying
-                        ? AppColors.crimsonRed
-                        : AppColors.crimsonRed
+                        ? AppColors.primary
+                        : AppColors.primary
                             .withValues(alpha: 0.15),
                     shape: BoxShape.circle,
                   ),
@@ -310,7 +310,7 @@ class _PostCardMusicPlayerState
                                 CircularProgressIndicator(
                               strokeWidth: 2,
                               color:
-                                  AppColors.crimsonRed,
+                                  AppColors.primary,
                             ),
                           )
                         // ✅ AnimatedSwitcher pour
@@ -334,7 +334,7 @@ class _PostCardMusicPlayerState
                                   _isPlaying),
                               color: _isPlaying
                                   ? Colors.white
-                                  : AppColors.crimsonRed,
+                                  : AppColors.primary,
                               size: 22,
                             ),
                           ),
@@ -365,7 +365,7 @@ class _PostCardMusicPlayerState
                         child: Text(
                           widget.post.musicTitle!,
                           style: GoogleFonts.inter(
-                            color: AppColors.pureWhite,
+                            color: AppColors.textPrimary,
                             fontSize:   13,
                             fontWeight: FontWeight.w600,
                           ),
@@ -382,7 +382,7 @@ class _PostCardMusicPlayerState
                       Text(
                         widget.post.musicArtist!,
                         style: GoogleFonts.inter(
-                          color:    AppColors.mediumGray,
+                          color:    AppColors.textMuted,
                           fontSize: 11,
                         ),
                         maxLines:  1,
@@ -411,12 +411,12 @@ class _PostCardMusicPlayerState
                                             .inMilliseconds)
                                     .clamp(0.0, 1.0),
                                 backgroundColor:
-                                    AppColors.mediumGray
+                                    AppColors.textMuted
                                         .withValues(
                                             alpha: 0.2),
                                 valueColor:
                                     const AlwaysStoppedAnimation(
-                                  AppColors.crimsonRed,
+                                  AppColors.primary,
                                 ),
                                 minHeight: 3,
                               ),
@@ -433,7 +433,7 @@ class _PostCardMusicPlayerState
                                     style: GoogleFonts
                                         .inter(
                                       color: AppColors
-                                          .mediumGray,
+                                          .textMuted,
                                       fontSize: 9,
                                     )),
                                 // ✅ Badge Deezer
@@ -470,7 +470,7 @@ class _PostCardMusicPlayerState
                                     style: GoogleFonts
                                         .inter(
                                       color: AppColors
-                                          .mediumGray,
+                                          .textMuted,
                                       fontSize: 9,
                                     )),
                               ],
@@ -497,7 +497,7 @@ class _PostCardMusicPlayerState
                         EdgeInsets.only(left: 8),
                     child: Icon(
                       Icons.refresh,
-                      color: AppColors.errorRed,
+                      color: AppColors.error,
                       size:  20,
                     ),
                   ),
@@ -530,7 +530,7 @@ class _AnimatedBars extends StatelessWidget {
             height: height,
             margin: const EdgeInsets.only(right: 1.5),
             decoration: BoxDecoration(
-              color:        AppColors.crimsonRed,
+              color:        AppColors.primary,
               borderRadius: BorderRadius.circular(1),
             ),
           );

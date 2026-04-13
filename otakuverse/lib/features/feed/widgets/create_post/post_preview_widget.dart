@@ -6,8 +6,8 @@ import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 
 class PostPreviewWidget extends StatelessWidget {
-  final List<Uint8List> imagePreviews;
-  final int             currentPreview;
+  final List<Uint8List>   imagePreviews;
+  final int               currentPreview;
   final ValueChanged<int> onPageChanged;
 
   const PostPreviewWidget({
@@ -24,8 +24,8 @@ class PostPreviewWidget extends StatelessWidget {
       PageRouteBuilder(
         opaque:      false,
         pageBuilder: (_, __, ___) => _FullscreenViewer(
-          imagePreviews:  imagePreviews,
-          initialIndex:   currentPreview,
+          imagePreviews: imagePreviews,
+          initialIndex:  currentPreview,
         ),
         transitionsBuilder: (_, anim, __, child) =>
             FadeTransition(opacity: anim, child: child),
@@ -35,107 +35,96 @@ class PostPreviewWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size.width;
+
     if (imagePreviews.isEmpty) {
       return Container(
         width:  double.infinity,
-        height: MediaQuery.of(context).size.width,
-        color:  AppColors.darkGray,
-        child: const Center(
+        height: size,
+        color:  AppColors.bgCard,
+        child:  const Center(
           child: Icon(Icons.image_outlined,
-              color: AppColors.mediumGray, size: 64),
+              color: AppColors.textMuted, size: 64),
         ),
       );
     }
 
-    return Stack(
-      children: [
-        // ─ Image / Carrousel ──────────────────────────────────
-        SizedBox(
-          width:  double.infinity,
-          height: MediaQuery.of(context).size.width,
-          child: imagePreviews.length == 1
-              ? Image.memory(
-                  imagePreviews.first,
-                  fit:    BoxFit.cover,
-                  width:  double.infinity,
-                  height: double.infinity,
-                )
-              : PageView.builder(
-                  itemCount:     imagePreviews.length,
-                  onPageChanged: onPageChanged,
-                  itemBuilder:   (_, i) => Image.memory(
-                    imagePreviews[i],
-                    fit: BoxFit.cover,
-                  ),
-                ),
+    return Stack(children: [
+      SizedBox(
+        width:  double.infinity,
+        height: size,
+        child: imagePreviews.length == 1
+            ? Image.memory(imagePreviews.first,
+                fit: BoxFit.cover, width: double.infinity)
+            : PageView.builder(
+                itemCount:     imagePreviews.length,
+                onPageChanged: onPageChanged,
+                itemBuilder:   (_, i) => Image.memory(
+                    imagePreviews[i], fit: BoxFit.cover),
+              ),
+      ),
+      // ─ Expand ────────────────────────────────────────────
+      Positioned(
+        bottom: 12, left: 12,
+        child: GestureDetector(
+          onTap: () => _openFullscreen(context),
+          child: Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.6),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.fullscreen,
+                color: Colors.white, size: 20),
+          ),
         ),
-
-        // ─ Bouton expand ──────────────────────────────────────
+      ),
+      // ─ Compteur ──────────────────────────────────────────
+      if (imagePreviews.length > 1)
         Positioned(
-          bottom: 12, left: 12,
-          child: GestureDetector(
-            onTap: () => _openFullscreen(context),
-            child: Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color:  Colors.black.withValues(alpha: 0.6),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.fullscreen,
-                  color: Colors.white, size: 20),
+          bottom: 12, right: 12,
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+                horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color:        Colors.black.withValues(alpha: 0.6),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              '${currentPreview + 1}/${imagePreviews.length}',
+              style: GoogleFonts.inter(
+                  color:      Colors.white,
+                  fontSize:   12,
+                  fontWeight: FontWeight.w600),
             ),
           ),
         ),
-
-        // ─ Indicateur carrousel ───────────────────────────────
-        if (imagePreviews.length > 1)
-          Positioned(
-            bottom: 12, right: 12,
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color:        Colors.black.withValues(alpha: 0.6),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                '${currentPreview + 1}/${imagePreviews.length}',
-                style: GoogleFonts.inter(
-                    color:      Colors.white,
-                    fontSize:   12,
-                    fontWeight: FontWeight.w600),
-              ),
-            ),
-          ),
-
-        // ─ Dots indicateur ────────────────────────────────────
-        if (imagePreviews.length > 1)
-          Positioned(
-            bottom: 8, left: 0, right: 0,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(
-                imagePreviews.length,
-                (i) => AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  margin: const EdgeInsets.symmetric(
-                      horizontal: 3),
-                  width:  currentPreview == i ? 16 : 6,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: currentPreview == i
-                        ? AppColors.crimsonRed
-                        : Colors.white38,
-                    borderRadius: BorderRadius.circular(3),
-                  ),
+      // ─ Dots ──────────────────────────────────────────────
+      if (imagePreviews.length > 1)
+        Positioned(
+          bottom: 8, left: 0, right: 0,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(imagePreviews.length, (i) =>
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                margin:   const EdgeInsets.symmetric(horizontal: 3),
+                width:  currentPreview == i ? 16 : 6,
+                height: 6,
+                decoration: BoxDecoration(
+                  color: currentPreview == i
+                      ? AppColors.primary
+                      : Colors.white38,
+                  borderRadius: BorderRadius.circular(3),
                 ),
-              ),
-            ),
+              )),
           ),
-      ],
-    );
+        ),
+    ]);
   }
 }
+
+// ─── Visionneuse plein écran ──────────────────────────────────────────
 
 class _FullscreenViewer extends StatefulWidget {
   final List<Uint8List> imagePreviews;
@@ -147,8 +136,7 @@ class _FullscreenViewer extends StatefulWidget {
   });
 
   @override
-  State<_FullscreenViewer> createState() =>
-      _FullscreenViewerState();
+  State<_FullscreenViewer> createState() => _FullscreenViewerState();
 }
 
 class _FullscreenViewerState extends State<_FullscreenViewer> {
@@ -164,74 +152,58 @@ class _FullscreenViewerState extends State<_FullscreenViewer> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Stack(
-        children: [
-          // ─ Gallery ─────────────────────────────────────
-          PhotoViewGallery.builder(
-            itemCount:  widget.imagePreviews.length,
-            pageController: PageController(
-                initialPage: widget.initialIndex),
-            onPageChanged: (i) =>
-                setState(() => _current = i),
-            builder: (_, index) =>
-                PhotoViewGalleryPageOptions(
-              imageProvider: MemoryImage(
-                  widget.imagePreviews[index]),
-              minScale: PhotoViewComputedScale.contained,
-              maxScale: PhotoViewComputedScale.covered * 3,
-            ),
-            backgroundDecoration: const BoxDecoration(
-                color: Colors.black),
+      body: Stack(children: [
+        PhotoViewGallery.builder(
+          itemCount:      widget.imagePreviews.length,
+          pageController: PageController(
+              initialPage: widget.initialIndex),
+          onPageChanged: (i) => setState(() => _current = i),
+          builder: (_, i) => PhotoViewGalleryPageOptions(
+            imageProvider: MemoryImage(widget.imagePreviews[i]),
+            minScale:      PhotoViewComputedScale.contained,
+            maxScale:      PhotoViewComputedScale.covered * 3,
           ),
-
-          // ─ Fermer ──────────────────────────────────────
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: GestureDetector(
-                onTap: () => Navigator.pop(context),
-                child: Container(
-                  padding: const EdgeInsets.all(8),
+          backgroundDecoration: const BoxDecoration(
+              color: Colors.black),
+        ),
+        SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.5),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.close,
+                    color: Colors.white, size: 22),
+              ),
+            ),
+          ),
+        ),
+        if (widget.imagePreviews.length > 1)
+          Positioned(
+            bottom: 30, left: 0, right: 0,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(widget.imagePreviews.length, (i) =>
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  margin:   const EdgeInsets.symmetric(horizontal: 3),
+                  width:  _current == i ? 16 : 6,
+                  height: 6,
                   decoration: BoxDecoration(
-                    color:  Colors.black
-                        .withValues(alpha: 0.5),
-                    shape: BoxShape.circle,
+                    color: _current == i
+                        ? AppColors.primary
+                        : Colors.white38,
+                    borderRadius: BorderRadius.circular(3),
                   ),
-                  child: const Icon(Icons.close,
-                      color: Colors.white, size: 22),
-                ),
-              ),
+                )),
             ),
           ),
-
-          // ─ Indicateur ──────────────────────────────────
-          if (widget.imagePreviews.length > 1)
-            Positioned(
-              bottom: 30, left: 0, right: 0,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(
-                  widget.imagePreviews.length,
-                  (i) => AnimatedContainer(
-                    duration: const Duration(
-                        milliseconds: 200),
-                    margin: const EdgeInsets.symmetric(
-                        horizontal: 3),
-                    width:  _current == i ? 16 : 6,
-                    height: 6,
-                    decoration: BoxDecoration(
-                      color: _current == i
-                          ? AppColors.crimsonRed
-                          : Colors.white38,
-                      borderRadius:
-                          BorderRadius.circular(3),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
+      ]),
     );
   }
 }

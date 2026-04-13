@@ -27,11 +27,11 @@ class ProfileTabAnimes extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Icon(Icons.favorite_border,
-                color: AppColors.mediumGray, size: 48),
+                color: AppColors.textMuted, size: 48),
             const SizedBox(height: 12),
             Text('Aucun animé/manga favori',
                 style: GoogleFonts.inter(
-                    color: AppColors.mediumGray)),
+                    color: AppColors.textMuted)),
             if (isMe) ...[
               const SizedBox(height: 16),
               TextButton(
@@ -47,7 +47,7 @@ class ProfileTabAnimes extends StatelessWidget {
                 },
                 child: Text('Ajouter des favoris',
                     style: GoogleFonts.inter(
-                        color:      AppColors.crimsonRed,
+                        color:      AppColors.primary,
                         fontWeight: FontWeight.w600)),
               ),
             ],
@@ -62,7 +62,7 @@ class ProfileTabAnimes extends StatelessWidget {
         if (profile.favoriteAnime.isNotEmpty) ...[
           Text('Animés favoris',
               style: GoogleFonts.poppins(
-                  color:      AppColors.pureWhite,
+                  color:      AppColors.textPrimary,
                   fontWeight: FontWeight.w600,
                   fontSize:   16)),
           const SizedBox(height: 12),
@@ -77,7 +77,7 @@ class ProfileTabAnimes extends StatelessWidget {
         if (profile.favoriteManga.isNotEmpty) ...[
           Text('Mangas favoris',
               style: GoogleFonts.poppins(
-                  color:      AppColors.pureWhite,
+                  color:      AppColors.textPrimary,
                   fontWeight: FontWeight.w600,
                   fontSize:   16)),
           const SizedBox(height: 12),
@@ -97,14 +97,14 @@ class ProfileTabAnimes extends StatelessWidget {
       padding: const EdgeInsets.symmetric(
           horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color:        AppColors.crimsonWithOpacity(0.1),
+        color:        AppColors.primaryAlpha(0.1),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-            color: AppColors.crimsonWithOpacity(0.4)),
+            color: AppColors.primaryAlpha(0.4)),
       ),
       child: Text(label,
           style: GoogleFonts.inter(
-              color:      AppColors.lightCrimson,
+              color:      AppColors.primaryLight,
               fontSize:   13,
               fontWeight: FontWeight.w500)),
     );

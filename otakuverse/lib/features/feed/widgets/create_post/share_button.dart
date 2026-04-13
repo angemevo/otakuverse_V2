@@ -15,9 +15,10 @@ class ShareButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: AppColors.deepBlack,
+      color: AppColors.bgPrimary,
       padding: EdgeInsets.only(
-        left:   16, right: 16,
+        left:   16,
+        right:  16,
         top:    12,
         bottom: MediaQuery.of(context).padding.bottom + 12,
       ),
@@ -27,8 +28,8 @@ class ShareButton extends StatelessWidget {
         child: ElevatedButton(
           onPressed: isPublishing ? null : onTap,
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.crimsonRed,
-            disabledBackgroundColor: AppColors.crimsonRed
+            backgroundColor:         AppColors.primary,
+            disabledBackgroundColor: AppColors.primary
                 .withValues(alpha: 0.4),
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12)),
@@ -38,8 +39,7 @@ class ShareButton extends StatelessWidget {
               ? const SizedBox(
                   width: 22, height: 22,
                   child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color:       Colors.white))
+                      strokeWidth: 2, color: Colors.white))
               : Text('Partager',
                   style: GoogleFonts.inter(
                     color:      Colors.white,

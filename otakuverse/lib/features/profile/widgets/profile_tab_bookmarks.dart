@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:heroicons_flutter/heroicons_flutter.dart';
 import 'package:otakuverse/core/constants/app_colors.dart';
 import 'package:otakuverse/features/feed/controllers/bookmark_controller.dart';
-import 'package:otakuverse/features/feed/screens/comments_sheet.dart';
+import 'package:otakuverse/features/feed/screens/comments/comments_sheet.dart';
 import 'package:otakuverse/features/feed/widgets/posts/posts_card.dart';
 
 class ProfileTabBookmarks extends StatelessWidget {
@@ -26,7 +26,7 @@ class ProfileTabBookmarks extends StatelessWidget {
     if (ctrl == null) {
       return const Center(
         child: CircularProgressIndicator(
-            color: AppColors.crimsonRed),
+            color: AppColors.primary),
       );
     }
 
@@ -41,7 +41,7 @@ class ProfileTabBookmarks extends StatelessWidget {
       if (ctrl.isLoading.value) {
         return const Center(
           child: CircularProgressIndicator(
-              color: AppColors.crimsonRed),
+              color: AppColors.primary),
         );
       }
 
@@ -51,18 +51,18 @@ class ProfileTabBookmarks extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Icon(HeroiconsOutline.bookmark,
-                  color: AppColors.mediumGray, size: 48),
+                  color: AppColors.textMuted, size: 48),
               const SizedBox(height: 12),
               Text('Aucune sauvegarde',
                   style: GoogleFonts.poppins(
-                      color:      AppColors.pureWhite,
+                      color:      AppColors.textPrimary,
                       fontWeight: FontWeight.w600,
                       fontSize:   16)),
               const SizedBox(height: 6),
               Text(
                 'Bookmark des posts pour les retrouver ici',
                 style: GoogleFonts.inter(
-                    color:    AppColors.mediumGray,
+                    color:    AppColors.textMuted,
                     fontSize: 13),
                 textAlign: TextAlign.center,
               ),
@@ -84,7 +84,7 @@ class ProfileTabBookmarks extends StatelessWidget {
                 child: Center(
                   child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color:       AppColors.crimsonRed),
+                      color:       AppColors.primary),
                 ),
               );
             }
@@ -95,7 +95,7 @@ class ProfileTabBookmarks extends StatelessWidget {
                 child: Center(
                   child: Text('Tu as tout vu ! 🎉',
                       style: GoogleFonts.inter(
-                          color:    AppColors.mediumGray,
+                          color:    AppColors.textMuted,
                           fontSize: 13)),
                 ),
               );
@@ -138,33 +138,33 @@ class _DeleteDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: AppColors.darkGray,
+      backgroundColor: AppColors.bgCard,
       shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16)),
       title: Text('Supprimer ce post ?',
           style: GoogleFonts.poppins(
-              color:      AppColors.pureWhite,
+              color:      AppColors.textPrimary,
               fontWeight: FontWeight.w600)),
       content: Text('Cette action est irréversible.',
           style: GoogleFonts.inter(
-              color: AppColors.mediumGray)),
+              color: AppColors.textMuted)),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, false),
           child: Text('Annuler',
               style: GoogleFonts.inter(
-                  color: AppColors.mediumGray)),
+                  color: AppColors.textMuted)),
         ),
         ElevatedButton(
           onPressed: () => Navigator.pop(context, true),
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.crimsonRed,
+            backgroundColor: AppColors.primary,
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8)),
           ),
           child: Text('Supprimer',
               style: GoogleFonts.inter(
-                  color: AppColors.pureWhite)),
+                  color: AppColors.textPrimary)),
         ),
       ],
     );

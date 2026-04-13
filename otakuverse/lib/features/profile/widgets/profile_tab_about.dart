@@ -44,16 +44,16 @@ class ProfileTabAbout extends StatelessWidget {
       children: [
         Text(title,
             style: GoogleFonts.poppins(
-                color:      AppColors.pureWhite,
+                color:      AppColors.textPrimary,
                 fontWeight: FontWeight.w600,
                 fontSize:   16)),
         const SizedBox(height: 12),
         Container(
           decoration: BoxDecoration(
-            color:        AppColors.darkGray,
+            color:        AppColors.bgCard,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-                color: AppColors.mediumGray
+                color: AppColors.textMuted
                     .withValues(alpha: 0.3)),
           ),
           child: Column(children: items),
@@ -68,23 +68,23 @@ class ProfileTabAbout extends StatelessWidget {
       padding: const EdgeInsets.symmetric(
           horizontal: 16, vertical: 12),
       child: Row(children: [
-        Icon(icon, color: AppColors.crimsonRed, size: 20),
+        Icon(icon, color: AppColors.primary, size: 20),
         const SizedBox(width: 12),
         Text(label,
             style: GoogleFonts.inter(
-                color: AppColors.mediumGray, fontSize: 14)),
+                color: AppColors.textMuted, fontSize: 14)),
         const Spacer(),
         Flexible(
           child: Text(value,
               style: GoogleFonts.inter(
                 color: isLink
-                    ? AppColors.crimsonRed
-                    : AppColors.pureWhite,
+                    ? AppColors.primary
+                    : AppColors.textPrimary,
                 fontSize:        14,
                 fontWeight:      FontWeight.w500,
                 decoration:
                     isLink ? TextDecoration.underline : null,
-                decorationColor: AppColors.crimsonRed,
+                decorationColor: AppColors.primary,
               ),
               overflow: TextOverflow.ellipsis),
         ),

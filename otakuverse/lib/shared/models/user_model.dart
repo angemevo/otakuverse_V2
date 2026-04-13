@@ -2,7 +2,7 @@ import 'package:otakuverse/features/profile/models/profile_model.dart';
 
 class UserModel {
   final String id;
-  final String email;
+  // final String email;
   final String username;
   final String? displayName;
   final String? bio;
@@ -17,7 +17,7 @@ class UserModel {
 
   UserModel({
     required this.id,
-    required this.email,
+    // required this.email,
     required this.username,
     this.displayName,
     this.bio,
@@ -35,7 +35,7 @@ class UserModel {
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
       id:          json['user_id'] as String,        // ✅ user_id pas id
-      email:       json['email']   as String? ?? '',
+      // email:       json['email']   as String? ?? '',
       username:    json['username'] as String,
       displayName: json['display_name'] as String?,
       bio:         json['bio']          as String?,
@@ -58,7 +58,7 @@ class UserModel {
   factory UserModel.fromProfile(ProfileModel profile) {
     return UserModel(
       id:             profile.userId,
-      email:          profile.email    ?? '',
+      // email:          profile.email    ?? '',
       username:       profile.username,
       displayName:    profile.displayName,
       bio:            profile.bio,
@@ -75,7 +75,7 @@ class UserModel {
 
   Map<String, dynamic> toJson() => {
     'user_id':         id,
-    'email':           email,
+    // 'email':           email,
     'username':        username,
     'display_name':    displayName,
     'bio':             bio,

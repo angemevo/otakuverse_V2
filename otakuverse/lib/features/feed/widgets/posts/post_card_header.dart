@@ -46,7 +46,7 @@ class PostCardHeader extends StatelessWidget {
                     Text(
                       post.displayNameOrUsername,
                       style: GoogleFonts.inter(
-                        color:      AppColors.pureWhite,
+                        color:      AppColors.textPrimary,
                         fontWeight: FontWeight.w600,
                         fontSize:   14,
                       ),
@@ -55,7 +55,7 @@ class PostCardHeader extends StatelessWidget {
                       const SizedBox(width: 6),
                       const Icon(
                         HeroiconsOutline.mapPin,
-                        color: AppColors.crimsonRed,
+                        color: AppColors.primary,
                         size:  13,
                       ),
                     ],
@@ -64,14 +64,14 @@ class PostCardHeader extends StatelessWidget {
                     Row(children: [
                       const Icon(
                         HeroiconsOutline.mapPin,
-                        color: AppColors.mediumGray,
+                        color: AppColors.textMuted,
                         size:  10,
                       ),
                       const SizedBox(width: 2),
                       Text(
                         post.location!,
                         style: GoogleFonts.inter(
-                          color:    AppColors.mediumGray,
+                          color:    AppColors.textMuted,
                           fontSize: 11,
                         ),
                       ),
@@ -88,7 +88,7 @@ class PostCardHeader extends StatelessWidget {
               padding: EdgeInsets.all(8),
               child: Icon(
                 HeroiconsOutline.ellipsisHorizontal,
-                color: AppColors.pureWhite,
+                color: AppColors.textPrimary,
                 size:  22,
               ),
             ),
