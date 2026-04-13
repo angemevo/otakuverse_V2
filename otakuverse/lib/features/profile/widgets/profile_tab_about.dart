@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:otakuverse/core/constants/colors.dart';
+import 'package:otakuverse/core/constants/app_colors.dart';
 import 'package:otakuverse/features/profile/models/profile_model.dart';
 
 class ProfileTabAbout extends StatelessWidget {

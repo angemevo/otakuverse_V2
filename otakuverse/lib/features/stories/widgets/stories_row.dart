@@ -5,7 +5,7 @@ import 'package:otakuverse/features/stories/models/story_model.dart';
 import 'package:otakuverse/features/stories/screens/create_story/create_story_screen.dart';
 import 'package:otakuverse/features/stories/screens/story_viewer_screen.dart';
 import 'package:otakuverse/features/stories/widgets/story_circle.dart';
-import 'package:otakuverse/core/constants/colors.dart';
+import 'package:otakuverse/core/constants/app_colors.dart';
 
 class StoriesRow extends StatelessWidget {
   const StoriesRow({super.key});

@@ -9,22 +9,24 @@ class MessageService {
 
   // ─── CONVERSATIONS ───────────────────────────────────────────────
   Future<List<ConversationModel>>
-      getConversations() async {
+    getConversations() async {
     try {
-      // ✅ Mes conversations via participants
-      final partData = await _supabase
+      final uid = _supabase.auth.currentUser!.id;
+
+      // ✅ Récupérer mes conversation_ids
+      final myParts = await _supabase
           .from('conversation_participants')
           .select('conversation_id')
-          .eq('user_id', _uid);
+          .eq('user_id', uid);
 
-      final convIds = (partData as List)
+      final myIds = (myParts as List)
           .map((e) => e['conversation_id'] as String)
           .toList();
 
-      if (convIds.isEmpty) return [];
+      if (myIds.isEmpty) return [];
 
-      // ✅ Charger les conversations
-      final convData = await _supabase
+      // ✅ Charger les conversations avec TOUS les participants
+      final data = await _supabase
           .from('conversations')
           .select('''
             id, type, name, avatar_url,
@@ -33,19 +35,20 @@ class MessageService {
               user_id,
               last_read_at,
               profiles(
-                user_id, username,
-                display_name, avatar_url
+                user_id,
+                username,
+                display_name,
+                avatar_url
               )
             )
           ''')
-          .inFilter('id', convIds)
+          .inFilter('id', myIds)
           .order('last_message_at',
-              ascending:   false,
-              nullsFirst:  false);
+              ascending: false, nullsFirst: false);
 
-      return (convData as List).map((json) {
-        final map = json as Map<String, dynamic>;
-        return _mapConversation(map);
+      return (data as List).map((json) {
+        return _mapConversation(
+            json as Map<String, dynamic>, uid);
       }).toList();
     } catch (e) {
       debugPrint('❌ getConversations: $e');
@@ -55,57 +58,70 @@ class MessageService {
 
   // ─── MAPPER UNE CONVERSATION ─────────────────────────────────────
   ConversationModel _mapConversation(
-      Map<String, dynamic> json) {
+    Map<String, dynamic> json, String uid) {
+
     final parts = (json['conversation_participants']
             as List? ?? [])
         .cast<Map<String, dynamic>>();
 
-    // ✅ L'autre participant (conversation directe)
+    debugPrint('📋 Participants: ${parts.length}');
+    for (final p in parts) {
+      debugPrint(
+          '  → user_id: ${p['user_id']} '
+          'profile: ${p['profiles']}');
+    }
+
+    // ✅ L'autre participant
     final other = parts.firstWhere(
-      (p) => p['user_id'] != _uid,
-      orElse: () => {},
+      (p) => p['user_id'] != uid,
+      orElse: () => <String, dynamic>{},
     );
 
     final otherProfile =
         other['profiles'] as Map<String, dynamic>?;
 
-    // ✅ Compter les non lus
+    debugPrint(
+        '📋 otherProfile: $otherProfile');
+
+    // ✅ Calculer non lus via last_read_at
     final myPart = parts.firstWhere(
-      (p) => p['user_id'] == _uid,
-      orElse: () => {},
+      (p) => p['user_id'] == uid,
+      orElse: () => <String, dynamic>{},
     );
+
     final lastReadAt = myPart['last_read_at'] != null
         ? DateTime.parse(
             myPart['last_read_at'] as String)
         : null;
 
-    final lastMsgAt = json['last_message_at'] != null
-        ? DateTime.parse(
-            json['last_message_at'] as String)
-        : null;
+    final lastMsgAt =
+        json['last_message_at'] != null
+            ? DateTime.parse(
+                json['last_message_at'] as String)
+            : null;
 
-    // ✅ Non lu si last_message_at > last_read_at
     final isUnread = lastMsgAt != null &&
         (lastReadAt == null ||
             lastMsgAt.isAfter(lastReadAt));
 
     return ConversationModel(
-      id:              json['id']           as String,
-      type:            json['type']         as String,
-      name:            json['name']         as String?,
-      avatarUrl:       json['avatar_url']   as String?,
-      lastMessageText: json['last_message_text']
-          as String?,
-      lastMessageAt:   lastMsgAt,
-      unreadCount:     isUnread ? 1 : 0,
-      otherUserId:     otherProfile?['user_id']
-          as String?,
-      otherUsername:   otherProfile?['username']
-          as String?,
-      otherDisplayName: otherProfile?['display_name']
-          as String?,
-      otherAvatarUrl:  otherProfile?['avatar_url']
-          as String?,
+      id:    json['id']   as String,
+      type:  json['type'] as String? ?? 'direct',
+      name:      json['name']       as String?,
+      avatarUrl: json['avatar_url'] as String?,
+      lastMessageText:
+          json['last_message_text'] as String?,
+      lastMessageAt: lastMsgAt,
+      unreadCount:   isUnread ? 1 : 0,
+      // ✅ Depuis le profil jointé de l'autre participant
+      otherUserId:
+          otherProfile?['user_id']      as String?,
+      otherUsername:
+          otherProfile?['username']     as String?,
+      otherDisplayName:
+          otherProfile?['display_name'] as String?,
+      otherAvatarUrl:
+          otherProfile?['avatar_url']   as String?,
     );
   }
 
@@ -200,33 +216,71 @@ class MessageService {
 
   // ─── MESSAGES D'UNE CONVERSATION ─────────────────────────────────
   Future<List<MessageModel>> getMessages(
-      String conversationId,
-      {int limit = 50, int offset = 0}) async {
-    try {
-      final data = await _supabase
-          .from('messages')
-          .select('''
-            *,
-            sender:profiles(
-              user_id, username,
-              display_name, avatar_url
-            )
-          ''')
-          .eq('conversation_id', conversationId)
-          .order('created_at', ascending: false)
-          .range(offset, offset + limit - 1);
+    String conversationId,
+    {int limit = 50, int offset = 0}) async {
+  try {
+    final data = await _supabase
+        .from('messages')
+        .select('''
+          *,
+          sender:profiles(
+            user_id, username,
+            display_name, avatar_url
+          )
+        ''')
+        .eq('conversation_id', conversationId)
+        .order('created_at', ascending: false)
+        .range(offset, offset + limit - 1);
 
-      return (data as List)
-          .map((m) => MessageModel.fromJson(
-              m as Map<String, dynamic>))
-          .toList()
-          .reversed
-          .toList();
-    } catch (e) {
-      debugPrint('❌ getMessages: $e');
-      return [];
-    }
+    final messages = (data as List)
+        .map((m) => MessageModel.fromJson(
+            m as Map<String, dynamic>))
+        .toList()
+        .reversed
+        .toList();
+
+    // ✅ Charger les messages originaux des replies
+    final replyIds = messages
+        .where((m) => m.replyToId != null)
+        .map((m) => m.replyToId!)
+        .toSet()
+        .toList();
+
+    if (replyIds.isEmpty) return messages;
+
+    final repliesData = await _supabase
+        .from('messages')
+        .select('''
+          *,
+          sender:profiles(
+            user_id, username,
+            display_name, avatar_url
+          )
+        ''')
+        .inFilter('id', replyIds);
+
+    // ✅ Map id → MessageModel
+    final repliesMap = {
+      for (final r in repliesData as List)
+        (r as Map<String, dynamic>)['id'] as String:
+            MessageModel.fromJson(r),
+    };
+
+    // ✅ Associer chaque message à son original
+    return messages.map((m) {
+      if (m.replyToId != null &&
+          repliesMap.containsKey(m.replyToId)) {
+        return m.copyWith(
+          replyToMessage: repliesMap[m.replyToId],
+        );
+      }
+      return m;
+    }).toList();
+  } catch (e) {
+    debugPrint('❌ getMessages: $e');
+    return [];
   }
+}
 
   // ─── ENVOYER UN MESSAGE ──────────────────────────────────────────
   Future<MessageModel?> sendMessage({
@@ -241,9 +295,9 @@ class MessageService {
           .insert({
             'conversation_id': conversationId,
             'sender_id':       _uid,
-            if (text     != null) 'text':       text,
-            if (imageUrl != null) 'image_url':  imageUrl,
-            if (replyToId!= null) 'reply_to_id': replyToId,
+            if (text      != null) 'text':        text,
+            if (imageUrl  != null) 'image_url':   imageUrl,
+            if (replyToId != null) 'reply_to_id': replyToId,
           })
           .select('''
             *,
@@ -254,6 +308,7 @@ class MessageService {
           ''')
           .single();
 
+      debugPrint('✅ sendMessage OK: ${data['id']}');
       return MessageModel.fromJson(
           data);
     } catch (e) {
@@ -261,7 +316,6 @@ class MessageService {
       return null;
     }
   }
-
   // ─── MARQUER COMME LU ────────────────────────────────────────────
   Future<void> markAsRead(
       String conversationId) async {

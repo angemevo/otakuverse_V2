@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../constants/colors.dart';
+import '../../constants/app_colors.dart';
 
 enum AppButtonType { primary, secondary, ghost }
 
@@ -61,7 +61,7 @@ class AppButton extends StatelessWidget {
         return Colors.white;  // Blanc sur fond rouge
       case AppButtonType.secondary:
       case AppButtonType.ghost:
-        return AppColors.crimsonRed;  // Rouge sur fond clair
+        return AppColors.primary;  // Rouge sur fond clair
     }
   }
 
@@ -69,10 +69,10 @@ class AppButton extends StatelessWidget {
   Color _getTextColor() {
     switch (type) {
       case AppButtonType.primary:
-        return AppColors.pureWhite;  // Texte blanc sur fond rouge
+        return AppColors.textPrimary;  // Texte blanc sur fond rouge
       case AppButtonType.secondary:
       case AppButtonType.ghost:
-        return AppColors.crimsonRed;  // Texte rouge
+        return AppColors.primary;  // Texte rouge
     }
   }
 
@@ -83,9 +83,9 @@ class AppButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.crimsonRed,
+          backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,  // ✅ CORRECTION : Couleur texte définie
-          disabledBackgroundColor: AppColors.crimsonRed.withOpacity(0.4),
+          disabledBackgroundColor: AppColors.primary.withOpacity(0.4),
           elevation: 4,
           shadowColor: const Color(0x4DDC143C),
           shape: RoundedRectangleBorder(
@@ -104,12 +104,12 @@ class AppButton extends StatelessWidget {
       child: OutlinedButton(
         onPressed: isLoading ? null : onPressed,
         style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.crimsonRed,
-          disabledForegroundColor: AppColors.crimsonRed.withOpacity(0.4),  // ✅ AMÉLIORATION
+          foregroundColor: AppColors.primary,
+          disabledForegroundColor: AppColors.primary.withOpacity(0.4),  // ✅ AMÉLIORATION
           side: BorderSide(
             color: isLoading  // ✅ AMÉLIORATION : Bordure disabled
-                ? AppColors.crimsonRed.withOpacity(0.4)
-                : AppColors.crimsonRed,
+                ? AppColors.primary.withOpacity(0.4)
+                : AppColors.primary,
           ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
@@ -124,8 +124,8 @@ class AppButton extends StatelessWidget {
     return TextButton(
       onPressed: isLoading ? null : onPressed,
       style: TextButton.styleFrom(
-        foregroundColor: AppColors.crimsonRed,
-        disabledForegroundColor: AppColors.crimsonRed.withOpacity(0.4),  // ✅ AMÉLIORATION
+        foregroundColor: AppColors.primary,
+        disabledForegroundColor: AppColors.primary.withOpacity(0.4),  // ✅ AMÉLIORATION
       ),
       child: child,
     );

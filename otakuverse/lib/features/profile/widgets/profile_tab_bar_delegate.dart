@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:otakuverse/core/constants/colors.dart';
+import 'package:otakuverse/core/constants/app_colors.dart';
 
 class ProfileTabBarDelegate extends SliverPersistentHeaderDelegate {
   final TabBar tabBar;

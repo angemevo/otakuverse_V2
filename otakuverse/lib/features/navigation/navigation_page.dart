@@ -1,102 +1,203 @@
 import 'package:flutter/material.dart';
-import 'package:otakuverse/core/constants/colors.dart';
-import 'package:otakuverse/features/notification/screens/notification_screen.dart';
-import 'package:otakuverse/features/community/screens/community_screen.dart';
+import 'package:get/get.dart';
+import 'package:otakuverse/core/constants/app_colors.dart';
+import 'package:otakuverse/core/constants/app_text_styles.dart';
+import 'package:otakuverse/core/widgets/app_bottom_nav.dart';
+import 'package:otakuverse/core/widgets/app_bar_widget.dart';
 import 'package:otakuverse/features/feed/screens/home_screen.dart';
-import 'package:otakuverse/features/navigation/widgets/bottom_nav_bar.dart';
+import 'package:otakuverse/features/notification/screens/notification_screen.dart';
 import 'package:otakuverse/features/profile/screens/profile_screen.dart';
+import 'package:otakuverse/features/search/screens/search_screen.dart';
 
 class NavigationPage extends StatefulWidget {
   const NavigationPage({super.key});
 
   @override
-  State<NavigationPage> createState() => _NavigationPageState();
+  State<NavigationPage> createState() =>
+      _NavigationPageState();
 }
 
 class _NavigationPageState extends State<NavigationPage> {
   int _currentIndex = 0;
 
-  // ✅ Un NavigatorKey par tab
-  final List<GlobalKey<NavigatorState>> _navigatorKeys = [
-    GlobalKey<NavigatorState>(), // Tab 0 — Accueil
-    GlobalKey<NavigatorState>(), // Tab 1 — Recherche
-    GlobalKey<NavigatorState>(), // Tab 2 — Activité
-    GlobalKey<NavigatorState>(), // Tab 3 — Profil
+  // ✅ Pages — Community et Events = placeholders Sprint 4 & 5
+  static final _pages = [
+    const HomeScreen(),
+    const _ComingSoon(label: 'Community',    icon: Icons.groups_2_rounded),
+    const SizedBox.shrink(), // Create — géré par bottom nav
+    const _ComingSoon(label: 'Events',       icon: Icons.event_rounded),
+    const ProfileScreen(),
   ];
-
-  // ✅ Mapping index BottomNav → index tab
-  // BottomNav : 0=Accueil, 1=Recherche, 2=Créer(ignoré), 3=Activité, 4=Profil
-  int _navIndexToTabIndex(int navIndex) {
-    switch (navIndex) {
-      case 0: return 0;
-      case 1: return 1;
-      case 3: return 2;
-      case 4: return 3;
-      default: return 0;
-    }
-  }
-
-  int get _currentTabIndex => _navIndexToTabIndex(_currentIndex);
-
-  // ✅ Bouton retour Android
-  Future<bool> _onWillPop() async {
-    final nav = _navigatorKeys[_currentTabIndex].currentState;
-    if (nav != null && nav.canPop()) {
-      nav.pop();
-      return false;
-    }
-    return true;
-  }
-
-  void _onNavTap(int navIndex) {
-    if (navIndex == 2) return; // CreatePostButton
-
-    final tabIndex = _navIndexToTabIndex(navIndex);
-
-    // ✅ Double tap → retour à la racine du tab
-    if (navIndex == _currentIndex) {
-      _navigatorKeys[tabIndex]
-          .currentState
-          ?.popUntil((route) => route.isFirst);
-      return;
-    }
-
-    setState(() => _currentIndex = navIndex);
-  }
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: _onWillPop,
-      child: Scaffold(
-        backgroundColor: AppColors.deepBlack,
-        body: Stack(
-          children: [
-            _buildTab(0, const HomeScreen()),
-            _buildTab(1, const CommunityScreen()),
-            _buildTab(2, const NotificationScreen()),
-            _buildTab(3, const ProfileScreen()),
-          ],
-        ),
-        bottomNavigationBar: BottomNavBar(
-          currentIndex: _currentIndex,
-          onTap:        _onNavTap,
-        ),
+    return Scaffold(
+      backgroundColor: AppColors.bgPrimary,
+
+      // ✅ App bar avec Discover + Notifications
+      appBar: _currentIndex == 4
+          ? null  // Profil gère son propre app bar
+          : OtakuverseAppBar(
+              unreadCount:    0, // TODO: brancher NotificationController
+              onSearch:       () => Get.to(() => const SearchScreen()),
+              onNotification: () => Get.to(() => const NotificationScreen()),
+            ),
+
+      body: IndexedStack(
+        index: _currentIndex,
+        children: _pages,
+      ),
+
+      bottomNavigationBar: AppBottomNav(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          if (index == 2) {
+            // ✅ Bouton créer → sheet de choix
+            _showCreateSheet();
+            return;
+          }
+          setState(() => _currentIndex = index);
+        },
       ),
     );
   }
 
-  Widget _buildTab(int tabIndex, Widget screen) {
-    return Offstage(
-      offstage: _currentTabIndex != tabIndex,
-      child: Navigator(
-        key: _navigatorKeys[tabIndex],
-        // ✅ Pas de conflit avec GetMaterialApp router
-        onGenerateRoute: (settings) => MaterialPageRoute(
-          settings: settings,
-          builder:  (_) => screen,
+  // ─── SHEET CRÉER ─────────────────────────────────────────────────
+  void _showCreateSheet() {
+    showModalBottomSheet(
+      context:         context,
+      backgroundColor: AppColors.bgSheet,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+            top: Radius.circular(24)),
+      ),
+      builder: (_) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+              20, 8, 20, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40, height: 4,
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                  color: AppColors.borderLight,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Text('Que veux-tu créer ?',
+                  style: AppTextStyles.h3),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  _CreateOption(
+                    icon:  Icons.image_outlined,
+                    label: 'Post',
+                    color: AppColors.primary,
+                    onTap: () {
+                      Navigator.pop(context);
+                      // TODO: CreatePostScreen
+                    },
+                  ),
+                  _CreateOption(
+                    icon:  Icons.auto_stories_outlined,
+                    label: 'Story',
+                    color: AppColors.sakura,
+                    onTap: () {
+                      Navigator.pop(context);
+                      // TODO: CreateStoryScreen
+                    },
+                  ),
+                  _CreateOption(
+                    icon:  Icons.rate_review_outlined,
+                    label: 'Avis',
+                    color: AppColors.gold,
+                    onTap: () {
+                      Navigator.pop(context);
+                      // TODO: Sprint 5 — ReviewForm
+                    },
+                  ),
+                  _CreateOption(
+                    icon:  Icons.videocam_outlined,
+                    label: 'Clip',
+                    color: AppColors.accent,
+                    onTap: () {
+                      Navigator.pop(context);
+                      // TODO: CreateShortScreen
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
+}
+
+// ─── CREATE OPTION ───────────────────────────────────────────────────
+class _CreateOption extends StatelessWidget {
+  final IconData     icon;
+  final String       label;
+  final Color        color;
+  final VoidCallback onTap;
+
+  const _CreateOption({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) => Expanded(
+    child: GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            width: 56, height: 56,
+            decoration: BoxDecoration(
+              color:        color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                  color: color.withValues(alpha: 0.3)),
+            ),
+            child: Icon(icon, color: color, size: 26),
+          ),
+          const SizedBox(height: 6),
+          Text(label, style: AppTextStyles.caption),
+        ],
+      ),
+    ),
+  );
+}
+
+// ─── PLACEHOLDER ─────────────────────────────────────────────────────
+class _ComingSoon extends StatelessWidget {
+  final String   label;
+  final IconData icon;
+  const _ComingSoon({
+    required this.label,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) => Center(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(icon, color: AppColors.textMuted, size: 56),
+        const SizedBox(height: 16),
+        Text(label, style: AppTextStyles.h3),
+        const SizedBox(height: 8),
+        Text(
+          'Disponible au Sprint ${label == "Community" ? 4 : 5}',
+          style: AppTextStyles.bodySmall,
+        ),
+      ],
+    ),
+  );
 }

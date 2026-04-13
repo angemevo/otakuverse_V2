@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:typed_data';
-import 'package:otakuverse/core/constants/colors.dart';
+import 'package:otakuverse/core/constants/app_colors.dart';
 import 'package:otakuverse/features/profile/models/profile_model.dart';
 import 'package:otakuverse/features/profile/services/profile_service.dart';
 

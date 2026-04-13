@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:otakuverse/core/constants/colors.dart';
+import 'package:otakuverse/core/constants/app_colors.dart';
 import 'package:otakuverse/core/services/connectivity_service.dart';
 import 'package:otakuverse/core/widgets/no_internet_widget.dart';
 
@@ -23,7 +23,7 @@ class ConnectivityWrapper extends StatelessWidget {
     return Obx(() {
       if (!connectivity.isConnected.value) {
         return Scaffold(
-          backgroundColor: AppColors.deepBlack,
+          backgroundColor: AppColors.bgPrimary,
           body: NoInternetWidget(onRetry: onRetry),
         );
       }

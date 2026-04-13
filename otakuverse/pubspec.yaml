@@ -205,13 +205,17 @@ flutter:
     # - .env
 
   fonts:
-    - family: Poppins
+    - family: Bangers        # Titres impact — feel manga
       fonts:
-        - asset: assets/fonts/Poppins-Regular.ttf
-        - asset: assets/fonts/Poppins-Bold.ttf
-          weight: 700
-    - family: Inter
+        - asset: assets/fonts/Bangers-Regular.ttf
+
+    - family: Nunito         # Corps de texte — lisible, moderne, doux
       fonts:
-        - asset: assets/fonts/Inter_18pt-Light.ttf
-          weight: 300
-        - asset: assets/fonts/Inter_18pt-Regular.ttf
+        - asset: assets/fonts/Nunito-Regular.ttf
+        - asset: assets/fonts/Nunito-SemiBold.ttf
+        - asset: assets/fonts/Nunito-Bold.ttf
+        - asset: assets/fonts/Nunito-ExtraBold.ttf
+
+    - family: JetBrainsMono  # Chiffres, rangs, stats
+      fonts:
+        - asset: assets/fonts/JetBrainsMono-Regular.ttf

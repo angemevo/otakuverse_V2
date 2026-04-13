@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:heroicons_flutter/heroicons_flutter.dart';
-import 'package:otakuverse/core/constants/colors.dart';
+import 'package:otakuverse/core/constants/app_colors.dart';
 
 class NoInternetWidget extends StatelessWidget {
   final VoidCallback? onRetry;
@@ -21,17 +21,17 @@ class NoInternetWidget extends StatelessWidget {
               width:  80,
               height: 80,
               decoration: BoxDecoration(
-                color:        AppColors.darkGray,
+                color:        AppColors.bgCard,
                 shape:        BoxShape.circle,
                 border: Border.all(
-                  color: AppColors.mediumGray
+                  color: AppColors.textMuted
                       .withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),
               child: const Icon(
                 HeroiconsOutline.signalSlash,
-                color: AppColors.mediumGray,
+                color: AppColors.textMuted,
                 size:  36,
               ),
             ),
@@ -41,7 +41,7 @@ class NoInternetWidget extends StatelessWidget {
             Text(
               'Pas de connexion',
               style: GoogleFonts.poppins(
-                color:      AppColors.pureWhite,
+                color:      AppColors.textPrimary,
                 fontWeight: FontWeight.w600,
                 fontSize:   18,
               ),
@@ -52,7 +52,7 @@ class NoInternetWidget extends StatelessWidget {
             Text(
               'Vérifie ta connexion internet\net réessaie.',
               style: GoogleFonts.inter(
-                color:    AppColors.mediumGray,
+                color:    AppColors.textMuted,
                 fontSize: 14,
                 height:   1.5,
               ),
@@ -70,7 +70,7 @@ class NoInternetWidget extends StatelessWidget {
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
                       colors: [
-                        AppColors.crimsonRed,
+                        AppColors.primary,
                         Color(0xFFFF4D6D),
                       ],
                       begin: Alignment.topLeft,
@@ -79,7 +79,7 @@ class NoInternetWidget extends StatelessWidget {
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.crimsonRed
+                        color: AppColors.primary
                             .withValues(alpha: 0.4),
                         blurRadius: 12,
                         offset:     const Offset(0, 4),

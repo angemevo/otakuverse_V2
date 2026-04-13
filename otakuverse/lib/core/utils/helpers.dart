@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../constants/app_constants.dart';
-import '../constants/colors.dart';
+import '../constants/app_colors.dart';
 
 /// Fonctions utilitaires générales
 class Helpers {
@@ -16,13 +16,13 @@ class Helpers {
     Get.snackbar(
       'Succès',
       message,
-      backgroundColor: AppColors.successGreen,
-      colorText: AppColors.pureWhite,
+      backgroundColor: AppColors.success,
+      colorText: AppColors.textPrimary,
       snackPosition: SnackPosition.BOTTOM,
       duration: const Duration(seconds: 3),
       margin: const EdgeInsets.all(16),
       borderRadius: 12,
-      icon: const Icon(Icons.check_circle, color: AppColors.pureWhite),
+      icon: const Icon(Icons.check_circle, color: AppColors.textPrimary),
     );
   }
   
@@ -31,13 +31,13 @@ class Helpers {
     Get.snackbar(
       'Erreur',
       message,
-      backgroundColor: AppColors.errorRed,
-      colorText: AppColors.pureWhite,
+      backgroundColor: AppColors.error,
+      colorText: AppColors.textPrimary,
       snackPosition: SnackPosition.BOTTOM,
       duration: const Duration(seconds: 4),
       margin: const EdgeInsets.all(16),
       borderRadius: 12,
-      icon: const Icon(Icons.error, color: AppColors.pureWhite),
+      icon: const Icon(Icons.error, color: AppColors.textPrimary),
     );
   }
   
@@ -46,13 +46,13 @@ class Helpers {
     Get.snackbar(
       'Attention',
       message,
-      backgroundColor: AppColors.warningOrange,
-      colorText: AppColors.deepBlack,
+      backgroundColor: AppColors.warning,
+      colorText: AppColors.bgPrimary,
       snackPosition: SnackPosition.BOTTOM,
       duration: const Duration(seconds: 3),
       margin: const EdgeInsets.all(16),
       borderRadius: 12,
-      icon: const Icon(Icons.warning, color: AppColors.deepBlack),
+      icon: const Icon(Icons.warning, color: AppColors.bgPrimary),
     );
   }
   
@@ -61,13 +61,13 @@ class Helpers {
     Get.snackbar(
       'Info',
       message,
-      backgroundColor: AppColors.infoBlue,
-      colorText: AppColors.pureWhite,
+      backgroundColor: AppColors.neonBlue,
+      colorText: AppColors.textPrimary,
       snackPosition: SnackPosition.BOTTOM,
       duration: const Duration(seconds: 3),
       margin: const EdgeInsets.all(16),
       borderRadius: 12,
-      icon: const Icon(Icons.info, color: AppColors.pureWhite),
+      icon: const Icon(Icons.info, color: AppColors.textPrimary),
     );
   }
   
@@ -94,7 +94,7 @@ class Helpers {
           ElevatedButton(
             onPressed: () => Get.back(result: true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.crimsonRed,
+              backgroundColor: AppColors.primary,
             ),
             child: Text(confirmText),
           ),
@@ -113,7 +113,7 @@ class Helpers {
           content: Row(
             children: [
               const CircularProgressIndicator(
-                color: AppColors.crimsonRed,
+                color: AppColors.primary,
               ),
               const SizedBox(width: 20),
               Expanded(child: Text(message)),
@@ -144,44 +144,13 @@ class Helpers {
   }) {
     return Get.bottomSheet<T>(
       child,
-      backgroundColor: Get.isDarkMode ? AppColors.darkGray : AppColors.pureWhite,
+      backgroundColor: Get.isDarkMode ? AppColors.bgCard : AppColors.textPrimary,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       isDismissible: isDismissible,
       enableDrag: enableDrag,
       isScrollControlled: true,
-    );
-  }
-  
-  // ============================================
-  // NAVIGATION
-  // ============================================
-  
-  /// Naviguer vers une page avec animation
-  static Future<T?> navigateTo<T>(Widget page) async {
-    return await Get.to<T>(
-      () => page,
-      transition: Transition.cupertino,
-      duration: AppConstants.animationNormal,
-    );
-  }
-  
-  /// Naviguer et remplacer
-  static Future<T?> navigateReplace<T>(Widget page) async {
-    return await Get.off<T>(
-      () => page,
-      transition: Transition.cupertino,
-      duration: AppConstants.animationNormal,
-    );
-  }
-  
-  /// Naviguer et supprimer tout l'historique
-  static Future<T?> navigateOffAll<T>(Widget page) async {
-    return await Get.offAll<T>(
-      () => page,
-      transition: Transition.cupertino,
-      duration: AppConstants.animationNormal,
     );
   }
   
@@ -205,8 +174,8 @@ class Helpers {
       scheme: 'mailto',
       path: email,
       queryParameters: {
-        'subject': ?subject,
-        'body': ?body,
+        if (subject != null) 'subject': subject,
+        if (body != null) 'body': body,
       },
     );
     
@@ -280,39 +249,6 @@ class Helpers {
   static List<String> extractUrls(String text) {
     final regex = RegExp(AppConstants.urlPattern);
     return regex.allMatches(text).map((m) => m.group(0)!).toList();
-  }
-  
-  // ============================================
-  // CLIPBOARD
-  // ============================================
-  
-  /// Copier du texte dans le presse-papiers
-  static Future<void> copyToClipboard(String text) async {
-    // Nécessite: import 'package:flutter/services.dart';
-    // await Clipboard.setData(ClipboardData(text: text));
-    showSuccessSnackbar('Copié dans le presse-papiers');
-  }
-  
-  // ============================================
-  // HAPTIC FEEDBACK
-  // ============================================
-  
-  /// Vibration légère
-  static Future<void> lightHaptic() async {
-    // Nécessite: import 'package:flutter/services.dart';
-    // await HapticFeedback.lightImpact();
-  }
-  
-  /// Vibration medium
-  static Future<void> mediumHaptic() async {
-    // Nécessite: import 'package:flutter/services.dart';
-    // await HapticFeedback.mediumImpact();
-  }
-  
-  /// Vibration heavy
-  static Future<void> heavyHaptic() async {
-    // Nécessite: import 'package:flutter/services.dart';
-    // await HapticFeedback.heavyImpact();
   }
   
   // ============================================

@@ -6,7 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:otakuverse/features/stories/screens/create_story/create_story_screen.dart';
 import 'package:photo_manager/photo_manager.dart';
-import 'package:otakuverse/core/constants/colors.dart';
+import 'package:otakuverse/core/constants/app_colors.dart';
 import 'package:otakuverse/features/feed/screens/create_post_screen.dart';
 import 'package:otakuverse/features/feed/screens/create_short_screen.dart';
 

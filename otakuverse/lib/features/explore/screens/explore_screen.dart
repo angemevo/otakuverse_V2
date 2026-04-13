@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:heroicons_flutter/heroicons_flutter.dart';
-import 'package:otakuverse/core/constants/colors.dart';
+import 'package:otakuverse/core/constants/app_colors.dart';
 import 'package:otakuverse/core/widgets/connectivity_wrapper.dart';
 import 'package:otakuverse/features/explore/controller/explore_controller.dart';
 import 'package:otakuverse/features/feed/controllers/post_controller.dart';
@@ -46,9 +46,9 @@ class _ExploreScreenState extends State<ExploreScreen> {
     return ConnectivityWrapper(
       onRetry: _controller.loadPosts,
       child: Scaffold(
-        backgroundColor: AppColors.deepBlack,
+        backgroundColor: AppColors.bgCard,
         appBar: AppBar(
-          backgroundColor:           AppColors.deepBlack,
+          backgroundColor:           AppColors.bgCard,
           elevation:                 0,
           automaticallyImplyLeading: false,
           titleSpacing:              0,
@@ -59,14 +59,14 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 onTap: () => Navigator.of(context).pop(),
                 child: const Icon(
                   HeroiconsOutline.arrowLeft,
-                  color: AppColors.pureWhite,
+                  color: AppColors.textPrimary,
                   size:  22,
                 ),
               ),
               const SizedBox(width: 12),
               Text('Explorer',
                   style: GoogleFonts.poppins(
-                      color:      AppColors.pureWhite,
+                      color:      AppColors.textPrimary,
                       fontWeight: FontWeight.w600)),
             ]),
           ),
@@ -84,7 +84,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 if (_controller.isLoading.value) {
                   return const Center(
                     child: CircularProgressIndicator(
-                        color: AppColors.crimsonRed),
+                        color: AppColors.primary),
                   );
                 }
 
@@ -100,8 +100,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
                 // ─ Liste posts ────────────────────────────────
                 return RefreshIndicator(
-                  color:           AppColors.crimsonRed,
-                  backgroundColor: AppColors.deepBlack,
+                  color:           AppColors.primary,
+                  backgroundColor: AppColors.bgCard,
                   onRefresh:       _controller.loadPosts,
                   child: ListView.builder(
                     controller: _scrollController,
@@ -119,7 +119,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                             child: Center(
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: AppColors.crimsonRed,
+                                color: AppColors.primary,
                               ),
                             ),
                           );
@@ -134,7 +134,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                               child: Text(
                                 'Tu as tout vu ! 🎉',
                                 style: GoogleFonts.inter(
-                                  color:    AppColors.mediumGray,
+                                  color:    AppColors.textMuted,
                                   fontSize: 13,
                                 ),
                               ),
@@ -198,19 +198,19 @@ class _ExploreScreenState extends State<ExploreScreen> {
                     horizontal: 16, vertical: 6),
                 decoration: BoxDecoration(
                   color: selected
-                      ? AppColors.crimsonRed
-                      : AppColors.darkGray,
+                      ? AppColors.primary
+                      : AppColors.bgCard,
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
                     color: selected
-                        ? AppColors.crimsonRed
+                        ? AppColors.primary
                         : Colors.white.withValues(alpha: 0.1),
                     width: 1,
                   ),
                   boxShadow: selected
                       ? [
                           BoxShadow(
-                            color: AppColors.crimsonRed
+                            color: AppColors.primary
                                 .withValues(alpha: 0.4),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
@@ -223,7 +223,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   style: GoogleFonts.inter(
                     color: selected
                         ? Colors.white
-                        : AppColors.mediumGray,
+                        : AppColors.textMuted,
                     fontWeight: selected
                         ? FontWeight.w600
                         : FontWeight.w400,
@@ -267,7 +267,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const Icon(HeroiconsOutline.sparkles,
-              color: AppColors.mediumGray, size: 48),
+              color: AppColors.textMuted, size: 48),
           const SizedBox(height: 12),
           Text(
             _controller.selectedGenre.value.isEmpty
@@ -275,7 +275,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 : 'Aucun post pour '
                   '"${_controller.selectedGenre.value}"',
             style: GoogleFonts.poppins(
-                color:      AppColors.pureWhite,
+                color:      AppColors.textPrimary,
                 fontWeight: FontWeight.w600,
                 fontSize:   16),
             textAlign: TextAlign.center,
@@ -287,7 +287,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   _controller.selectedGenre.value),
               child: Text('Voir tous les posts',
                   style: GoogleFonts.inter(
-                      color:      AppColors.crimsonRed,
+                      color:      AppColors.primary,
                       fontWeight: FontWeight.w600)),
             ),
         ],
@@ -302,12 +302,12 @@ class _ExploreScreenState extends State<ExploreScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const Icon(HeroiconsOutline.exclamationCircle,
-              color: AppColors.mediumGray, size: 48),
+              color: AppColors.textMuted, size: 48),
           const SizedBox(height: 12),
           Text(
             _controller.errorMessage.value,
             style: GoogleFonts.inter(
-                color:    AppColors.mediumGray,
+                color:    AppColors.textMuted,
                 fontSize: 14),
             textAlign: TextAlign.center,
           ),
@@ -318,7 +318,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
               padding: const EdgeInsets.symmetric(
                   horizontal: 24, vertical: 12),
               decoration: BoxDecoration(
-                color:        AppColors.crimsonRed,
+                color:        AppColors.primary,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text('Réessayer',

@@ -1,180 +1,172 @@
 class ProfileModel {
-  final String id;
-  final String userId;
-  final String username;           // ✅ ajouté — obligatoire
-  final String? email;             // ✅ ajouté
+  final String  id;
+  final String  userId;
   final String? displayName;
   final String? bio;
   final String? avatarUrl;
   final String? bannerUrl;
-  final String? birthDate;
+  final String? website;
   final String? gender;
   final String? location;
-  final String? website;
-  final List<String> favoriteAnime;
-  final List<String> favoriteManga;
-  final List<String> favoriteGames;  // ✅ ajouté
-  final List<String> favoriteGenres;
-  final int followersCount;
-  final int followingCount;
-  final int postsCount;
+  final String? birthDate;
+
+  // ─── Stats sociales ──────────────────────────────────────────────
+  final int  followersCount;
+  final int  followingCount;
+  final int  postsCount;
   final bool isPrivate;
   final bool isVerified;
+
+  // ─── Goûts otaku ─────────────────────────────────────────────────
+  final List<String> favoriteAnime;
+  final List<String> favoriteManga;
+  final List<String> favoriteGames;
+  final List<String> favoriteGenres;
+
+  // ✅ Nouveau — Rank système
+  final String otakuRank;    // Novice, Otaku, Senpai...
+  final int    otakuLevel;   // 1-50
+  final int    otakuPoints;  // Points bruts
+  final int    watchlistCount;
+  final int    reviewsCount;
+
   final DateTime createdAt;
   final DateTime updatedAt;
 
   const ProfileModel({
     required this.id,
     required this.userId,
-    required this.username,          // ✅
-    this.email,                      // ✅
     this.displayName,
     this.bio,
     this.avatarUrl,
     this.bannerUrl,
-    this.birthDate,
+    this.website,
     this.gender,
     this.location,
-    this.website,
-    required this.favoriteAnime,
-    required this.favoriteManga,
-    required this.favoriteGames,     // ✅
-    required this.favoriteGenres,
+    this.birthDate,
     required this.followersCount,
     required this.followingCount,
     required this.postsCount,
     required this.isPrivate,
     required this.isVerified,
+    this.favoriteAnime  = const [],
+    this.favoriteManga  = const [],
+    this.favoriteGames  = const [],
+    this.favoriteGenres = const [],
+    this.otakuRank      = 'Novice',
+    this.otakuLevel     = 1,
+    this.otakuPoints    = 0,
+    this.watchlistCount = 0,
+    this.reviewsCount   = 0,
     required this.createdAt,
     required this.updatedAt,
   });
 
-  // ─── fromJson ──────────────────────────────────────────────────────
+  // ─── Getters ─────────────────────────────────────────────────────
+  bool get hasAvatar => avatarUrl != null && avatarUrl!.isNotEmpty;
+  bool get hasBanner => bannerUrl != null && bannerUrl!.isNotEmpty;
+  bool get hasBio    => bio != null && bio!.isNotEmpty;
+
+  String get displayNameOrUsername =>
+      displayName?.isNotEmpty == true ? displayName! : username;
+
+  // ✅ Prochain niveau — points nécessaires
+  int get pointsForNextLevel {
+    final next = otakuLevel + 1;
+    return (next * next * 10);
+  }
+
+  // ✅ Progression vers le niveau suivant (0.0 à 1.0)
+  double get levelProgress {
+    final current = otakuLevel * otakuLevel * 10;
+    final next    = pointsForNextLevel;
+    if (next <= current) return 1.0;
+    return ((otakuPoints - current) / (next - current)).clamp(0.0, 1.0);
+  }
+
+  String get username => displayName ?? 'utilisateur';
+
   factory ProfileModel.fromJson(Map<String, dynamic> json) {
     return ProfileModel(
-      id:          json['id']       as String? ?? json['user_id'] as String,
-      userId:      json['user_id']  as String,
-      // ✅ username peut être null si le trigger ne l'a pas encore mis
-      username:    json['username'] as String? ?? 'utilisateur',
-      email:       json['email']    as String?,
-      displayName: json['display_name'] as String?,
-      bio:         json['bio']          as String?,
-      avatarUrl:   json['avatar_url']   as String?,
-      bannerUrl:   json['banner_url']   as String?,
-      birthDate:   json['birth_date']   as String?,
-      gender:      json['gender']       as String?,
-      location:    json['location']     as String?,
-      website:     json['website']      as String?,
-      favoriteAnime: (json['favorite_anime'] as List<dynamic>?)
-          ?.map((e) => e.toString()).toList() ?? [],
-      favoriteManga: (json['favorite_manga'] as List<dynamic>?)
-          ?.map((e) => e.toString()).toList() ?? [],
-      favoriteGames: (json['favorite_games'] as List<dynamic>?)
-          ?.map((e) => e.toString()).toList() ?? [],
-      favoriteGenres: (json['favorite_genres'] as List<dynamic>?)
-          ?.map((e) => e.toString()).toList() ?? [],
-      followersCount: json['followers_count'] as int? ?? 0,
-      followingCount: json['following_count'] as int? ?? 0,
-      postsCount:     json['posts_count']     as int? ?? 0,
-      isPrivate:      json['is_private']      as bool? ?? false,
-      isVerified:     json['is_verified']     as bool? ?? false,
-      createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'] as String)
-          : DateTime.now(),
-      updatedAt: json['updated_at'] != null
-          ? DateTime.parse(json['updated_at'] as String)
-          : DateTime.now(),
+      id:             json['id']         as String,
+      userId:         json['user_id']    as String,
+      displayName:    json['display_name'] as String?,
+      bio:            json['bio']          as String?,
+      avatarUrl:      json['avatar_url']   as String?,
+      bannerUrl:      json['banner_url']   as String?,
+      website:        json['website']      as String?,
+      gender:         json['gender']       as String?,
+      location:       json['location']     as String?,
+      birthDate:      json['birth_date']   as String?,
+      followersCount: (json['followers_count'] as num?)?.toInt() ?? 0,
+      followingCount: (json['following_count'] as num?)?.toInt() ?? 0,
+      postsCount:     (json['posts_count']     as num?)?.toInt() ?? 0,
+      isPrivate:      json['is_private']   as bool? ?? false,
+      isVerified:     json['is_verified']  as bool? ?? false,
+      favoriteAnime:  _parseList(json['favorite_anime']),
+      favoriteManga:  _parseList(json['favorite_manga']),
+      favoriteGames:  _parseList(json['favorite_games']),
+      favoriteGenres: _parseList(json['favorite_genres']),
+      // ✅ Rank
+      otakuRank:     json['otaku_rank']   as String? ?? 'Novice',
+      otakuLevel:   (json['otaku_level']   as num?)?.toInt() ?? 1,
+      otakuPoints:  (json['otaku_points']  as num?)?.toInt() ?? 0,
+      watchlistCount:(json['watchlist_count'] as num?)?.toInt() ?? 0,
+      reviewsCount:  (json['reviews_count']   as num?)?.toInt() ?? 0,
+      createdAt:     DateTime.parse(json['created_at'] as String),
+      updatedAt:     DateTime.parse(json['updated_at'] as String),
     );
   }
 
-  // ─── toJson ────────────────────────────────────────────────────────
-  Map<String, dynamic> toJson() => {
-    'id':              id,
-    'user_id':         userId,
-    'username':        username,
-    'email':           email,
-    'display_name':    displayName,
-    'bio':             bio,
-    'avatar_url':      avatarUrl,
-    'banner_url':      bannerUrl,
-    'birth_date':      birthDate,
-    'gender':          gender,
-    'location':        location,
-    'website':         website,
-    'favorite_anime':  favoriteAnime,
-    'favorite_manga':  favoriteManga,
-    'favorite_games':  favoriteGames, // ✅
-    'favorite_genres': favoriteGenres,
-    'followers_count': followersCount,
-    'following_count': followingCount,
-    'posts_count':     postsCount,
-    'is_private':      isPrivate,
-    'is_verified':     isVerified,
-  };
+  static List<String> _parseList(dynamic v) {
+    if (v == null) return [];
+    if (v is List) return v.map((e) => e.toString()).toList();
+    return [];
+  }
 
-  // ─── copyWith ──────────────────────────────────────────────────────
   ProfileModel copyWith({
-    String? username,
-    String? email,
-    String? displayName,
-    String? bio,
-    // ✅ Wrapper Object? pour permettre de passer null explicitement
-    Object? avatarUrl  = _undefined,
-    Object? bannerUrl  = _undefined,
-    String? birthDate,
-    String? gender,
-    String? location,
-    String? website,
+    String?       displayName,
+    String?       bio,
+    String?       avatarUrl,
+    String?       bannerUrl,
+    String?       website,
+    List<String>? favoriteGenres,
     List<String>? favoriteAnime,
     List<String>? favoriteManga,
-    List<String>? favoriteGames,
-    List<String>? favoriteGenres,
-    bool? isPrivate,
-    int? followersCount,
-    int? followingCount,
-    int? postsCount,
-  }) {
-    return ProfileModel(
-      id:             id,
-      userId:         userId,
-      username:       username       ?? this.username,
-      email:          email          ?? this.email,
-      displayName:    displayName    ?? this.displayName,
-      bio:            bio            ?? this.bio,
-      // ✅ Si _undefined → garde la valeur actuelle, sinon utilise la nouvelle (même null)
-      avatarUrl:      avatarUrl  == _undefined ? this.avatarUrl  : avatarUrl  as String?,
-      bannerUrl:      bannerUrl  == _undefined ? this.bannerUrl  : bannerUrl  as String?,
-      birthDate:      birthDate      ?? this.birthDate,
-      gender:         gender         ?? this.gender,
-      location:       location       ?? this.location,
-      website:        website        ?? this.website,
-      favoriteAnime:  favoriteAnime  ?? this.favoriteAnime,
-      favoriteManga:  favoriteManga  ?? this.favoriteManga,
-      favoriteGames:  favoriteGames  ?? this.favoriteGames,
-      favoriteGenres: favoriteGenres ?? this.favoriteGenres,
-      followersCount: followersCount ?? this.followersCount,
-      followingCount: followingCount ?? this.followingCount,
-      postsCount:     postsCount     ?? this.postsCount,
-      isPrivate:      isPrivate      ?? this.isPrivate,
-      isVerified:     isVerified,
-      createdAt:      createdAt,
-      updatedAt:      DateTime.now(),
-    );
-  }
-
-  // ─── Getters ───────────────────────────────────────────────────────
-  /// Affiche le displayName si défini, sinon le @username
-  String get displayNameOrUsername => displayName ?? username;
-
-  // ✅ Sentinel pour distinguer "non passé" de "null explicite"
-  static const _undefined = Object();
-
-  /// @username formaté
-  String get atUsername => '@$username';
-
-  bool get hasAvatar   => avatarUrl != null && avatarUrl!.isNotEmpty;
-  bool get hasBanner   => bannerUrl != null && bannerUrl!.isNotEmpty;
-  bool get hasBio      => bio != null && bio!.isNotEmpty;
-  bool get hasLocation => location != null && location!.isNotEmpty;
-  bool get hasWebsite  => website != null && website!.isNotEmpty;
+    int?          followersCount,
+    int?          followingCount,
+    int?          postsCount,
+    int?          watchlistCount,
+    int?          reviewsCount,
+    String?       otakuRank,
+    int?          otakuLevel,
+    int?          otakuPoints,
+  }) => ProfileModel(
+    id:             id,
+    userId:         userId,
+    displayName:    displayName    ?? this.displayName,
+    bio:            bio            ?? this.bio,
+    avatarUrl:      avatarUrl      ?? this.avatarUrl,
+    bannerUrl:      bannerUrl      ?? this.bannerUrl,
+    website:        website        ?? this.website,
+    gender:         gender,
+    location:       location,
+    birthDate:      birthDate,
+    followersCount: followersCount ?? this.followersCount,
+    followingCount: followingCount ?? this.followingCount,
+    postsCount:     postsCount     ?? this.postsCount,
+    isPrivate:      isPrivate,
+    isVerified:     isVerified,
+    favoriteAnime:  favoriteAnime  ?? this.favoriteAnime,
+    favoriteManga:  favoriteManga  ?? this.favoriteManga,
+    favoriteGames:  favoriteGames,
+    favoriteGenres: favoriteGenres ?? this.favoriteGenres,
+    otakuRank:      otakuRank      ?? this.otakuRank,
+    otakuLevel:     otakuLevel     ?? this.otakuLevel,
+    otakuPoints:    otakuPoints    ?? this.otakuPoints,
+    watchlistCount: watchlistCount ?? this.watchlistCount,
+    reviewsCount:   reviewsCount   ?? this.reviewsCount,
+    createdAt:      createdAt,
+    updatedAt:      updatedAt,
+  );
 }

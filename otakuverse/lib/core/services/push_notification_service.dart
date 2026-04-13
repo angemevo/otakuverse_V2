@@ -2,7 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:otakuverse/core/constants/colors.dart';
+import 'package:otakuverse/core/constants/app_colors.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 // ✅ Handler background — DOIT être top-level (hors de toute classe)
@@ -92,7 +92,7 @@ class PushNotificationService {
       Get.snackbar(
         notification.title ?? 'Otakuverse',
         notification.body  ?? '',
-        backgroundColor: AppColors.darkGray
+        backgroundColor: AppColors.bgCard
             .withValues(alpha: 0.95),
         colorText:     Colors.white,
         duration:      const Duration(seconds: 4),
@@ -101,7 +101,7 @@ class PushNotificationService {
         borderRadius:  12,
         icon: const Icon(
           Icons.notifications,
-          color: AppColors.crimsonRed,
+          color: AppColors.primary,
         ),
         onTap: (_) => _handleNotificationTap(message.data),
       );

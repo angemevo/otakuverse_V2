@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:otakuverse/core/constants/colors.dart';
+import 'package:otakuverse/core/constants/app_colors.dart';
 import 'package:otakuverse/features/feed/models/post_model.dart';
 import 'package:otakuverse/features/feed/widgets/posts/expandable_text.dart';
 import 'package:otakuverse/features/feed/widgets/posts/post_card_music_player.dart';

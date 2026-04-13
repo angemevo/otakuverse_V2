@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:otakuverse/core/constants/colors.dart';
-import 'package:otakuverse/core/constants/text_styles.dart';
+import 'package:otakuverse/core/constants/app_colors.dart';
+import 'package:otakuverse/core/constants/app_text_styles.dart';
 
 class InputStandard extends StatefulWidget {
   final TextEditingController controller;
@@ -49,16 +49,16 @@ class _InputStandardState extends State<InputStandard> {
         decoration: InputDecoration(
           labelText: widget.label,
           labelStyle: TextStyle(
-            color: _isFocused ? AppColors.crimsonRed : AppColors.mediumGray,
+            color: _isFocused ? AppColors.primary : AppColors.textMuted,
             fontSize: 14,
           ),
           helperText: widget.helperText,
           helperStyle: const TextStyle(
-            color: AppColors.lightGray,
+            color: AppColors.textDisabled,
             fontSize: 12,
           ),
           filled: true,
-          fillColor: widget.enabled ? AppColors.darkGray : AppColors.darkGray.withOpacity(0.5),
+          fillColor: widget.enabled ? AppColors.bgCard : AppColors.bgCard.withOpacity(0.5),
           contentPadding: const EdgeInsets.symmetric(
             vertical: 14,
             horizontal: 16,
@@ -68,7 +68,7 @@ class _InputStandardState extends State<InputStandard> {
           prefixIcon: widget.prefixIcon != null
               ? Icon(
                   widget.prefixIcon,
-                  color: _isFocused ? AppColors.crimsonRed : AppColors.mediumGray,
+                  color: _isFocused ? AppColors.primary : AppColors.textMuted,
                   size: 20,
                 )
               : null,
@@ -78,7 +78,7 @@ class _InputStandardState extends State<InputStandard> {
               ? IconButton(
                   icon: Icon(
                     _obscureText ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                    color: AppColors.mediumGray,
+                    color: AppColors.textMuted,
                     size: 20,
                   ),
                   onPressed: () => setState(() => _obscureText = !_obscureText),
@@ -87,14 +87,14 @@ class _InputStandardState extends State<InputStandard> {
 
           // Borders
           enabledBorder: _border(AppColors.border),
-          focusedBorder: _border(AppColors.crimsonRed),
-          errorBorder: _border(AppColors.errorRed),
-          focusedErrorBorder: _border(AppColors.errorRed),
-          disabledBorder: _border(AppColors.darkGray),
+          focusedBorder: _border(AppColors.primary),
+          errorBorder: _border(AppColors.error),
+          focusedErrorBorder: _border(AppColors.error),
+          disabledBorder: _border(AppColors.bgCard),
 
           // Error style
           errorStyle: const TextStyle(
-            color: AppColors.errorRed,
+            color: AppColors.error,
             fontSize: 12,
           ),
         ),

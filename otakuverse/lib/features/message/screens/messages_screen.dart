@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:otakuverse/core/constants/colors.dart';
+import 'package:otakuverse/core/constants/app_colors.dart';
 import 'package:otakuverse/core/widgets/cached_image.dart';
 import 'package:otakuverse/features/message/screens/new_conversation_screen.dart';
 import '../controllers/message_controller.dart';
@@ -275,7 +275,7 @@ class _ConversationTile extends StatelessWidget {
                           ),
                           padding:
                               const EdgeInsets.symmetric(
-                                  horizontal: 6),
+                                  horizontal: 1, vertical: 1),
                           decoration: BoxDecoration(
                             color: AppColors.crimsonRed,
                             borderRadius:

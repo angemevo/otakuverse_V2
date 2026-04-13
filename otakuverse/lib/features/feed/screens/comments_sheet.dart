@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:otakuverse/core/constants/colors.dart';
+import 'package:otakuverse/core/constants/app_colors.dart';
 import 'package:otakuverse/features/feed/controllers/comment_controller.dart';
 import 'package:otakuverse/features/feed/models/comment_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';

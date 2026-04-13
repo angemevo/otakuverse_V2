@@ -7,6 +7,7 @@ class MessageModel {
   final bool      isRead;
   final DateTime  createdAt;
   final String?   replyToId;
+  final MessageModel? replyToMessage;
 
   // ✅ Infos sender (join)
   final String?   senderUsername;
@@ -25,7 +26,28 @@ class MessageModel {
     this.senderUsername,
     this.senderDisplayName,
     this.senderAvatarUrl,
+    this.replyToMessage,
   });
+
+  MessageModel copyWith({
+    bool? isRead, 
+    MessageModel? replyToMessage}) {
+    return MessageModel(
+      id:             id,
+      conversationId: conversationId,
+      senderId:       senderId,
+      text:           text,
+      imageUrl:       imageUrl,
+      isRead:         isRead ?? this.isRead,
+      createdAt:      createdAt,
+      replyToId:      replyToId,
+      senderUsername:    senderUsername,
+      senderDisplayName: senderDisplayName,
+      senderAvatarUrl:   senderAvatarUrl,
+      replyToMessage: replyToMessage ??
+          this.replyToMessage,
+    );
+  }
 
   String get senderName =>
       senderDisplayName ?? senderUsername ?? '';

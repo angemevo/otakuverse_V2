@@ -1,7 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:heroicons_flutter/heroicons_flutter.dart';
-import 'package:otakuverse/core/constants/colors.dart';
+import 'package:otakuverse/core/constants/app_colors.dart';
 
 class CachedImage extends StatelessWidget {
   final String?    url;
@@ -58,11 +58,11 @@ class CachedImage extends StatelessWidget {
     return Container(
       width:  width,
       height: height,
-      color:  AppColors.darkGray,
+      color:  AppColors.bgCard,
       child: const Center(
         child: CircularProgressIndicator(
           strokeWidth: 2,
-          color:       AppColors.crimsonRed,
+          color:       AppColors.primary,
         ),
       ),
     );
@@ -72,11 +72,11 @@ class CachedImage extends StatelessWidget {
     return Container(
       width:  width,
       height: height,
-      color:  AppColors.darkGray,
+      color:  AppColors.bgCard,
       child: const Center(
         child: Icon(
           HeroiconsOutline.photo,
-          color: AppColors.mediumGray,
+          color: AppColors.textMuted,
           size:  32,
         ),
       ),
@@ -107,7 +107,7 @@ class CachedAvatar extends StatelessWidget {
 
     return CircleAvatar(
       radius:          radius,
-      backgroundColor: AppColors.darkGray,
+      backgroundColor: AppColors.bgCard,
       child: ClipOval(
         child: CachedNetworkImage(
           imageUrl:    url!,
@@ -124,19 +124,19 @@ class CachedAvatar extends StatelessWidget {
   Widget _buildFallback() {
     return CircleAvatar(
       radius:          radius,
-      backgroundColor: AppColors.darkGray,
+      backgroundColor: AppColors.bgCard,
       child: fallbackLetter != null
           ? Text(
               fallbackLetter![0].toUpperCase(),
               style: TextStyle(
-                color:      AppColors.pureWhite,
+                color:      AppColors.textPrimary,
                 fontWeight: FontWeight.bold,
                 fontSize:   radius * 0.7,
               ),
             )
           : Icon(
               Icons.person,
-              color: AppColors.pureWhite,
+              color: AppColors.textPrimary,
               size:  radius,
             ),
     );
