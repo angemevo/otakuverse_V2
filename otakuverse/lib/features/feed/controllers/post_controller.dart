@@ -5,7 +5,11 @@ import 'package:otakuverse/features/feed/models/post_model.dart';
 import 'package:otakuverse/features/feed/services/post_service.dart';
 
 class PostsController extends GetxController {
-  final _postService = PostService();
+  late final PostService _postService;
+
+  PostsController([PostService? service]) {
+    _postService = service ?? PostService();
+  }
 
   // ─── State ───────────────────────────────────────────────────────
   final RxList<PostModel> posts           = <PostModel>[].obs;

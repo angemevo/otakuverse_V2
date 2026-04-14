@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:otakuverse/core/constants/app_colors.dart';
 import 'package:otakuverse/core/utils/helpers.dart';
 import 'package:otakuverse/core/services/music_service.dart';
+import 'package:otakuverse/core/utils/session_guard.dart';
 import 'package:otakuverse/features/feed/controllers/post_controller.dart';
 import 'package:otakuverse/features/feed/widgets/create_post/caption_section.dart';
 import 'package:otakuverse/features/feed/widgets/create_post/location_section.dart';
@@ -15,7 +16,6 @@ import 'package:otakuverse/features/feed/widgets/create_post/share_button.dart';
 import 'package:otakuverse/features/feed/widgets/create_post/music_section.dart';
 import 'package:otakuverse/main.dart';
 import 'package:otakuverse/shared/services/storage_upload_service.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class CreatePostScreen extends StatefulWidget {
   final List<XFile> preselectedFiles;
@@ -73,14 +73,22 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       return;
     }
 
+    // ✅ FIX : vérifier mounted AVANT chaque setState
+    if (!mounted) return;
     setState(() => _isPublishing = true);
+
     try {
-      final userId = Supabase.instance.client.auth.currentUser!.id;
+      // ✅ FIX : SessionGuard à la place de currentUser!
+      final userId = SessionGuard.requiredUid;
+
       List<String> mediaUrls = [];
       if (_selectedImages.isNotEmpty) {
-        mediaUrls = await _uploadService
-            .uploadImages(_selectedImages, userId);
+        mediaUrls = await _uploadService.uploadImages(
+            _selectedImages, userId);
       }
+
+      // ✅ FIX : vérifier mounted après chaque await long
+      if (!mounted) return;
 
       final ok = await _postsCtrl.createPost(
         caption:         _captionCtrl.text.trim(),
@@ -95,16 +103,25 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         musicImageUrl:   _selectedSong?.imageUrl,
       );
 
+      // ✅ FIX : vérifier mounted avant navigation/snackbar
       if (!mounted) return;
+
       if (ok) {
         Get.offAllNamed(Routes.home);
         Helpers.showSuccessSnackbar('Ton post est maintenant visible');
       } else {
         Helpers.showErrorSnackbar(_postsCtrl.errorMessage.value);
       }
+    } on SessionExpiredException {
+      // ✅ Gérer la session expirée proprement
+      // SessionGuard redirige déjà vers login — pas d'autre action
+    } on UploadValidationException catch (e) {
+      // ✅ Erreur de validation upload (taille/format)
+      if (mounted) Helpers.showErrorSnackbar(e.message);
     } catch (e) {
-      if (mounted) Helpers.showErrorSnackbar('❌ $e');
+      if (mounted) Helpers.showErrorSnackbar('Erreur : $e');
     } finally {
+      // ✅ FIX : mounted check dans finally
       if (mounted) setState(() => _isPublishing = false);
     }
   }

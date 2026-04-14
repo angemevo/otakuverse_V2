@@ -10,6 +10,9 @@ import 'package:otakuverse/features/profile/screens/edit_profile_screen.dart';
 import 'package:otakuverse/features/profile/widgets/genre_tags.dart';
 import 'package:otakuverse/features/profile/widgets/rank_badge.dart';
 import 'package:otakuverse/features/profile/widgets/watchlist_preview.dart';
+import 'package:otakuverse/features/feed/models/post_model.dart';
+import 'package:otakuverse/features/feed/screens/comments/comments_sheet.dart';
+import 'package:otakuverse/features/feed/widgets/posts/posts_card.dart';
 import 'package:otakuverse/features/message/models/conversation_model.dart';
 import 'package:otakuverse/features/message/services/message_service.dart';
 import 'package:otakuverse/features/message/screens/chat_screen.dart';
@@ -55,19 +58,24 @@ class _ProfileScreenState extends State<ProfileScreen>
     setState(() => _isLoading = true);
     try {
       final targetId = widget.userId ?? _myUid;
-      _isMe = widget.userId == null ||
-              widget.userId == _myUid;
+      _isMe = widget.userId == null || widget.userId == _myUid;
 
       final data = await _supabase
           .from('profiles')
           .select()
           .eq('user_id', targetId)
-          .single();
+          .maybeSingle();
 
-      ProfileModel profile =
-          ProfileModel.fromJson(data);
+      debugPrint('🔍 loadProfile[$targetId] → $data');
 
-      // ─ Vérifier si je suis cet utilisateur ─────────────────────
+      if (data == null) {
+        debugPrint('⚠️ Aucun profil trouvé pour $targetId');
+        if (mounted) setState(() => _isLoading = false);
+        return;
+      }
+
+      final profile = ProfileModel.fromJson(data);
+
       if (!_isMe) {
         final follow = await _supabase
             .from('follows')
@@ -78,14 +86,9 @@ class _ProfileScreenState extends State<ProfileScreen>
         _isFollowing = follow != null;
       }
 
-      if (mounted) {
-        setState(() {
-          _profile   = profile;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      debugPrint('❌ loadProfile: $e');
+      if (mounted) setState(() { _profile = profile; _isLoading = false; });
+    } catch (e, st) {
+      debugPrint('❌ loadProfile error: $e\n$st');
       if (mounted) setState(() => _isLoading = false);
     }
   }
@@ -189,55 +192,52 @@ class _ProfileScreenState extends State<ProfileScreen>
     return Scaffold(
       backgroundColor: AppColors.bgPrimary,
       body: NestedScrollView(
-        headerSliverBuilder: (_, __) => [
-          // ─ SliverAppBar avec bannière ─────────────────────────
-          SliverAppBar(
-            expandedHeight:  240,
-            floating:        false,
-            pinned:          true,
-            backgroundColor: AppColors.bgPrimary,
-            elevation:       0,
-            leading: IconButton(
-              icon: const Icon(
-                Icons.arrow_back_ios_new,
-                color: AppColors.textPrimary,
-                size:  20,
+        // ─ Header : bannière + infos (scrollent et disparaissent) ──
+        headerSliverBuilder: (context, innerBoxIsScrolled) => [
+          SliverOverlapAbsorber(
+            handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
+            sliver: SliverAppBar(
+              expandedHeight:         240,
+              floating:               false,
+              pinned:                 true,
+              forceElevated:          innerBoxIsScrolled,
+              backgroundColor:        AppColors.bgPrimary,
+              elevation:              0,
+              scrolledUnderElevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new,
+                    color: AppColors.textPrimary, size: 20),
+                onPressed: () => Navigator.pop(context),
               ),
-              onPressed: () => Navigator.pop(context),
-            ),
-            actions: [
-              if (_isMe)
-                IconButton(
-                  icon: const Icon(
-                    Icons.settings_outlined,
-                    color: AppColors.textPrimary,
+              actions: [
+                if (_isMe)
+                  IconButton(
+                    icon: const Icon(Icons.settings_outlined,
+                        color: AppColors.textPrimary),
+                    onPressed: _showSettings,
+                  )
+                else
+                  IconButton(
+                    icon: const Icon(Icons.more_horiz,
+                        color: AppColors.textPrimary),
+                    onPressed: () {},
                   ),
-                  onPressed: _showSettings,
-                )
-              else
-                IconButton(
-                  icon: const Icon(
-                    Icons.more_horiz,
-                    color: AppColors.textPrimary,
-                  ),
-                  onPressed: () {},
-                ),
-            ],
-            flexibleSpace: FlexibleSpaceBar(
-              background: _buildBanner(),
+              ],
+              flexibleSpace: FlexibleSpaceBar(
+                background: _buildBanner(),
+              ),
             ),
           ),
+          SliverToBoxAdapter(child: _buildUserInfo()),
+        ],
 
-          // ─ Info utilisateur ────────────────────────────────────
-          SliverToBoxAdapter(
-            child: _buildUserInfo(),
-          ),
-
-          // ─ Tab bar ─────────────────────────────────────────────
-          SliverPersistentHeader(
-            pinned: true,
-            delegate: _TabBarDelegate(
-              TabBar(
+        // ─ Body : TabBar collée en haut + contenu scrollable ────────
+        body: Column(
+          children: [
+            // TabBar comme widget ordinaire → reste en haut du body
+            Container(
+              color: AppColors.bgPrimary,
+              child: TabBar(
                 controller: _tabCtrl,
                 tabs: const [
                   Tab(text: 'Posts'),
@@ -247,25 +247,27 @@ class _ProfileScreenState extends State<ProfileScreen>
                 ],
                 labelStyle: AppTextStyles.labelLarge
                     .copyWith(color: AppColors.primary),
-                unselectedLabelStyle:
-                    AppTextStyles.labelLarge
-                        .copyWith(color: AppColors.textMuted),
+                unselectedLabelStyle: AppTextStyles.labelLarge
+                    .copyWith(color: AppColors.textMuted),
                 indicatorColor: AppColors.primary,
                 indicatorSize:  TabBarIndicatorSize.label,
                 dividerColor:   Colors.transparent,
               ),
             ),
-          ),
-        ],
+            const Divider(height: 1, color: AppColors.border),
 
-        // ─ Contenu des onglets ───────────────────────────────────
-        body: TabBarView(
-          controller: _tabCtrl,
-          children: [
-            _PostsTab(userId: _profile!.userId),
-            _ReviewsTab(userId: _profile!.userId),
-            _FanArtTab(),
-            _ClipsTab(),
+            // TabBarView prend tout l'espace restant
+            Expanded(
+              child: TabBarView(
+                controller: _tabCtrl,
+                children: [
+                  _PostsTab(userId: _profile!.userId),
+                  _ReviewsTab(userId: _profile!.userId),
+                  _FanArtTab(),
+                  _ClipsTab(),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -388,8 +390,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   Widget _buildUserInfo() {
     final p = _profile!;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
-          16, 0, 16, 0),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -824,64 +825,180 @@ class _SettingsItem extends StatelessWidget {
   );
 }
 
-// ─── TAB BAR DELEGATE ────────────────────────────────────────────────
-class _TabBarDelegate extends SliverPersistentHeaderDelegate {
-  final TabBar tabBar;
-  const _TabBarDelegate(this.tabBar);
 
-  @override
-  double get minExtent => tabBar.preferredSize.height + 1;
-  @override
-  double get maxExtent => tabBar.preferredSize.height + 1;
+// ─── ONGLET POSTS ────────────────────────────────────────────────────
 
-  @override
-  Widget build(BuildContext context, double shrinkOffset,
-      bool overlapsContent) {
-    return Container(
-      color: AppColors.bgPrimary,
-      child: tabBar,
-    );
-  }
-
-  @override
-  bool shouldRebuild(_TabBarDelegate old) => false;
-}
-
-// ─── ONGLETS (stubs — à implémenter) ─────────────────────────────────
-class _PostsTab extends StatelessWidget {
+class _PostsTab extends StatefulWidget {
   final String userId;
   const _PostsTab({required this.userId});
 
   @override
-  Widget build(BuildContext context) => Center(
-    child: Text('Posts à venir',
-        style: AppTextStyles.body),
-  );
+  State<_PostsTab> createState() => __PostsTabState();
 }
+
+class __PostsTabState extends State<_PostsTab>
+    with AutomaticKeepAliveClientMixin {
+
+  final _supabase = Supabase.instance.client;
+  List<PostModel> _posts   = [];
+  bool            _loading = true;
+  String?         _error;
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPosts();
+  }
+
+  Future<void> _loadPosts() async {
+    setState(() { _loading = true; _error = null; });
+    try {
+      final data = await _supabase
+          .from('posts')
+          .select('*, profiles(username, display_name, avatar_url)')
+          .eq('user_id', widget.userId)
+          .order('created_at', ascending: false);
+
+      if (mounted) {
+        setState(() {
+          _posts   = (data as List).map((j) => PostModel.fromJson(j)).toList();
+          _loading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('❌ _PostsTab: $e');
+      if (mounted) setState(() { _loading = false; _error = e.toString(); });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    final myUid = _supabase.auth.currentUser?.id;
+
+    if (_loading) {
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
+      );
+    }
+
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline,
+                color: AppColors.textMuted, size: 40),
+            const SizedBox(height: 12),
+            Text('Erreur de chargement', style: AppTextStyles.body),
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: _loadPosts,
+              child: Text('Réessayer',
+                  style: AppTextStyles.body
+                      .copyWith(color: AppColors.primary)),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_posts.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.grid_off_outlined,
+                color: AppColors.textMuted, size: 48),
+            const SizedBox(height: 12),
+            Text("Aucun post pour l'instant",
+                style: AppTextStyles.body),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      color:           AppColors.primary,
+      backgroundColor: AppColors.bgPrimary,
+      onRefresh:       _loadPosts,
+      child: ListView.builder(
+        padding: const EdgeInsets.fromLTRB(12, 8, 12, 80),
+        itemCount: _posts.length,
+        itemBuilder: (context, i) {
+          final post = _posts[i];
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: PostCard(
+              post:      post,
+              isLiked:   post.isLiked,
+              isMe:      post.userId == myUid,
+              onLike:    () {},
+              onComment: () => showCommentsSheet(
+                context,
+                postId:     post.id,
+                postAuthor: post.displayNameOrUsername,
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+// ─── ONGLETS PLACEHOLDER ─────────────────────────────────────────────
 
 class _ReviewsTab extends StatelessWidget {
   final String userId;
   const _ReviewsTab({required this.userId});
 
   @override
-  Widget build(BuildContext context) => Center(
-    child: Text('Avis à venir',
-        style: AppTextStyles.body),
+  Widget build(BuildContext context) => const Center(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(Icons.rate_review_outlined,
+            color: AppColors.textMuted, size: 48),
+        SizedBox(height: 12),
+        Text('Avis à venir',
+            style: TextStyle(color: AppColors.textMuted)),
+      ],
+    ),
   );
 }
 
 class _FanArtTab extends StatelessWidget {
   @override
-  Widget build(BuildContext context) => Center(
-    child: Text('Fan Art à venir',
-        style: AppTextStyles.body),
+  Widget build(BuildContext context) => const Center(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(Icons.brush_outlined,
+            color: AppColors.textMuted, size: 48),
+        SizedBox(height: 12),
+        Text('Fan Art à venir',
+            style: TextStyle(color: AppColors.textMuted)),
+      ],
+    ),
   );
 }
 
 class _ClipsTab extends StatelessWidget {
   @override
-  Widget build(BuildContext context) => Center(
-    child: Text('Clips à venir',
-        style: AppTextStyles.body),
+  Widget build(BuildContext context) => const Center(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(Icons.videocam_outlined,
+            color: AppColors.textMuted, size: 48),
+        SizedBox(height: 12),
+        Text('Clips à venir',
+            style: TextStyle(color: AppColors.textMuted)),
+      ],
+    ),
   );
 }

@@ -1,26 +1,51 @@
 {
   "project_info": {
-    "project_number": "775380107022",
-    "project_id": "otakuverse-fafb8",
-    "storage_bucket": "otakuverse-fafb8.firebasestorage.app"
+    "project_number": "454205633639",
+    "project_id": "otakuverse-12cbc",
+    "storage_bucket": "otakuverse-12cbc.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:775380107022:android:cb141e1836317e4575e15f",
+        "mobilesdk_app_id": "1:454205633639:android:9dbbe9ee517d78ec4150c2",
         "android_client_info": {
           "package_name": "com.mevcode.otakuverse"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "454205633639-j24va1987emivqdbargj28g39ggi7igh.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mevcode.otakuverse",
+            "certificate_hash": "9fba4204896c6bb0502b5cb81feaa5e999643dd7"
+          }
+        },
+        {
+          "client_id": "454205633639-nq9867mh55krd66hk5dqqa703rih1bel.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyDsRvep1IF3P5JlktKNS_bI4geHbEb9KLQ"
+          "current_key": "AIzaSyCb3AGWMiEnSSHs5VOaAnK6fh1R3jXm36M"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "454205633639-nq9867mh55krd66hk5dqqa703rih1bel.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "454205633639-p7q3qo42r8g46mqndsolh38j1n8u0guh.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.otakuverse"
+              }
+            }
+          ]
         }
       }
     }

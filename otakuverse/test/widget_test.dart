@@ -1,30 +1,35 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
+// Smoke tests for core models — fast sanity checks.
+// Full tests are in models/, controllers/, security/ subdirectories.
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:otakuverse/main.dart';
+import 'package:otakuverse/features/feed/models/post_model.dart';
+import 'package:otakuverse/features/feed/models/comment_model.dart';
+import 'package:otakuverse/features/profile/models/profile_model.dart';
+import 'helpers/fixtures.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const OtakuverseApp());
+  group('Smoke tests - core models', () {
+    test('PostModel parses from JSON without error', () {
+      expect(() => PostModel.fromJson(postJson()), returnsNormally);
+    });
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    test('ProfileModel parses from JSON without error', () {
+      expect(() => ProfileModel.fromJson(profileJson()), returnsNormally);
+    });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    test('CommentModel parses from JSON without error', () {
+      expect(() => CommentModel.fromJson(commentJson()), returnsNormally);
+    });
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    test('PostModel.copyWith does not mutate original', () {
+      final original = PostModel.fromJson(postJson());
+      original.copyWith(likesCount: 9999);
+      expect(original.likesCount, 42); // unchanged
+    });
+
+    test('ProfileModel.levelProgress is between 0.0 and 1.0', () {
+      final model = ProfileModel.fromJson(profileJson());
+      expect(model.levelProgress, inInclusiveRange(0.0, 1.0));
+    });
   });
 }

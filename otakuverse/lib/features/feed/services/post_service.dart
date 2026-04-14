@@ -2,7 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:otakuverse/features/feed/models/post_model.dart';
 
 class PostService {
-  final _supabase = Supabase.instance.client;
+  SupabaseClient get _supabase => Supabase.instance.client;
 
   String get _uid => _supabase.auth.currentUser!.id;
   static const _select =

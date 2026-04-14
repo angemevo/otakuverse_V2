@@ -1,64 +1,57 @@
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class GoogleAuthService {
   static final GoogleAuthService _instance = GoogleAuthService._internal();
   factory GoogleAuthService() => _instance;
   GoogleAuthService._internal();
 
+  static const _webClientId =
+      '454205633639-nq9867mh55krd66hk5dqqa703rih1bel.apps.googleusercontent.com';
+
   final GoogleSignIn _googleSignIn = GoogleSignIn(
-    scopes: ['email', 'profile'],
+    scopes:         ['email', 'profile'],
+    serverClientId: _webClientId,
   );
 
-  /// Se connecter avec Google
-  Future<Map<String, dynamic>?> signInWithGoogle() async {
-    try {
-      print('🔵 Début Google Sign-In...');
+  /// Connexion Google → Supabase.
+  ///
+  /// Retourne [null] si l'utilisateur annule le sélecteur de compte.
+  /// Lance une exception en cas d'erreur réelle.
+  Future<AuthResponse?> signInWithGoogle() async {
+    // 1. Ouvrir le sélecteur de compte Google
+    final googleUser = await _googleSignIn.signIn();
+    if (googleUser == null) return null; // annulé par l'utilisateur
 
-      // Déclencher le flow de connexion Google
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+    // 2. Récupérer les tokens OAuth
+    final googleAuth = await googleUser.authentication;
 
-      if (googleUser == null) {
-        print('⚠️  Connexion Google annulée');
-        return null;
-      }
+    final idToken     = googleAuth.idToken;
+    final accessToken = googleAuth.accessToken;
 
-      print('✅ Utilisateur Google: ${googleUser.email}');
-
-      // Obtenir les détails d'authentification
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
-
-      print('✅ Token Google obtenu');
-
-      // Retourner les infos utilisateur
-      return {
-        'email': googleUser.email,
-        'displayName': googleUser.displayName,
-        'photoUrl': googleUser.photoUrl,
-        'idToken': googleAuth.idToken,
-        'accessToken': googleAuth.accessToken,
-      };
-    } catch (e) {
-      print('❌ Erreur Google Sign-In: $e');
-      return null;
+    if (idToken == null) {
+      throw Exception(
+        'Google Sign-In : idToken manquant. '
+        'Vérifie la configuration OAuth dans Google Cloud Console '
+        '(clientId web requis dans google-services.json).',
+      );
     }
+
+    // 3. Authentifier avec Supabase via le token Google
+    final response = await Supabase.instance.client.auth.signInWithIdToken(
+      provider:    OAuthProvider.google,
+      idToken:     idToken,
+      accessToken: accessToken,
+    );
+
+    return response;
   }
 
-  /// Se déconnecter de Google
+  /// Déconnexion Google (à appeler en complément de Supabase.auth.signOut)
   Future<void> signOut() async {
-    try {
-      await _googleSignIn.signOut();
-      print('✅ Déconnexion Google réussie');
-    } catch (e) {
-      print('❌ Erreur déconnexion Google: $e');
-    }
+    await _googleSignIn.signOut();
   }
 
-  /// Vérifier si l'utilisateur est connecté
-  Future<bool> isSignedIn() async {
-    return await _googleSignIn.isSignedIn();
-  }
-
-  /// Obtenir l'utilisateur actuel
+  bool get isSignedIn => _googleSignIn.currentUser != null;
   GoogleSignInAccount? get currentUser => _googleSignIn.currentUser;
 }

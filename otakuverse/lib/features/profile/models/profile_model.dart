@@ -88,7 +88,7 @@ class ProfileModel {
 
   factory ProfileModel.fromJson(Map<String, dynamic> json) {
     return ProfileModel(
-      id:             json['id']         as String,
+      id:             (json['id'] ?? json['user_id']) as String,
       userId:         json['user_id']    as String,
       displayName:    json['display_name'] as String?,
       bio:            json['bio']          as String?,

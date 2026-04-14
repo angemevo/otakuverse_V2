@@ -41,48 +41,51 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyBDTk2LyCCnHzJiNByJOC9d6l1JLTjkx8w',
-    appId: '1:775380107022:web:3a3a0415f362b59475e15f',
-    messagingSenderId: '775380107022',
-    projectId: 'otakuverse-fafb8',
-    authDomain: 'otakuverse-fafb8.firebaseapp.com',
-    storageBucket: 'otakuverse-fafb8.firebasestorage.app',
-    measurementId: 'G-Z3WK1BRQ9Q',
+    apiKey: 'AIzaSyC-dZ7TvAuNaeUUHoZ_bzK-_bQBGapjEOU',
+    appId: '1:454205633639:web:e460ecb1343cae3a4150c2',
+    messagingSenderId: '454205633639',
+    projectId: 'otakuverse-12cbc',
+    authDomain: 'otakuverse-12cbc.firebaseapp.com',
+    storageBucket: 'otakuverse-12cbc.firebasestorage.app',
+    measurementId: 'G-6J0QYSNVJG',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDsRvep1IF3P5JlktKNS_bI4geHbEb9KLQ',
-    appId: '1:775380107022:android:cb141e1836317e4575e15f',
-    messagingSenderId: '775380107022',
-    projectId: 'otakuverse-fafb8',
-    storageBucket: 'otakuverse-fafb8.firebasestorage.app',
+    apiKey: 'AIzaSyCb3AGWMiEnSSHs5VOaAnK6fh1R3jXm36M',
+    appId: '1:454205633639:android:9dbbe9ee517d78ec4150c2',
+    messagingSenderId: '454205633639',
+    projectId: 'otakuverse-12cbc',
+    storageBucket: 'otakuverse-12cbc.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyD8bReXbcWtikAkauqMLpZ5W-KC8fNCT14',
-    appId: '1:775380107022:ios:9a27f65943d7048875e15f',
-    messagingSenderId: '775380107022',
-    projectId: 'otakuverse-fafb8',
-    storageBucket: 'otakuverse-fafb8.firebasestorage.app',
-    iosBundleId: 'com.example.otakuverse',
+    apiKey: 'AIzaSyAKKK0svGcit-GXtg-gYRg1c0J8lZBhqjI',
+    appId: '1:454205633639:ios:f21efb4adb4d10b14150c2',
+    messagingSenderId: '454205633639',
+    projectId: 'otakuverse-12cbc',
+    storageBucket: 'otakuverse-12cbc.firebasestorage.app',
+    iosClientId: '454205633639-vgk2uvrkmmknqb2qbu51t27mrgl6eups.apps.googleusercontent.com',
+    iosBundleId: 'com.mevcode.otakuverse',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyD8bReXbcWtikAkauqMLpZ5W-KC8fNCT14',
-    appId: '1:775380107022:ios:9a27f65943d7048875e15f',
-    messagingSenderId: '775380107022',
-    projectId: 'otakuverse-fafb8',
-    storageBucket: 'otakuverse-fafb8.firebasestorage.app',
+    apiKey: 'AIzaSyAKKK0svGcit-GXtg-gYRg1c0J8lZBhqjI',
+    appId: '1:454205633639:ios:483a19a67ca824184150c2',
+    messagingSenderId: '454205633639',
+    projectId: 'otakuverse-12cbc',
+    storageBucket: 'otakuverse-12cbc.firebasestorage.app',
+    iosClientId: '454205633639-p7q3qo42r8g46mqndsolh38j1n8u0guh.apps.googleusercontent.com',
     iosBundleId: 'com.example.otakuverse',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyBDTk2LyCCnHzJiNByJOC9d6l1JLTjkx8w',
-    appId: '1:775380107022:web:6cf6913b43c5658d75e15f',
-    messagingSenderId: '775380107022',
-    projectId: 'otakuverse-fafb8',
-    authDomain: 'otakuverse-fafb8.firebaseapp.com',
-    storageBucket: 'otakuverse-fafb8.firebasestorage.app',
-    measurementId: 'G-42GT0F6S3G',
+    apiKey: 'AIzaSyC-dZ7TvAuNaeUUHoZ_bzK-_bQBGapjEOU',
+    appId: '1:454205633639:web:170ea3d88ef168b44150c2',
+    messagingSenderId: '454205633639',
+    projectId: 'otakuverse-12cbc',
+    authDomain: 'otakuverse-12cbc.firebaseapp.com',
+    storageBucket: 'otakuverse-12cbc.firebasestorage.app',
+    measurementId: 'G-7KS64WFJTR',
   );
+
 }

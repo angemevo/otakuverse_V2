@@ -1,17 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:heroicons_flutter/heroicons_flutter.dart';
 import 'package:otakuverse/core/constants/app_colors.dart';
-import 'package:otakuverse/core/constants/app_text_styles.dart';
 import 'package:otakuverse/core/services/realtime_service.dart';
 import 'package:otakuverse/core/widgets/connectivity_wrapper.dart';
 import 'package:otakuverse/features/feed/controllers/post_controller.dart';
 import 'package:otakuverse/features/feed/screens/comments/comments_sheet.dart';
 import 'package:otakuverse/features/feed/screens/home/widgets/feed_widgets.dart';
 import 'package:otakuverse/features/feed/widgets/posts/posts_card.dart';
-import 'package:otakuverse/features/message/screens/messages_screen.dart';
-import 'package:otakuverse/features/search/screens/search_screen.dart';
 import 'package:otakuverse/features/stories/widgets/stories_row.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -21,8 +17,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen>
-    with WidgetsBindingObserver {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   late final PostsController _ctrl;
   bool _hasNewContent = false;
 
@@ -65,56 +60,26 @@ class _HomeScreenState extends State<HomeScreen>
   Widget build(BuildContext context) {
     return ConnectivityWrapper(
       onRetry: _ctrl.loadFeed,
-      child: Scaffold(
-        backgroundColor: AppColors.bgPrimary,
-        appBar:          _buildAppBar(),
-        body: Obx(() {
-          if (_ctrl.isLoading.value && _ctrl.posts.isEmpty) {
-            return const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
-            );
-          }
-          if (_ctrl.errorMessage.value.isNotEmpty && _ctrl.posts.isEmpty) {
-            return _buildError();
-          }
-          return Stack(children: [
-            _buildFeed(),
-            if (_hasNewContent)
-              NewContentBadge(
-                onTap: () async {
-                  setState(() => _hasNewContent = false);
-                  await _ctrl.loadFeed();
-                },
-              ),
-          ]);
-        }),
-      ),
-    );
-  }
-
-  // ─── AppBar ──────────────────────────────────────────────────────
-
-  AppBar _buildAppBar() {
-    return AppBar(
-      backgroundColor: AppColors.bgPrimary,
-      elevation:       0,
-      title: Text('Otakuverse', style: AppTextStyles.appBarTitle),
-      actions: [
-        const NotificationBell(),
-        IconButton(
-          icon: const Icon(HeroiconsOutline.chatBubbleLeftRight,
-              color: AppColors.textPrimary, size: 24),
-          onPressed: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const MessagesScreen())),
-        ),
-        IconButton(
-          icon: const Icon(HeroiconsOutline.magnifyingGlass,
-              color: AppColors.textPrimary, size: 24),
-          onPressed: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const SearchScreen())),
-        ),
-        const SizedBox(width: 4),
-      ],
+      child: Obx(() {
+        if (_ctrl.isLoading.value && _ctrl.posts.isEmpty) {
+          return const Center(
+            child: CircularProgressIndicator(color: AppColors.primary),
+          );
+        }
+        if (_ctrl.errorMessage.value.isNotEmpty && _ctrl.posts.isEmpty) {
+          return _buildError();
+        }
+        return Stack(children: [
+          _buildFeed(),
+          if (_hasNewContent)
+            NewContentBadge(
+              onTap: () async {
+                setState(() => _hasNewContent = false);
+                await _ctrl.loadFeed();
+              },
+            ),
+        ]);
+      }),
     );
   }
 
