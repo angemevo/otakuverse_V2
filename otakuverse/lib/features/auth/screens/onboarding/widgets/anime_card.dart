@@ -25,17 +25,17 @@ class AnimeCard extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
+            // ✅ AppColors.border → AppColors.textMuted.withValues(alpha: 0.4)
             color: selected
                 ? AppColors.primary
-                : AppColors.border,
+                : AppColors.textMuted.withValues(alpha: 0.4),
             width: selected ? 2 : 0.5,
           ),
           boxShadow: selected
               ? [
                   BoxShadow(
-                    color:      AppColors.primary
-                        .withValues(alpha: 0.3),
-                    blurRadius: 12,
+                    color:        AppColors.primary.withValues(alpha: 0.3),
+                    blurRadius:   12,
                     spreadRadius: 1,
                   ),
                 ]
@@ -46,12 +46,11 @@ class AnimeCard extends StatelessWidget {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              // ─ Cover ───────────────────────────────────────────
+              // ─ Cover ─────────────────────────────────────────────
               Image.network(
                 imageUrl,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) =>
-                    Container(
+                errorBuilder: (_, __, ___) => Container(
                   color: AppColors.bgCard,
                   child: const Icon(
                     Icons.movie_outlined,
@@ -61,7 +60,7 @@ class AnimeCard extends StatelessWidget {
                 ),
               ),
 
-              // ─ Gradient bas ────────────────────────────────────
+              // ─ Gradient bas ──────────────────────────────────────
               Positioned(
                 bottom: 0, left: 0, right: 0,
                 child: Container(
@@ -72,22 +71,21 @@ class AnimeCard extends StatelessWidget {
                       end:    Alignment.bottomCenter,
                       colors: [
                         Colors.transparent,
-                        Colors.black
-                            .withValues(alpha: 0.85),
+                        Colors.black.withValues(alpha: 0.85),
                       ],
                     ),
                   ),
                 ),
               ),
 
-              // ─ Titre ───────────────────────────────────────────
+              // ─ Titre ─────────────────────────────────────────────
               Positioned(
                 bottom: 6, left: 6, right: 6,
                 child: Text(
                   name,
-                  style: AppTextStyles.captionBold
-                      .copyWith(
-                    color:    AppColors.white,
+                  style: AppTextStyles.captionBold.copyWith(
+                    // ✅ AppColors.white → AppColors.textPrimary
+                    color:    AppColors.textPrimary,
                     fontSize: 10,
                   ),
                   maxLines: 2,
@@ -95,7 +93,7 @@ class AnimeCard extends StatelessWidget {
                 ),
               ),
 
-              // ─ Check ───────────────────────────────────────────
+              // ─ Check ─────────────────────────────────────────────
               if (selected)
                 Positioned(
                   top: 6, right: 6,
@@ -107,17 +105,17 @@ class AnimeCard extends StatelessWidget {
                     ),
                     child: const Icon(
                       Icons.check_rounded,
-                      color: AppColors.white,
+                      // ✅ AppColors.white → AppColors.textPrimary
+                      color: AppColors.textPrimary,
                       size:  14,
                     ),
                   ),
                 ),
 
-              // ─ Overlay ─────────────────────────────────────────
+              // ─ Overlay sélection ─────────────────────────────────
               if (selected)
                 Container(
-                  color: AppColors.primary
-                      .withValues(alpha: 0.15),
+                  color: AppColors.primary.withValues(alpha: 0.15),
                 ),
             ],
           ),

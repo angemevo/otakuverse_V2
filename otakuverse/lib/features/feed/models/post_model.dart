@@ -19,6 +19,13 @@ class PostModel {
   final String? musicPreviewUrl;
   final String? musicImageUrl;
 
+  // ─── Sondage ─────────────────────────────────────────────────────
+  final String?   pollQuestion;
+  final String?   pollOptionA;
+  final String?   pollOptionB;
+  final int?      pollDurationHours;
+  final DateTime? pollExpiresAt;
+
   // ─── Données du profil (JOIN Supabase) ───────────────────────────
   final String? username;
   final String? displayName; // ✅ ajouté — était référencé mais absent
@@ -38,15 +45,20 @@ class PostModel {
     required this.isPinned,
     this.isLiked     = false,
     this.username,
-    this.displayName, // ✅
+    this.displayName,
     this.avatarUrl,
     required this.createdAt,
     required this.updatedAt,
     this.musicTitle,
     this.musicArtist,
-    this.musicTrackId, 
-    this.musicPreviewUrl, 
+    this.musicTrackId,
+    this.musicPreviewUrl,
     this.musicImageUrl,
+    this.pollQuestion,
+    this.pollOptionA,
+    this.pollOptionB,
+    this.pollDurationHours,
+    this.pollExpiresAt,
   });
 
   // ─── GETTERS ─────────────────────────────────────────────────────
@@ -93,6 +105,13 @@ class PostModel {
       musicTrackId:    json['music_track_id']    as String?,
       musicPreviewUrl: json['music_preview_url'] as String?,
       musicImageUrl:   json['music_image_url']   as String?,
+      pollQuestion:      json['poll_question']       as String?,
+      pollOptionA:       json['poll_option_a']       as String?,
+      pollOptionB:       json['poll_option_b']       as String?,
+      pollDurationHours: json['poll_duration_hours'] as int?,
+      pollExpiresAt: json['poll_expires_at'] != null
+          ? DateTime.parse(json['poll_expires_at'] as String)
+          : null,
     );
   }
 
@@ -111,11 +130,16 @@ class PostModel {
     'is_pinned':      isPinned,
     'created_at':     createdAt.toIso8601String(),
     'updated_at':     updatedAt.toIso8601String(),
-    'music_title':  musicTitle,
-    'music_artist': musicArtist,
-    'music_track_id': musicTrackId,
+    'music_title':       musicTitle,
+    'music_artist':      musicArtist,
+    'music_track_id':    musicTrackId,
     'music_preview_url': musicPreviewUrl,
-    'music_image_url': musicImageUrl,
+    'music_image_url':   musicImageUrl,
+    if (pollQuestion != null) 'poll_question':       pollQuestion,
+    if (pollOptionA  != null) 'poll_option_a':       pollOptionA,
+    if (pollOptionB  != null) 'poll_option_b':       pollOptionB,
+    if (pollDurationHours != null) 'poll_duration_hours': pollDurationHours,
+    if (pollExpiresAt     != null) 'poll_expires_at':     pollExpiresAt!.toIso8601String(),
   };
 
   // ─── copyWith ────────────────────────────────────────────────────
@@ -137,7 +161,12 @@ class PostModel {
     String? musicArtist,
     String? musicTrackId,
     String? musicPreviewUrl,
-    String? musicImageUrl
+    String? musicImageUrl,
+    String?   pollQuestion,
+    String?   pollOptionA,
+    String?   pollOptionB,
+    int?      pollDurationHours,
+    DateTime? pollExpiresAt,
   }) {
     return PostModel(
       id:            id,
@@ -162,6 +191,11 @@ class PostModel {
       musicTrackId:    musicTrackId    ?? this.musicTrackId,
       musicPreviewUrl: musicPreviewUrl ?? this.musicPreviewUrl,
       musicImageUrl:   musicImageUrl   ?? this.musicImageUrl,
+      pollQuestion:      pollQuestion      ?? this.pollQuestion,
+      pollOptionA:       pollOptionA       ?? this.pollOptionA,
+      pollOptionB:       pollOptionB       ?? this.pollOptionB,
+      pollDurationHours: pollDurationHours ?? this.pollDurationHours,
+      pollExpiresAt:     pollExpiresAt     ?? this.pollExpiresAt,
     );
   }
 

@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:otakuverse/features/feed/models/post_model.dart';
 import 'package:otakuverse/features/feed/services/post_service.dart';
+import 'package:otakuverse/features/notification/services/notification_service.dart';
 
 class PostsController extends GetxController {
   late final PostService _postService;
@@ -95,6 +97,14 @@ class PostsController extends GetxController {
 
     try {
       await _postService.toggleLike(postId);
+      // ✅ Notifier l'auteur du post si c'est un like (pas un unlike)
+      if (isLiked) {
+        unawaited(NotificationService.createNotification(
+          targetUserId: post.userId,
+          type:         'like',
+          postId:       postId,
+        ));
+      }
     } catch (e) {
       // ✅ Rollback si erreur
       posts[index] = post;
@@ -107,24 +117,32 @@ class PostsController extends GetxController {
     required String       caption,
     required List<String> mediaUrls,
     String?               location,
-    bool                  allowComments  = true,
+    bool                  allowComments    = true,
     String?               musicTitle,
     String?               musicArtist,
     String?               musicTrackId,
     String?               musicPreviewUrl,
     String?               musicImageUrl,
+    String?               pollQuestion,
+    String?               pollOptionA,
+    String?               pollOptionB,
+    int?                  pollDurationHours,
   }) async {
     try {
       await _postService.createPost(
-        caption:         caption,
-        mediaUrls:       mediaUrls,
-        location:        location,
-        allowComments:   allowComments,
-        musicTitle:      musicTitle,
-        musicArtist:     musicArtist,
-        musicTrackId:    musicTrackId,
-        musicPreviewUrl: musicPreviewUrl,
-        musicImageUrl:   musicImageUrl,
+        caption:          caption,
+        mediaUrls:        mediaUrls,
+        location:         location,
+        allowComments:    allowComments,
+        musicTitle:       musicTitle,
+        musicArtist:      musicArtist,
+        musicTrackId:     musicTrackId,
+        musicPreviewUrl:  musicPreviewUrl,
+        musicImageUrl:    musicImageUrl,
+        pollQuestion:     pollQuestion,
+        pollOptionA:      pollOptionA,
+        pollOptionB:      pollOptionB,
+        pollDurationHours: pollDurationHours,
       );
 
       await loadFeed();

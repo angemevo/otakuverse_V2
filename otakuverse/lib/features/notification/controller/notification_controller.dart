@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:otakuverse/features/notification/models/notification_model.dart';
 import 'package:otakuverse/features/notification/services/notification_service.dart';
 
@@ -17,10 +18,61 @@ class NotificationController extends GetxController {
   int              _offset   = 0;
   static const int _pageSize = 20;
 
+  // ─── Realtime ────────────────────────────────────────────────────
+  RealtimeChannel? _channel;
+
   @override
   void onInit() {
     super.onInit();
     loadNotifications();
+    _subscribeToRealtime();
+  }
+
+  @override
+  void onClose() {
+    _channel?.unsubscribe();
+    super.onClose();
+  }
+
+  // ─── REALTIME — nouvelles notifications ──────────────────────────
+  void _subscribeToRealtime() {
+    final uid = Supabase.instance.client.auth.currentUser?.id;
+    if (uid == null) return;
+
+    _channel = Supabase.instance.client
+        .channel('notifications:$uid')
+        .onPostgresChanges(
+          event:    PostgresChangeEvent.insert,
+          schema:   'public',
+          table:    'notifications',
+          callback: (payload) => _onNewNotification(payload),
+        )
+        .subscribe();
+  }
+
+  Future<void> _onNewNotification(
+      PostgresChangePayload payload) async {
+    // Vérifier que la notif appartient bien à l'utilisateur courant
+    final uid = Supabase.instance.client.auth.currentUser?.id;
+    final notifUserId = payload.newRecord['user_id'] as String?;
+    if (notifUserId != uid) return;
+
+    final id = payload.newRecord['id'] as String?;
+    if (id == null) return;
+
+    try {
+      // Récupérer la notif complète avec les JOINs (actor + post)
+      final notif = await _service.getById(id);
+      if (notif == null) return;
+
+      // Éviter les doublons si loadNotifications() a déjà chargé la notif
+      if (notifications.any((n) => n.id == id)) return;
+
+      notifications.insert(0, notif);
+      unreadCount.value++;
+    } catch (e) {
+      print('🔴 _onNewNotification: $e');
+    }
   }
 
   // ─── CHARGER (première page) ─────────────────────────────────────

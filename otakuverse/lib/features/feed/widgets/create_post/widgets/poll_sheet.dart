@@ -3,9 +3,25 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:otakuverse/core/constants/app_colors.dart';
 
+// ─── Modèle de données du sondage ────────────────────────────────────
+class PollData {
+  final String question;
+  final String optionA;
+  final String optionB;
+  final int    durationHours;
+
+  const PollData({
+    required this.question,
+    required this.optionA,
+    required this.optionB,
+    required this.durationHours,
+  });
+}
+
 /// Sheet de création de sondage.
 class PollSheet extends StatefulWidget {
-  const PollSheet({super.key});
+  final ValueChanged<PollData>? onPollCreated;
+  const PollSheet({super.key, this.onPollCreated});
 
   @override
   State<PollSheet> createState() => _PollSheetState();
@@ -101,7 +117,20 @@ class _PollSheetState extends State<PollSheet> {
             SizedBox(
               width: double.infinity, height: 48,
               child: ElevatedButton(
-                onPressed: () { HapticFeedback.mediumImpact(); Navigator.pop(context); },
+                onPressed: () {
+                  HapticFeedback.mediumImpact();
+                  final q = _questionCtrl.text.trim();
+                  if (q.isEmpty) return;
+                  widget.onPollCreated?.call(PollData(
+                    question:      q,
+                    optionA:       _option1Ctrl.text.trim().isEmpty
+                        ? 'Option A' : _option1Ctrl.text.trim(),
+                    optionB:       _option2Ctrl.text.trim().isEmpty
+                        ? 'Option B' : _option2Ctrl.text.trim(),
+                    durationHours: _duration,
+                  ));
+                  Navigator.pop(context);
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   shape: RoundedRectangleBorder(

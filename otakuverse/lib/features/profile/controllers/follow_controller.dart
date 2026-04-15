@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:ui';
 import 'package:get/get.dart';
+import 'package:otakuverse/features/notification/services/notification_service.dart';
 import 'package:otakuverse/features/profile/services/follow_service.dart';
 
 class FollowController extends GetxController {
@@ -32,6 +34,13 @@ class FollowController extends GetxController {
       isLoading.value = true;
       final result = await _followService.toggleFollow(targetUserId);
       _followingMap[targetUserId] = result; // ✅ Sync avec la DB
+      // ✅ Notifier l'utilisateur suivi
+      if (result) {
+        unawaited(NotificationService.createNotification(
+          targetUserId: targetUserId,
+          type:         'follow',
+        ));
+      }
     } catch (e) {
       // ✅ Rollback si erreur
       _followingMap[targetUserId] = current;

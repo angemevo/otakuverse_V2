@@ -9,12 +9,14 @@ class PostPreviewWidget extends StatelessWidget {
   final List<Uint8List>   imagePreviews;
   final int               currentPreview;
   final ValueChanged<int> onPageChanged;
+  final VoidCallback?     onAddImage;
 
   const PostPreviewWidget({
     super.key,
     required this.imagePreviews,
     required this.currentPreview,
     required this.onPageChanged,
+    this.onAddImage,
   });
 
   void _openFullscreen(BuildContext context) {
@@ -38,13 +40,34 @@ class PostPreviewWidget extends StatelessWidget {
     final size = MediaQuery.of(context).size.width;
 
     if (imagePreviews.isEmpty) {
-      return Container(
-        width:  double.infinity,
-        height: size,
-        color:  AppColors.bgCard,
-        child:  const Center(
-          child: Icon(Icons.image_outlined,
-              color: AppColors.textMuted, size: 64),
+      return GestureDetector(
+        onTap: onAddImage,
+        child: Container(
+          width:  double.infinity,
+          height: size,
+          color:  AppColors.bgCard,
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.add_photo_alternate_outlined,
+                  color: onAddImage != null
+                      ? AppColors.primary
+                      : AppColors.textMuted,
+                  size: 64,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Touche pour ajouter des photos',
+                  style: TextStyle(
+                    color:    AppColors.textMuted,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       );
     }

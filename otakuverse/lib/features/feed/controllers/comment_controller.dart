@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'package:get/get.dart';
 import 'package:otakuverse/features/feed/controllers/post_controller.dart';
 import 'package:otakuverse/features/feed/models/comment_model.dart';
 import 'package:otakuverse/features/feed/services/comment_service.dart';
+import 'package:otakuverse/features/notification/services/notification_service.dart';
 
 class CommentController extends GetxController {
   final _service = CommentService();
@@ -58,9 +60,31 @@ class CommentController extends GetxController {
           );
           comments[parentIndex] = updated;
         }
+        // ✅ Notifier l'auteur du commentaire parent
+        unawaited(NotificationService.createNotification(
+          targetUserId: replyingTo.value!.userId,
+          type:         'reply',
+          postId:       postId,
+          commentId:    replyingTo.value!.id,
+        ));
       } else {
         // ─ Commentaire racine → ajouter en bas
         comments.add(comment);
+        // ✅ Notifier l'auteur du post
+        final postAuthorId = Get.isRegistered<PostsController>()
+            ? Get.find<PostsController>()
+                .posts
+                .firstWhereOrNull((p) => p.id == postId)
+                ?.userId
+            : null;
+        if (postAuthorId != null) {
+          unawaited(NotificationService.createNotification(
+            targetUserId: postAuthorId,
+            type:         'comment',
+            postId:       postId,
+            commentId:    comment.id,
+          ));
+        }
       }
 
       // ✅ Incrémenter commentsCount dans le feed

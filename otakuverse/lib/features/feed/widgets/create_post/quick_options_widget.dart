@@ -3,8 +3,11 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:otakuverse/core/constants/app_colors.dart';
 import 'widgets/poll_sheet.dart';
 
+export 'widgets/poll_sheet.dart' show PollData;
+
 class QuickOptionsWidget extends StatelessWidget {
-  const QuickOptionsWidget({super.key});
+  final ValueChanged<PollData>? onPollCreated;
+  const QuickOptionsWidget({super.key, this.onPollCreated});
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +23,7 @@ class QuickOptionsWidget extends StatelessWidget {
             isScrollControlled: true,
             shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-            builder: (_) => const PollSheet(),
+            builder: (_) => PollSheet(onPollCreated: onPollCreated),
           ),
         ),
         const SizedBox(width: 8),

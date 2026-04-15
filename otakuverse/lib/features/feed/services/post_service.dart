@@ -36,24 +36,37 @@ class PostService {
     required String       caption,
     required List<String> mediaUrls,
     String? location,
-    bool allowComments = true,
+    bool    allowComments    = true,
     String? musicTitle,
     String? musicArtist,
     String? musicTrackId,
     String? musicPreviewUrl,
     String? musicImageUrl,
+    String? pollQuestion,
+    String? pollOptionA,
+    String? pollOptionB,
+    int?    pollDurationHours,
   }) async {
+    final pollExpiresAt = pollDurationHours != null
+        ? DateTime.now().add(Duration(hours: pollDurationHours)).toIso8601String()
+        : null;
+
     final data = await _supabase.from('posts').insert({
-      'user_id': _uid,
-      'caption': caption,
-      'media_urls': mediaUrls,
-      'location': ?location,
+      'user_id':       _uid,
+      'caption':       caption,
+      'media_urls':    mediaUrls,
+      'location':      ?location,
       'allow_comments': allowComments,
       'music_title':      musicTitle,
       'music_artist':     musicArtist,
       'music_track_id':   musicTrackId,
       'music_preview_url': musicPreviewUrl,
       'music_image_url':  musicImageUrl,
+      'poll_question':       ?pollQuestion,
+      'poll_option_a':       ?pollOptionA,
+      'poll_option_b':       ?pollOptionB,
+      'poll_duration_hours': ?pollDurationHours,
+      'poll_expires_at':     ?pollExpiresAt,
     }).select(_select).single();
 
     return PostModel.fromJson(data);

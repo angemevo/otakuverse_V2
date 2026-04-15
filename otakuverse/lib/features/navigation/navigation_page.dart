@@ -4,11 +4,12 @@ import 'package:otakuverse/core/constants/app_colors.dart';
 import 'package:otakuverse/core/constants/app_text_styles.dart';
 import 'package:otakuverse/core/widgets/app_bottom_nav.dart';
 import 'package:otakuverse/core/widgets/app_bar_widget.dart';
-import 'package:otakuverse/features/feed/screens/create_post_screen.dart';
 import 'package:otakuverse/features/feed/screens/home/home_screen.dart';
+import 'package:otakuverse/features/feed/screens/media/media_picker_screen.dart';
 import 'package:otakuverse/features/message/screens/messages_screen.dart';
 import 'package:otakuverse/features/profile/screens/profile_screen.dart';
 import 'package:otakuverse/features/search/screens/search_screen.dart';
+import 'package:otakuverse/features/stories/screens/create_story/create_story_screen.dart';
 
 class NavigationPage extends StatefulWidget {
   const NavigationPage({super.key});
@@ -97,7 +98,9 @@ class _NavigationPageState extends State<NavigationPage> {
                     color: AppColors.primary,
                     onTap: () {
                       Navigator.pop(context);
-                      Get.to(() => const CreatePostScreen());
+                      Navigator.push(context,
+                        MaterialPageRoute(
+                            builder: (_) => const MediaPickerScreen()));
                     },
                   ),
                   _CreateOption(
@@ -106,7 +109,9 @@ class _NavigationPageState extends State<NavigationPage> {
                     color: AppColors.sakura,
                     onTap: () {
                       Navigator.pop(context);
-                      // TODO: CreateStoryScreen
+                      Navigator.push(context,
+                        MaterialPageRoute(
+                            builder: (_) => const CreateStoryScreen()));
                     },
                   ),
                   _CreateOption(
@@ -115,7 +120,15 @@ class _NavigationPageState extends State<NavigationPage> {
                     color: AppColors.gold,
                     onTap: () {
                       Navigator.pop(context);
-                      // TODO: Sprint 5 — ReviewForm
+                      Get.snackbar(
+                        'Bientôt disponible 🎯',
+                        'Les avis arrivent prochainement',
+                        backgroundColor: AppColors.bgCard,
+                        colorText:       AppColors.textPrimary,
+                        snackPosition:   SnackPosition.BOTTOM,
+                        margin:          const EdgeInsets.all(16),
+                        borderRadius:    12,
+                      );
                     },
                   ),
                   _CreateOption(
@@ -124,7 +137,15 @@ class _NavigationPageState extends State<NavigationPage> {
                     color: AppColors.accent,
                     onTap: () {
                       Navigator.pop(context);
-                      // TODO: CreateShortScreen
+                      Get.snackbar(
+                        'Bientôt disponible 🎬',
+                        'Les Clips arrivent prochainement',
+                        backgroundColor: AppColors.bgCard,
+                        colorText:       AppColors.textPrimary,
+                        snackPosition:   SnackPosition.BOTTOM,
+                        margin:          const EdgeInsets.all(16),
+                        borderRadius:    12,
+                      );
                     },
                   ),
                 ],

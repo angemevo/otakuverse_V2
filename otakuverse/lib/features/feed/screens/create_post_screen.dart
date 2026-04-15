@@ -39,7 +39,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   bool          _allowComments  = true;
   bool          _isPublishing   = false;
   int           _currentPreview = 0;
-  MusicTrack? _selectedSong;
+  MusicTrack?   _selectedSong;
+  PollData?     _pollData;
 
   final _postsCtrl     = Get.find<PostsController>();
   final _uploadService = StorageUploadService();
@@ -67,6 +68,19 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     });
   }
 
+  Future<void> _pickImages() async {
+    final picker = ImagePicker();
+    final files  = await picker.pickMultiImage(imageQuality: 85);
+    if (files.isEmpty) return;
+    final previews = await Future.wait(files.map((f) => f.readAsBytes()));
+    if (!mounted) return;
+    setState(() {
+      _selectedImages..clear()..addAll(files);
+      _imagePreviews..clear()..addAll(previews);
+      _currentPreview = 0;
+    });
+  }
+
   Future<void> _publish() async {
     if (_captionCtrl.text.trim().isEmpty && _selectedImages.isEmpty) {
       Helpers.showWarningSnackbar('Ajoute une légende ou une image');
@@ -91,16 +105,20 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       if (!mounted) return;
 
       final ok = await _postsCtrl.createPost(
-        caption:         _captionCtrl.text.trim(),
-        mediaUrls:       mediaUrls,
-        location:        _locationCtrl.text.trim().isEmpty
+        caption:          _captionCtrl.text.trim(),
+        mediaUrls:        mediaUrls,
+        location:         _locationCtrl.text.trim().isEmpty
             ? null : _locationCtrl.text.trim(),
-        allowComments:   _allowComments,
-        musicTitle:      _selectedSong?.title,
-        musicArtist:     _selectedSong?.artist,
-        musicTrackId:    _selectedSong?.id,
-        musicPreviewUrl: _selectedSong?.previewUrl,
-        musicImageUrl:   _selectedSong?.imageUrl,
+        allowComments:    _allowComments,
+        musicTitle:       _selectedSong?.title,
+        musicArtist:      _selectedSong?.artist,
+        musicTrackId:     _selectedSong?.id,
+        musicPreviewUrl:  _selectedSong?.previewUrl,
+        musicImageUrl:    _selectedSong?.imageUrl,
+        pollQuestion:     _pollData?.question,
+        pollOptionA:      _pollData?.optionA,
+        pollOptionB:      _pollData?.optionB,
+        pollDurationHours: _pollData?.durationHours,
       );
 
       // ✅ FIX : vérifier mounted avant navigation/snackbar
@@ -138,11 +156,14 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             imagePreviews:  _imagePreviews,
             currentPreview: _currentPreview,
             onPageChanged:  (i) => setState(() => _currentPreview = i),
+            onAddImage:     _pickImages,
           ),
           const Divider(color: Color(0xFF1F1F1F), height: 1),
           CaptionSection(controller: _captionCtrl),
           const Divider(color: Color(0xFF1F1F1F), height: 1),
-          const QuickOptionsWidget(),
+          QuickOptionsWidget(
+            onPollCreated: (data) => setState(() => _pollData = data),
+          ),
           const Divider(color: Color(0xFF1F1F1F), height: 1),
           MusicSection(
             selectedSong:   _selectedSong,

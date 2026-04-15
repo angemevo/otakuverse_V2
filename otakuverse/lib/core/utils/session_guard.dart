@@ -33,9 +33,9 @@ class SessionGuard {
   }
 
   static void _redirectToLogin() {
-    // ✅ Ferme toutes les routes et retourne au splash/login
+    // ✅ Ferme toutes les routes et retourne au login
     if (Get.context != null) {
-      Get.offAllNamed('/');
+      Get.offAllNamed('/login');
     }
   }
 }
