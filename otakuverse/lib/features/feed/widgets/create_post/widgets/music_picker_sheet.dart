@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:otakuverse/core/constants/app_colors.dart';
 import 'package:otakuverse/core/services/music_service.dart';
 
@@ -43,39 +44,53 @@ class _MusicPickerContent extends StatefulWidget {
 }
 
 class _MusicPickerContentState extends State<_MusicPickerContent> {
-  final _searchCtrl = TextEditingController();
+  final _searchCtrl  = TextEditingController();
+  final _audioPlayer = AudioPlayer();
 
-  List<MusicTrack> _results      = [];
-  bool             _loading      = false;
-  bool             _hasSearched  = false;
+  List<MusicTrack> _results       = [];
+  bool             _loading       = false;
+  bool             _hasSearched   = false;
+
+  // Preview audio state
+  String? _previewingId;
+  bool    _previewLoading = false;
 
   @override
   void initState() {
     super.initState();
     _loadSuggestions();
+
+    // Reset preview state when track finishes
+    _audioPlayer.playerStateStream.listen((state) {
+      if (state.processingState == ProcessingState.completed && mounted) {
+        setState(() { _previewingId = null; });
+      }
+    });
   }
 
   @override
   void dispose() {
     _searchCtrl.dispose();
+    _audioPlayer.dispose();
     super.dispose();
   }
 
-  // ─── Suggestions initiales ───────────────────────────────────────
+  // ─── Suggestions initiales ────────────────────────────────────────
 
   Future<void> _loadSuggestions() async {
     setState(() => _loading = true);
     final results = await MusicService.getSuggestions();
     if (mounted) setState(() {
-      _results  = results;
-      _loading  = false;
+      _results = results;
+      _loading = false;
     });
   }
 
-  // ─── Recherche avec debounce léger ───────────────────────────────
+  // ─── Recherche ────────────────────────────────────────────────────
 
   Future<void> _onSearchChanged(String query) async {
     if (query.trim().isEmpty) {
+      _stopPreview();
       _loadSuggestions();
       return;
     }
@@ -86,6 +101,47 @@ class _MusicPickerContentState extends State<_MusicPickerContent> {
       _loading = false;
     });
   }
+
+  // ─── Preview audio ────────────────────────────────────────────────
+
+  Future<void> _togglePreview(MusicTrack track) async {
+    if (track.previewUrl == null) return;
+
+    HapticFeedback.lightImpact();
+
+    // Même track → toggle play/pause
+    if (_previewingId == track.id) {
+      if (_audioPlayer.playing) {
+        await _audioPlayer.pause();
+      } else {
+        await _audioPlayer.play();
+      }
+      return;
+    }
+
+    // Autre track → charger et jouer
+    setState(() {
+      _previewingId   = track.id;
+      _previewLoading = true;
+    });
+
+    try {
+      await _audioPlayer.setUrl(track.previewUrl!);
+      await _audioPlayer.play();
+    } catch (e) {
+      debugPrint('❌ Preview error: $e');
+      if (mounted) setState(() { _previewingId = null; });
+    } finally {
+      if (mounted) setState(() => _previewLoading = false);
+    }
+  }
+
+  Future<void> _stopPreview() async {
+    await _audioPlayer.stop();
+    if (mounted) setState(() { _previewingId = null; });
+  }
+
+  // ─── Build ────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -104,7 +160,8 @@ class _MusicPickerContentState extends State<_MusicPickerContent> {
           ),
         ),
         const SizedBox(height: 12),
-        // ─ Header ─────────────────────────────────────────────
+
+        // ─ Header ───────────────────────────────────────────────
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(children: [
@@ -115,7 +172,6 @@ class _MusicPickerContentState extends State<_MusicPickerContent> {
                   fontSize:   17,
                 )),
             const Spacer(),
-            // ✅ Badge Deezer
             Container(
               padding: const EdgeInsets.symmetric(
                   horizontal: 8, vertical: 3),
@@ -135,7 +191,8 @@ class _MusicPickerContentState extends State<_MusicPickerContent> {
           ]),
         ),
         const SizedBox(height: 12),
-        // ─ Champ de recherche ─────────────────────────────────
+
+        // ─ Champ de recherche ────────────────────────────────────
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Container(
@@ -159,6 +216,7 @@ class _MusicPickerContentState extends State<_MusicPickerContent> {
                     ? GestureDetector(
                         onTap: () {
                           _searchCtrl.clear();
+                          _stopPreview();
                           _loadSuggestions();
                         },
                         child: const Icon(Icons.close,
@@ -166,14 +224,14 @@ class _MusicPickerContentState extends State<_MusicPickerContent> {
                       )
                     : null,
                 border:         InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(
-                    vertical: 10),
+                contentPadding: const EdgeInsets.symmetric(vertical: 10),
               ),
             ),
           ),
         ),
         const SizedBox(height: 8),
-        // ─ Contenu ────────────────────────────────────────────
+
+        // ─ Contenu ──────────────────────────────────────────────
         Expanded(child: _buildContent(sc)),
       ]),
     );
@@ -208,6 +266,7 @@ class _MusicPickerContentState extends State<_MusicPickerContent> {
       itemBuilder: (_, i) {
         final track      = _results[i];
         final isSelected = widget.selectedSong?.id == track.id;
+        final isPreviewing = _previewingId == track.id;
 
         return AnimatedContainer(
           duration: const Duration(milliseconds: 150),
@@ -218,13 +277,11 @@ class _MusicPickerContentState extends State<_MusicPickerContent> {
             leading: _buildAlbumArt(track, isSelected),
             title: Text(
               track.title,
-              maxLines:  1,
-              overflow:  TextOverflow.ellipsis,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: GoogleFonts.inter(
                 color:      AppColors.textPrimary,
-                fontWeight: isSelected
-                    ? FontWeight.w600
-                    : FontWeight.w400,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                 fontSize:   14,
               ),
             ),
@@ -232,9 +289,7 @@ class _MusicPickerContentState extends State<_MusicPickerContent> {
               Text(
                 track.artist,
                 style: GoogleFonts.inter(
-                  color: isSelected
-                      ? AppColors.primary
-                      : AppColors.textMuted,
+                  color:    isSelected ? AppColors.primary : AppColors.textMuted,
                   fontSize: 12,
                 ),
               ),
@@ -242,21 +297,97 @@ class _MusicPickerContentState extends State<_MusicPickerContent> {
               Text(
                 '• ${track.durationFormatted}',
                 style: GoogleFonts.inter(
-                    color:    AppColors.textMuted,
-                    fontSize: 11),
+                    color: AppColors.textMuted, fontSize: 11),
               ),
             ]),
-            trailing: isSelected
-                ? const Icon(Icons.check_circle,
-                    color: AppColors.primary, size: 22)
-                : track.previewUrl != null
-                    ? const Icon(Icons.play_circle_outline,
-                        color: AppColors.textMuted, size: 22)
-                    : null,
-            onTap: () {
-              HapticFeedback.lightImpact();
-              widget.onSongSelected(track);
-            },
+            // ─ Trailing : preview + sélection ─────────────────────
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Bouton preview (seulement si URL disponible)
+                if (track.previewUrl != null)
+                  GestureDetector(
+                    onTap: () => _togglePreview(track),
+                    child: Container(
+                      width: 34, height: 34,
+                      decoration: BoxDecoration(
+                        color: isPreviewing
+                            ? AppColors.primary.withValues(alpha: 0.15)
+                            : AppColors.bgPrimary,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: isPreviewing
+                              ? AppColors.primary
+                              : AppColors.textMuted.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Center(
+                        child: (_previewLoading && isPreviewing)
+                            ? const SizedBox(
+                                width: 14, height: 14,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: AppColors.primary),
+                              )
+                            : StreamBuilder<PlayerState>(
+                                stream: _audioPlayer.playerStateStream,
+                                builder: (_, snap) {
+                                  final playing = snap.data?.playing == true
+                                      && isPreviewing;
+                                  return Icon(
+                                    playing
+                                        ? Icons.pause
+                                        : Icons.play_arrow,
+                                    color: isPreviewing
+                                        ? AppColors.primary
+                                        : AppColors.textMuted,
+                                    size: 18,
+                                  );
+                                },
+                              ),
+                      ),
+                    ),
+                  ),
+
+                const SizedBox(width: 8),
+
+                // Bouton sélection
+                if (isSelected)
+                  const Icon(Icons.check_circle,
+                      color: AppColors.primary, size: 22)
+                else
+                  GestureDetector(
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                      _stopPreview();
+                      widget.onSongSelected(track);
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color:        AppColors.primary.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                            color: AppColors.primary.withValues(alpha: 0.3)),
+                      ),
+                      child: Text('Choisir',
+                          style: GoogleFonts.inter(
+                            color:      AppColors.primary,
+                            fontSize:   11,
+                            fontWeight: FontWeight.w600,
+                          )),
+                    ),
+                  ),
+              ],
+            ),
+            onTap: isSelected
+                ? null
+                : () {
+                    HapticFeedback.lightImpact();
+                    _stopPreview();
+                    widget.onSongSelected(track);
+                  },
           ),
         );
       },

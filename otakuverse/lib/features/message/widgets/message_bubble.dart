@@ -181,6 +181,10 @@ class MessageBubbleState extends State<MessageBubble>
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize:       MainAxisSize.min,
         children: [
+          // ─ Citation du message original ──────────────────────
+          if (widget.message.replyToMessage != null)
+            _buildQuotedReply(widget.message.replyToMessage!),
+
           if (widget.message.imageUrl != null)
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
@@ -219,6 +223,51 @@ class MessageBubbleState extends State<MessageBubble>
                 _buildTicks(),
               ],
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuotedReply(MessageModel reply) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(8),
+        border: Border(
+          left: BorderSide(
+            color: widget.isMe
+                ? Colors.white.withValues(alpha: 0.7)
+                : AppColors.primary,
+            width: 3,
+          ),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize:       MainAxisSize.min,
+        children: [
+          Text(
+            reply.senderName.isNotEmpty ? reply.senderName : 'Utilisateur',
+            style: GoogleFonts.inter(
+              color: widget.isMe
+                  ? Colors.white.withValues(alpha: 0.9)
+                  : AppColors.primary,
+              fontSize:   11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            reply.imageUrl != null ? '📷 Photo' : (reply.text ?? ''),
+            style: GoogleFonts.inter(
+              color:    Colors.white.withValues(alpha: 0.65),
+              fontSize: 12,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),

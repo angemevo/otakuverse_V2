@@ -113,13 +113,19 @@ class MusicService {
       final title = t['title'] as String?;
       if (id == null || title == null) return null;
 
+      // Deezer renvoie "" (chaîne vide) quand pas de preview → traiter comme null
+      final rawPreview = t['preview'] as String?;
+      final previewUrl = (rawPreview != null && rawPreview.isNotEmpty)
+          ? rawPreview
+          : null;
+
       return MusicTrack(
         id:         id,
         title:      title,
         artist:     (t['artist']?['name'] as String?) ?? 'Artiste inconnu',
-        previewUrl: t['preview']              as String?,
+        previewUrl: previewUrl,
         imageUrl:   t['album']?['cover_medium'] as String?,
-        // ✅ Deezer renvoie la durée en secondes → convertir en ms
+        // Deezer renvoie la durée en secondes → convertir en ms
         durationMs: ((t['duration'] as int? ?? 30) * 1000),
       );
     } catch (e) {

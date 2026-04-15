@@ -128,7 +128,8 @@ class _PostCardMusicPlayerState
 
   // ─── CHARGER LE TRACK ────────────────────────────────────────────
   Future<void> _loadTrack() async {
-    if (widget.post.musicPreviewUrl == null) return;
+    final url = widget.post.musicPreviewUrl;
+    if (url == null || url.isEmpty) return;
     if (_isLoaded) return; // ✅ Déjà chargé
 
     setState(() {
@@ -162,7 +163,8 @@ class _PostCardMusicPlayerState
   // ─── TOGGLE PLAY/PAUSE ───────────────────────────────────────────
   // ✅ Simple et direct — pas de logique complexe
   Future<void> _togglePlay() async {
-    if (widget.post.musicPreviewUrl == null) return;
+    final url = widget.post.musicPreviewUrl;
+    if (url == null || url.isEmpty) return;
 
     if (_isPlaying) {
       // ✅ L'utilisateur pause manuellement
@@ -182,7 +184,7 @@ class _PostCardMusicPlayerState
 
       await AudioManager.instance.play(
         postId:     widget.post.id,
-        previewUrl: widget.post.musicPreviewUrl!,
+        previewUrl: url,
         player:     _player,
       );
     }
@@ -191,7 +193,8 @@ class _PostCardMusicPlayerState
   // ─── AUTOPLAY VISIBILITÉ ─────────────────────────────────────────
   Future<void> _onVisibilityChanged(
     VisibilityInfo info) async {
-    if (widget.post.musicPreviewUrl == null) return;
+    final url = widget.post.musicPreviewUrl;
+    if (url == null || url.isEmpty) return;
 
     final isVisible =
         info.visibleFraction >= _visibilityThreshold;
@@ -206,7 +209,7 @@ class _PostCardMusicPlayerState
 
       await AudioManager.instance.play(
         postId:     widget.post.id,
-        previewUrl: widget.post.musicPreviewUrl!,
+        previewUrl: url,
         player:     _player,
       );
     } else if (!isVisible && _isPlaying) {

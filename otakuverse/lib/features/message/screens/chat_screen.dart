@@ -85,20 +85,38 @@ class _ChatScreenState extends State<ChatScreen>
             final newId = payload.newRecord['id'] as String?;
             if (newId == null) return;
 
-                if (_messages.any((m) => m.id == newId)) return;
+            if (_messages.any((m) => m.id == newId)) return;
 
             final data = await _supabase
                 .from('messages')
-.select('*, sender:profiles(user_id, username, display_name, avatar_url)')
+                .select('*, sender:profiles(user_id, username, display_name, avatar_url)')
                 .eq('id', newId)
                 .single();
 
-            if (!mounted) return;
-            setState(() => _messages.add(MessageModel.fromJson(data)));
-            _scrollToBottom();
-            if (MessageModel.fromJson(data).senderId != _uid) {
-              _markAsRead();
+            MessageModel msg = MessageModel.fromJson(data);
+
+            // ✅ Charger le message original si c'est une réponse
+            if (msg.replyToId != null) {
+              try {
+                final replyData = await _supabase
+                    .from('messages')
+                    .select('*, sender:profiles(user_id, username, display_name, avatar_url)')
+                    .eq('id', msg.replyToId!)
+                    .maybeSingle();
+                if (replyData != null) {
+                  msg = msg.copyWith(
+                    replyToMessage: MessageModel.fromJson(replyData),
+                  );
+                }
+              } catch (e) {
+                debugPrint('⚠️ Reply fetch error: $e');
+              }
             }
+
+            if (!mounted) return;
+            setState(() => _messages.add(msg));
+            _scrollToBottom();
+            if (msg.senderId != _uid) _markAsRead();
           },
         )
 
@@ -243,13 +261,15 @@ class _ChatScreenState extends State<ChatScreen>
   // ─── Scroll ──────────────────────────────────────────────────────
 
   void _scrollToBottom() {
-    if (_scrollCtrl.hasClients) {
-      _scrollCtrl.animateTo(
-        _scrollCtrl.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 300),
-        curve:    Curves.easeOut,
-      );
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollCtrl.hasClients) {
+        _scrollCtrl.animateTo(
+          _scrollCtrl.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve:    Curves.easeOut,
+        );
+      }
+    });
   }
 
   bool _isSameDay(DateTime a, DateTime b) {

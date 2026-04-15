@@ -52,6 +52,7 @@ class AudioManager {
 
   Future<void> stop(String postId) async {
     if (_currentPostId == postId) {
+      await _currentPlayer?.pause();
       _currentPostId = null;
       _currentPlayer = null;
     }
