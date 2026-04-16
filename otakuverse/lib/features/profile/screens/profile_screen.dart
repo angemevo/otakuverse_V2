@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 
 import 'package:otakuverse/core/constants/app_colors.dart';
 import 'package:otakuverse/core/constants/app_text_styles.dart';
+import 'package:otakuverse/core/utils/helpers.dart';
 import 'package:otakuverse/core/widgets/cached_image.dart';
 import 'package:otakuverse/features/profile/models/profile_model.dart';
 import 'package:otakuverse/features/profile/screens/edit_profile_screen.dart';
@@ -98,11 +99,20 @@ class _ProfileScreenState extends State<ProfileScreen>
     if (_profile == null) return;
     HapticFeedback.lightImpact();
 
-    final targetId = _profile!.userId;
-    setState(() => _isFollowing = !_isFollowing);
+    final targetId     = _profile!.userId;
+    final nowFollowing = !_isFollowing;
+    final delta        = nowFollowing ? 1 : -1;
+
+    // ✅ Optimistic update — état + compteur
+    setState(() {
+      _isFollowing = nowFollowing;
+      _profile = _profile!.copyWith(
+        followersCount: (_profile!.followersCount + delta).clamp(0, 999999999),
+      );
+    });
 
     try {
-      if (_isFollowing) {
+      if (nowFollowing) {
         await _supabase.from('follows').insert({
           'follower_id':  _myUid,
           'following_id': targetId,
@@ -114,8 +124,13 @@ class _ProfileScreenState extends State<ProfileScreen>
             .eq('following_id', targetId);
       }
     } catch (e) {
-      // ✅ Rollback si erreur
-      setState(() => _isFollowing = !_isFollowing);
+      // ✅ Rollback complet si erreur
+      setState(() {
+        _isFollowing = !nowFollowing;
+        _profile = _profile!.copyWith(
+          followersCount: (_profile!.followersCount - delta).clamp(0, 999999999),
+        );
+      });
     }
   }
 
@@ -146,15 +161,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         ),
       );
     } catch (e) {
-      Get.snackbar(
-        'Erreur',
-        'Impossible d\'ouvrir la conversation',
-        backgroundColor: AppColors.error,
-        colorText:       AppColors.white,
-        snackPosition:   SnackPosition.BOTTOM,
-        margin:          const EdgeInsets.all(16),
-        borderRadius:    12,
-      );
+      Helpers.showErrorSnackbar('Impossible d\'ouvrir la conversation');
     } finally {
       if (mounted) setState(() => _isOpeningChat = false);
     }
@@ -209,6 +216,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                     color: AppColors.textPrimary, size: 20),
                 onPressed: () => Navigator.pop(context),
               ),
+              // ✅ Visible uniquement quand la toolbar est collapsée
+              title: _buildCollapsedTitle(),
+              titleSpacing: 0,
               actions: [
                 if (_isMe)
                   IconButton(
@@ -224,7 +234,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                   ),
               ],
               flexibleSpace: FlexibleSpaceBar(
-                background: _buildBanner(),
+                // title à null dans flexibleSpace pour éviter le doublon
+                collapseMode: CollapseMode.parallax,
+                background:   _buildBanner(),
               ),
             ),
           ),
@@ -271,6 +283,39 @@ class _ProfileScreenState extends State<ProfileScreen>
           ],
         ),
       ),
+    );
+  }
+
+  // ─── TOOLBAR COLLAPSÉE ───────────────────────────────────────────
+  Widget _buildCollapsedTitle() {
+    if (_profile == null) return const SizedBox.shrink();
+    final p = _profile!;
+    final rankColor = AppColors.rankColor(p.otakuRank);
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Flexible(
+          child: Text(
+            p.displayNameOrUsername,
+            style: AppTextStyles.h3,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color:        rankColor.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(12),
+            border:       Border.all(color: rankColor.withValues(alpha: 0.5)),
+          ),
+          child: Text(
+            '${p.otakuRank} · Lv.${p.otakuLevel}',
+            style: AppTextStyles.statSmall.copyWith(color: rankColor),
+          ),
+        ),
+      ],
     );
   }
 
@@ -394,53 +439,23 @@ class _ProfileScreenState extends State<ProfileScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ─ Nom + Rang + Vérifié ──────────────────────────────
+          // ─ Nom + Vérifié ─────────────────────────────────
           Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          p.displayNameOrUsername,
-                          style: AppTextStyles.h2,
-                        ),
-                        if (p.isVerified) ...[
-                          const SizedBox(width: 6),
-                          const Icon(
-                            Icons.verified_rounded,
-                            color: AppColors.primary,
-                            size:  18,
-                          ),
-                        ],
-                      ],
-                    ),
-                    Text(
-                      '@${p.username}',
-                      style: AppTextStyles.bodySmall,
-                    ),
-                  ],
-                ),
-              ),
-              // ─ Badge rang ──────────────────────────────────
-              RankBadge(
-                rank:  p.otakuRank,
-                level: p.otakuLevel,
-                large: true,
-              ),
+              Text(p.displayNameOrUsername, style: AppTextStyles.h2),
+              if (p.isVerified) ...[
+                const SizedBox(width: 6),
+                const Icon(Icons.verified_rounded,
+                    color: AppColors.primary, size: 18),
+              ],
             ],
           ),
-          const SizedBox(height: 10),
+          Text('@${p.username}', style: AppTextStyles.bodySmall),
+          const SizedBox(height: 14),
 
-          // ─ Barre progression rang ────────────────────────────
-          if (_isMe) ...[
-            _buildProgressBar(p),
-            const SizedBox(height: 12),
-          ],
+          // ─ Rang + Niveau + Progression ───────────────────────
+          _buildRankSection(p),
+          const SizedBox(height: 14),
 
           // ─ Bio ───────────────────────────────────────────────
           if (p.hasBio) ...[
@@ -477,39 +492,68 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  // ─── BARRE PROGRESSION ───────────────────────────────────────────
-  Widget _buildProgressBar(ProfileModel p) {
+  // ─── RANG + NIVEAU + PROGRESSION ────────────────────────────────
+  Widget _buildRankSection(ProfileModel p) {
     final color = AppColors.rankColor(p.otakuRank);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment:
-              MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              '${p.otakuPoints} points',
-              style: AppTextStyles.statSmall
-                  .copyWith(color: color),
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color:        color.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(12),
+        border:       Border.all(color: color.withValues(alpha: 0.25)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ─ Rang + Niveau ───────────────────────────────────
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              RankBadge(
+                rank:  p.otakuRank,
+                level: p.otakuLevel,
+                large: true,
+              ),
+              if (_isMe)
+                Text(
+                  '${p.otakuPoints} pts',
+                  style: AppTextStyles.statSmall
+                      .copyWith(color: color),
+                ),
+            ],
+          ),
+
+          // ─ Barre + points (profil perso uniquement) ────────
+          if (_isMe) ...[
+            const SizedBox(height: 8),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value:           p.levelProgress,
+                minHeight:       5,
+                backgroundColor: AppColors.bgElevated,
+                valueColor:      AlwaysStoppedAnimation(color),
+              ),
             ),
-            Text(
-              'Lv.${p.otakuLevel + 1} : '
-              '${p.pointsForNextLevel} pts',
-              style: AppTextStyles.caption,
+            const SizedBox(height: 6),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '${p.otakuPoints} pts actuels',
+                  style: AppTextStyles.caption
+                      .copyWith(color: color),
+                ),
+                Text(
+                  '${p.pointsForNextLevel} pts → Lv.${p.otakuLevel + 1}',
+                  style: AppTextStyles.caption,
+                ),
+              ],
             ),
           ],
-        ),
-        const SizedBox(height: 4),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: LinearProgressIndicator(
-            value:           p.levelProgress,
-            minHeight:       5,
-            backgroundColor: AppColors.bgElevated,
-            valueColor:      AlwaysStoppedAnimation(color),
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 

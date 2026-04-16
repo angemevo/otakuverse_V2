@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:otakuverse/features/notification/models/notification_model.dart';
@@ -42,9 +43,15 @@ class NotificationController extends GetxController {
     _channel = Supabase.instance.client
         .channel('notifications:$uid')
         .onPostgresChanges(
-          event:    PostgresChangeEvent.insert,
-          schema:   'public',
-          table:    'notifications',
+          event:  PostgresChangeEvent.insert,
+          schema: 'public',
+          table:  'notifications',
+          // Filtre serveur : seules les notifs de cet utilisateur
+          filter: PostgresChangeFilter(
+            type:   PostgresChangeFilterType.eq,
+            column: 'user_id',
+            value:  uid,
+          ),
           callback: (payload) => _onNewNotification(payload),
         )
         .subscribe();
@@ -71,7 +78,7 @@ class NotificationController extends GetxController {
       notifications.insert(0, notif);
       unreadCount.value++;
     } catch (e) {
-      print('🔴 _onNewNotification: $e');
+      debugPrint('🔴 _onNewNotification: $e');
     }
   }
 
@@ -94,7 +101,7 @@ class NotificationController extends GetxController {
       _offset = data.length;
 
     } catch (e) {
-      print('🔴 Erreur notifications : $e');
+      debugPrint('🔴 Erreur notifications : $e');
     } finally {
       isLoading.value = false;
     }
@@ -116,8 +123,12 @@ class NotificationController extends GetxController {
       notifications.addAll(data);
       _offset += data.length;
 
+      // Ajouter les non-lues de la nouvelle page au compteur
+      final newUnread = data.where((n) => !n.isRead).length;
+      if (newUnread > 0) unreadCount.value += newUnread;
+
     } catch (e) {
-      print('🔴 Erreur loadMore notifications : $e');
+      debugPrint('🔴 loadMore notifications: $e');
     } finally {
       isLoadingMore.value = false;
     }
@@ -143,7 +154,7 @@ class NotificationController extends GetxController {
       // ✅ Rollback
       notifications[index] = notif;
       unreadCount.value++;
-      print('🔴 Erreur markAsRead : $e');
+      debugPrint('🔴 markAsRead: $e');
     }
   }
 
@@ -161,7 +172,7 @@ class NotificationController extends GetxController {
     } catch (e) {
       // ✅ Rollback
       await loadNotifications();
-      print('🔴 Erreur markAllAsRead : $e');
+      debugPrint('🔴 markAllAsRead: $e');
     }
   }
 
@@ -185,7 +196,7 @@ class NotificationController extends GetxController {
       // ✅ Rollback
       notifications.insert(index, notif);
       if (!notif.isRead) unreadCount.value++;
-      print('🔴 Erreur deleteNotification : $e');
+      debugPrint('🔴 deleteNotification: $e');
     }
   }
 }

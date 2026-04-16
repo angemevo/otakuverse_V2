@@ -83,14 +83,14 @@ class StorageUploadService {
       final ext   = files[i].path.split('.').last;
       _validate(bytes, ext);
 
+      // Dossier = userId directement (évite le doublon posts/posts/)
       final url = await _upload(
         bytes, ext,
-        folder: 'posts',
-        userId: userId,
+        folder: userId,
         index: i,
       );
       urls.add(url);
-      _log('📤 Image $i uploadée');
+      _log('✅ Image $i uploadée');
     }
     return urls;
   }
