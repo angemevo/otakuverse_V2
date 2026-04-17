@@ -6,17 +6,16 @@ import 'package:otakuverse/features/profile/screens/edit_profile_screen.dart';
 
 /// Affiche le bottom-sheet de paramètres du profil.
 void showSettingsSheet({
-  required BuildContext  context,
-  required ProfileModel  profile,
-  required VoidCallback  onProfileUpdated,
-  required VoidCallback  onLogoutRequested,
+  required BuildContext context,
+  required ProfileModel profile,
+  required VoidCallback onProfileUpdated,
+  required VoidCallback onLogoutRequested,
 }) {
   showModalBottomSheet(
     context:         context,
     backgroundColor: AppColors.bgCard,
     shape: const RoundedRectangleBorder(
-      borderRadius:
-          BorderRadius.vertical(top: Radius.circular(20)),
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
     builder: (sheetCtx) => Column(
       mainAxisSize: MainAxisSize.min,
@@ -31,8 +30,7 @@ void showSettingsSheet({
         ),
         const SizedBox(height: 16),
 
-        _settingsItem(
-          context: sheetCtx,
+        _SettingsItem(
           icon:  Icons.edit_outlined,
           label: 'Modifier le profil',
           onTap: () {
@@ -46,38 +44,37 @@ void showSettingsSheet({
           },
         ),
 
-        _settingsItem(
-          context: sheetCtx,
+        _SettingsItem(
           icon:  Icons.lock_outline,
           label: 'Changer le mot de passe',
           onTap: () => Navigator.pop(sheetCtx),
         ),
 
-        _settingsItem(
-          context: sheetCtx,
+        _SettingsItem(
           icon:  Icons.notifications_outlined,
           label: 'Notifications',
           onTap: () => Navigator.pop(sheetCtx),
         ),
 
-        _settingsItem(
-          context: sheetCtx,
+        _SettingsItem(
           icon:  Icons.privacy_tip_outlined,
           label: 'Confidentialité',
           onTap: () => Navigator.pop(sheetCtx),
         ),
 
-        const Divider(color: AppColors.textMuted, height: 1),
+        Divider(
+          color:  AppColors.textMuted.withValues(alpha: 0.2),
+          height: 1,
+        ),
 
-        _settingsItem(
-          context: sheetCtx,
+        _SettingsItem(
           icon:  Icons.logout,
           label: 'Se déconnecter',
+          color: AppColors.primary,
           onTap: () {
             Navigator.pop(sheetCtx);
             onLogoutRequested();
           },
-          color: AppColors.primary,
         ),
 
         const SizedBox(height: 16),
@@ -86,25 +83,34 @@ void showSettingsSheet({
   );
 }
 
-Widget _settingsItem({
-  required BuildContext context,
-  required IconData     icon,
-  required String       label,
-  required VoidCallback onTap,
-  Color?                color,
-}) {
-  return ListTile(
-    leading: Icon(icon,
-        color: color ?? AppColors.textPrimary, size: 22),
-    title: Text(
-      label,
-      style: GoogleFonts.inter(
-          color: color ?? AppColors.textPrimary, fontSize: 15),
-    ),
-    trailing: color == null
-        ? const Icon(Icons.arrow_forward_ios,
-            color: AppColors.textMuted, size: 14)
-        : null,
-    onTap: onTap,
-  );
+// ─── Item interne ─────────────────────────────────────────────────────
+
+class _SettingsItem extends StatelessWidget {
+  final IconData     icon;
+  final String       label;
+  final VoidCallback onTap;
+  final Color?       color;
+
+  const _SettingsItem({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = color ?? AppColors.textPrimary;
+    return ListTile(
+      leading: Icon(icon, color: c, size: 22),
+      title:   Text(label,
+          style: GoogleFonts.inter(color: c, fontSize: 15)),
+      // ✅ Flèche uniquement sur les items non-destructifs
+      trailing: color == null
+          ? const Icon(Icons.arrow_forward_ios,
+              color: AppColors.textMuted, size: 14)
+          : null,
+      onTap: onTap,
+    );
+  }
 }
