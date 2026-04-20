@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:ui';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:otakuverse/features/notification/services/notification_service.dart';
 import 'package:otakuverse/features/profile/services/follow_service.dart';
@@ -20,7 +20,7 @@ class FollowController extends GetxController {
       final following = await _followService.isFollowing(targetUserId);
       _followingMap[targetUserId] = following;
     } catch (e) {
-      print('⚠️ Erreur loadFollowState : $e');
+      debugPrint('⚠️ Erreur loadFollowState : $e');
     }
   }
 
@@ -44,7 +44,7 @@ class FollowController extends GetxController {
     } catch (e) {
       // ✅ Rollback si erreur
       _followingMap[targetUserId] = current;
-      print('🔴 Erreur toggleFollow : $e');
+      debugPrint('🔴 Erreur toggleFollow : $e');
       Get.snackbar(
         'Erreur',
         '❌ Impossible de modifier le suivi',

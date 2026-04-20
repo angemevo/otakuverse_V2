@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:otakuverse/features/explore/services/explore_service.dart';
 import 'package:otakuverse/features/feed/models/post_model.dart';
@@ -58,7 +59,7 @@ class ExploreController extends GetxController {
       _offset = result.length;
     } catch (e) {
       errorMessage.value = 'Impossible de charger les tendances';
-      print('🔴 Erreur ExploreController : $e');
+      debugPrint('🔴 Erreur ExploreController : $e');
     } finally {
       isLoading.value = false;
     }
@@ -82,7 +83,7 @@ class ExploreController extends GetxController {
       posts.addAll(result);
       _offset += result.length;
     } catch (e) {
-      print('🔴 Erreur loadMore explore : $e');
+      debugPrint('🔴 Erreur loadMore explore : $e');
     } finally {
       isLoadingMore.value = false;
     }

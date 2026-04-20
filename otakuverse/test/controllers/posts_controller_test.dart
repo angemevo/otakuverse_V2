@@ -31,6 +31,10 @@ class _FakePostService extends PostService {
     String? musicTrackId,
     String? musicPreviewUrl,
     String? musicImageUrl,
+    int?    pollDurationHours,   
+    String? pollOptionA,          
+    String? pollOptionB,          
+    String? pollQuestion,  
   }) async =>
       PostModel.fromJson(postJson());
 }

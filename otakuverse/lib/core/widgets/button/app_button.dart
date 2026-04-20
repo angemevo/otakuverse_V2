@@ -85,7 +85,7 @@ class AppButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,  // ✅ CORRECTION : Couleur texte définie
-          disabledBackgroundColor: AppColors.primary.withOpacity(0.4),
+          disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.4),
           elevation: 4,
           shadowColor: const Color(0x4DDC143C),
           shape: RoundedRectangleBorder(
@@ -105,10 +105,10 @@ class AppButton extends StatelessWidget {
         onPressed: isLoading ? null : onPressed,
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.primary,
-          disabledForegroundColor: AppColors.primary.withOpacity(0.4),  // ✅ AMÉLIORATION
+          disabledForegroundColor: AppColors.primary.withValues(alpha: 0.4),  // ✅ AMÉLIORATION
           side: BorderSide(
             color: isLoading  // ✅ AMÉLIORATION : Bordure disabled
-                ? AppColors.primary.withOpacity(0.4)
+                ? AppColors.primary.withValues(alpha: 0.4)
                 : AppColors.primary,
           ),
           shape: RoundedRectangleBorder(
@@ -125,7 +125,7 @@ class AppButton extends StatelessWidget {
       onPressed: isLoading ? null : onPressed,
       style: TextButton.styleFrom(
         foregroundColor: AppColors.primary,
-        disabledForegroundColor: AppColors.primary.withOpacity(0.4),  // ✅ AMÉLIORATION
+        disabledForegroundColor: AppColors.primary.withValues(alpha: 0.4),  // ✅ AMÉLIORATION
       ),
       child: child,
     );

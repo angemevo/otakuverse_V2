@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:otakuverse/core/constants/app_colors.dart';
+import 'package:otakuverse/core/constants/app_keys.dart';
 import 'package:otakuverse/core/services/realtime_service.dart';
 import 'package:otakuverse/core/widgets/connectivity_wrapper.dart';
 import 'package:otakuverse/features/feed/controllers/post_controller.dart';
@@ -87,6 +88,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   Widget _buildFeed() {
     return RefreshIndicator(
+      key: AppKeys.feedList,
       color:           AppColors.primary,
       backgroundColor: AppColors.bgPrimary,
       onRefresh: () async {

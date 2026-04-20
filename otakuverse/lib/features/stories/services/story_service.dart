@@ -366,7 +366,7 @@ class StoryService {
     final bytes = await file.readAsBytes();
     final ext   = file.path.split('.').last.toLowerCase();
     final ts    = DateTime.now().millisecondsSinceEpoch;
-    final path  = 'stories/$_uid/${ts}$suffix.$ext';
+    final path  = 'stories/$_uid/$ts$suffix.$ext';
 
     await _supabase.storage
         .from('stories')

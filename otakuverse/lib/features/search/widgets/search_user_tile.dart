@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:otakuverse/core/constants/app_colors.dart';
+import 'package:otakuverse/core/constants/app_keys.dart';
 import 'package:otakuverse/core/utils/helpers.dart';
 import 'package:otakuverse/core/widgets/cached_image.dart';
 import 'package:otakuverse/features/profile/controllers/follow_controller.dart';
@@ -64,15 +65,15 @@ class SearchUserTile extends StatelessWidget {
           ],
         ]),
         const SizedBox(height: 2),
-        Text(
-          '@${profile.username}',
-          style: GoogleFonts.inter(color: AppColors.textMuted, fontSize: 12),
-        ),
+        Text('@${profile.username}',
+            style: GoogleFonts.inter(
+                color: AppColors.textMuted, fontSize: 12)),
         if (profile.followersCount > 0) ...[
           const SizedBox(height: 2),
           Text(
             '${Helpers.formatNumber(profile.followersCount)} abonnés',
-            style: GoogleFonts.inter(color: AppColors.textMuted, fontSize: 11),
+            style: GoogleFonts.inter(
+                color: AppColors.textMuted, fontSize: 11),
           ),
         ],
       ],
@@ -84,7 +85,9 @@ class SearchUserTile extends StatelessWidget {
       final isFollowing = followController.isFollowing(profile.userId);
       final isLoading   = followController.isLoading.value;
 
+      // ✅ Key sur le GestureDetector du bouton follow
       return GestureDetector(
+        key:   AppKeys.followButton,
         onTap: isLoading
             ? null
             : () => followController.toggleFollow(profile.userId),

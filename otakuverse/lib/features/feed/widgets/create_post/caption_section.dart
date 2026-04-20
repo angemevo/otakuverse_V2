@@ -2,6 +2,7 @@ import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart' hide Config;
 import 'package:otakuverse/core/constants/app_colors.dart';
+import 'package:otakuverse/core/constants/app_keys.dart';
 import 'package:otakuverse/core/widgets/cached_image.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -63,7 +64,7 @@ class _CaptionSectionState extends State<CaptionSection> {
       context:         context,
       backgroundColor: AppColors.bgCard,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (_) => _TextEffectsSheet(controller: widget.controller),
     );
   }
@@ -72,7 +73,7 @@ class _CaptionSectionState extends State<CaptionSection> {
   Widget build(BuildContext context) {
     final user      = Supabase.instance.client.auth.currentUser;
     final avatarUrl = user?.userMetadata?['avatar_url'] as String?;
-    final username  = user?.userMetadata?['username'] as String? ?? 'Moi';
+    final username  = user?.userMetadata?['username']   as String? ?? 'Moi';
 
     return Column(children: [
       Container(
@@ -82,10 +83,12 @@ class _CaptionSectionState extends State<CaptionSection> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             CachedAvatar(
-              url: avatarUrl, radius: 20, fallbackLetter: username),
+                url: avatarUrl, radius: 20, fallbackLetter: username),
             const SizedBox(width: 12),
             Expanded(
               child: TextField(
+                // ✅ Key sur le champ de légende
+                key:        AppKeys.captionInput,
                 controller: widget.controller,
                 focusNode:  _focusNode,
                 maxLines:   null,
@@ -174,7 +177,8 @@ class _IconBtn extends StatelessWidget {
   @override
   Widget build(BuildContext context) => GestureDetector(
     onTap: onTap,
-    child: Icon(icon, color: color ?? AppColors.textPrimary, size: 22),
+    child: Icon(icon,
+        color: color ?? AppColors.textPrimary, size: 22),
   );
 }
 
@@ -207,7 +211,7 @@ class _TextEffectsSheet extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize:       MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Center(
@@ -227,11 +231,9 @@ class _TextEffectsSheet extends StatelessWidget {
                 fontSize:   17,
               )),
           const SizedBox(height: 6),
-          Text(
-            'Sélectionne du texte dans la légende\npuis applique un effet',
-            style: GoogleFonts.inter(
-                color: AppColors.textMuted, fontSize: 13),
-          ),
+          Text('Sélectionne du texte dans la légende\npuis applique un effet',
+              style: GoogleFonts.inter(
+                  color: AppColors.textMuted, fontSize: 13)),
           const SizedBox(height: 16),
           Wrap(
             spacing: 8, runSpacing: 8,
@@ -261,7 +263,10 @@ class _EffectChip extends StatelessWidget {
   final String       label;
   final String       preview;
   final VoidCallback onTap;
-  const _EffectChip({required this.label, required this.preview, required this.onTap});
+  const _EffectChip({
+      required this.label,
+      required this.preview,
+      required this.onTap});
 
   @override
   Widget build(BuildContext context) => GestureDetector(

@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:otakuverse/features/feed/models/post_model.dart';
 import 'package:otakuverse/features/feed/services/bookmark_service.dart';
@@ -29,7 +30,7 @@ class BookmarkController extends GetxController {
       final ids = await _service.getBookmarkedIds();
       bookmarkedIds.assignAll(ids);
     } catch (e) {
-      print('🔴 Erreur _loadBookmarkedIds : $e');
+      debugPrint('🔴 Erreur _loadBookmarkedIds : $e');
     }
   }
 
@@ -46,7 +47,7 @@ class BookmarkController extends GetxController {
       if (result.length < _pageSize) hasMore.value = false;
       _offset = result.length;
     } catch (e) {
-      print('🔴 Erreur loadBookmarks : $e');
+      debugPrint('🔴 Erreur loadBookmarks : $e');
     } finally {
       isLoading.value = false;
     }
@@ -66,7 +67,7 @@ class BookmarkController extends GetxController {
       bookmarkedPosts.addAll(result);
       _offset += result.length;
     } catch (e) {
-      print('🔴 Erreur loadMore bookmarks : $e');
+      debugPrint('🔴 Erreur loadMore bookmarks : $e');
     } finally {
       isLoadingMore.value = false;
     }
@@ -94,7 +95,7 @@ class BookmarkController extends GetxController {
         bookmarkedIds.remove(postId);
         bookmarkedPosts.removeWhere((p) => p.id == postId);
       }
-      print('🔴 Erreur toggleBookmark : $e');
+      debugPrint('🔴 Erreur toggleBookmark : $e');
     }
   }
 

@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:otakuverse/features/profile/models/profile_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:otakuverse/shared/models/user_model.dart';
@@ -38,12 +39,12 @@ class AuthRepository {
         .maybeSingle();
 
     if (data != null) {
-      print('✅ Profil créé par le trigger');
+      debugPrint('✅ Profil créé par le trigger');
       return UserModel.fromProfile(ProfileModel.fromJson(data));
     }
 
     // ─── Fallback : upsert si trigger trop lent ───────────────────
-    print('⚠️ Fallback upsert');
+    debugPrint('⚠️ Fallback upsert');
     final fallback = await _supabase
         .from('profiles')
         .upsert(

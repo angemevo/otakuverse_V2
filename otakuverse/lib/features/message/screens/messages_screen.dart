@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:otakuverse/core/constants/app_colors.dart';
+import 'package:otakuverse/core/constants/app_keys.dart';
 import 'package:otakuverse/core/widgets/cached_image.dart';
 import 'package:otakuverse/features/message/screens/new_conversation_screen.dart';
 import '../controllers/message_controller.dart';
@@ -49,6 +50,7 @@ class MessagesScreen extends StatelessWidget {
         ),
       ]),
       floatingActionButton: FloatingActionButton(
+        key:             AppKeys.newConvButton,
         backgroundColor: AppColors.primary,
         elevation:       4,
         onPressed: () => Navigator.push(context,

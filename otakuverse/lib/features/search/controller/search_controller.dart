@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:otakuverse/features/profile/models/profile_model.dart';
 import 'package:otakuverse/features/search/services/search_service.dart';
@@ -30,7 +31,7 @@ class SearchUsersController extends GetxController {
       final data = await _service.getSuggestions();
       suggestions.assignAll(data);
     } catch (e) {
-      print('⚠️ Erreur suggestions : $e');
+      debugPrint('⚠️ Erreur suggestions : $e');
     }
   }
 
@@ -51,7 +52,7 @@ class SearchUsersController extends GetxController {
       final data = await _service.searchUsers(value);
       results.assignAll(data);
     } catch (e) {
-      print('🔴 Erreur recherche : $e');
+      debugPrint('🔴 Erreur recherche : $e');
     } finally {
       isLoading.value = false;
     }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:otakuverse/core/constants/app_colors.dart';
+import 'package:otakuverse/core/constants/app_keys.dart';
 import 'package:otakuverse/features/stories/controllers/story_controller.dart';
 import 'package:otakuverse/features/stories/models/story_model.dart';
 import 'package:otakuverse/features/stories/screens/create_story/create_story_screen.dart';
@@ -22,9 +23,7 @@ class StoriesRow extends StatelessWidget {
             child: SizedBox(
               width: 20, height: 20,
               child: CircularProgressIndicator(
-                color:       AppColors.primary,
-                strokeWidth: 2,
-              ),
+                color: AppColors.primary, strokeWidth: 2),
             ),
           ),
         );
@@ -34,7 +33,9 @@ class StoriesRow extends StatelessWidget {
       final groups     = ctrl.storyGroups;
       final hasMyStory = groups.any((g) => g.isMe);
 
+      // ✅ Key sur le SizedBox principal de la barre de stories
       return SizedBox(
+        key:    AppKeys.storiesRow,
         height: 96,
         child: ListView.builder(
           scrollDirection: Axis.horizontal,
@@ -105,7 +106,9 @@ class _AddStoryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // ✅ Key sur le GestureDetector du bouton +
     return GestureDetector(
+      key:  AppKeys.addStoryButton,
       onTap: onTap,
       child: SizedBox(
         width: 72,
@@ -122,19 +125,13 @@ class _AddStoryButton extends StatelessWidget {
                   width: 2,
                 ),
               ),
-              child: const Icon(
-                Icons.add,
-                color: AppColors.primary,
-                size:  28,
-              ),
+              child: const Icon(Icons.add,
+                  color: AppColors.primary, size: 28),
             ),
             const SizedBox(height: 5),
             const Text(
               'Ajouter',
-              style: TextStyle(
-                color:    AppColors.textMuted,
-                fontSize: 11,
-              ),
+              style: TextStyle(color: AppColors.textMuted, fontSize: 11),
               textAlign: TextAlign.center,
             ),
           ],

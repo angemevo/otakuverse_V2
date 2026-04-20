@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:otakuverse/core/services/push_notification_service.dart';
 import 'package:otakuverse/features/auth/repositories/auth_repository.dart';
@@ -83,7 +84,7 @@ class AuthController extends GetxController {
 
   // ─── PARSE ERREURS SUPABASE ──────────────────────────────────────
   String _parseError(dynamic e) {
-    print('🔴 ERREUR BRUTE : $e'); // ← retirer en production
+    debugPrint('🔴 ERREUR BRUTE : $e'); // ← retirer en production
     final msg = e.toString();
     if (msg.contains('Invalid login credentials'))  return 'Email ou mot de passe incorrect';
     if (msg.contains('User already registered'))    return 'Un compte existe déjà avec cet email';

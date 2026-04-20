@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:otakuverse/core/constants/app_colors.dart';
+import 'package:otakuverse/core/constants/app_keys.dart';
 import 'package:otakuverse/features/feed/controllers/comment_controller.dart';
 
 /// Barre de saisie des commentaires.
@@ -98,6 +99,7 @@ class CommentsInputBar extends StatelessWidget {
               color: Colors.white.withValues(alpha: 0.06), width: 0.5),
           ),
           child: TextField(
+            key: AppKeys.commentInput,
             controller: textController,
             focusNode:  focusNode,
             maxLines:   4,
@@ -120,6 +122,7 @@ class CommentsInputBar extends StatelessWidget {
       ),
       const SizedBox(width: 8),
       Obx(() => GestureDetector(
+        key: AppKeys.commentSend,
         onTap: controller.isSending.value ? null : onSend,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),

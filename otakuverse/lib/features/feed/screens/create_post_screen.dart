@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:typed_data';
 import 'package:otakuverse/core/constants/app_colors.dart';
+import 'package:otakuverse/core/constants/app_keys.dart';
 import 'package:otakuverse/core/utils/helpers.dart';
 import 'package:otakuverse/core/services/music_service.dart';
 import 'package:otakuverse/core/utils/session_guard.dart';
@@ -36,11 +37,11 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   final List<XFile>     _selectedImages = [];
   final List<Uint8List> _imagePreviews  = [];
 
-  bool          _allowComments  = true;
-  bool          _isPublishing   = false;
-  int           _currentPreview = 0;
-  MusicTrack?   _selectedSong;
-  PollData?     _pollData;
+  bool        _allowComments  = true;
+  bool        _isPublishing   = false;
+  int         _currentPreview = 0;
+  MusicTrack? _selectedSong;
+  PollData?   _pollData;
 
   final _postsCtrl     = Get.find<PostsController>();
   final _uploadService = StorageUploadService();
@@ -69,8 +70,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   }
 
   Future<void> _pickImages() async {
-    final picker = ImagePicker();
-    final files  = await picker.pickMultiImage(imageQuality: 85);
+    final files = await ImagePicker().pickMultiImage(imageQuality: 85);
     if (files.isEmpty) return;
     final previews = await Future.wait(files.map((f) => f.readAsBytes()));
     if (!mounted) return;
@@ -86,44 +86,36 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       Helpers.showWarningSnackbar('Ajoute une légende ou une image');
       return;
     }
-
-    // ✅ FIX : vérifier mounted AVANT chaque setState
     if (!mounted) return;
     setState(() => _isPublishing = true);
 
     try {
-      // ✅ FIX : SessionGuard à la place de currentUser!
       final userId = SessionGuard.requiredUid;
-
       List<String> mediaUrls = [];
       if (_selectedImages.isNotEmpty) {
         mediaUrls = await _uploadService.uploadImages(
             _selectedImages, userId);
       }
-
-      // ✅ FIX : vérifier mounted après chaque await long
       if (!mounted) return;
 
       final ok = await _postsCtrl.createPost(
-        caption:          _captionCtrl.text.trim(),
-        mediaUrls:        mediaUrls,
-        location:         _locationCtrl.text.trim().isEmpty
+        caption:           _captionCtrl.text.trim(),
+        mediaUrls:         mediaUrls,
+        location:          _locationCtrl.text.trim().isEmpty
             ? null : _locationCtrl.text.trim(),
-        allowComments:    _allowComments,
-        musicTitle:       _selectedSong?.title,
-        musicArtist:      _selectedSong?.artist,
-        musicTrackId:     _selectedSong?.id,
-        musicPreviewUrl:  _selectedSong?.previewUrl,
-        musicImageUrl:    _selectedSong?.imageUrl,
-        pollQuestion:     _pollData?.question,
-        pollOptionA:      _pollData?.optionA,
-        pollOptionB:      _pollData?.optionB,
+        allowComments:     _allowComments,
+        musicTitle:        _selectedSong?.title,
+        musicArtist:       _selectedSong?.artist,
+        musicTrackId:      _selectedSong?.id,
+        musicPreviewUrl:   _selectedSong?.previewUrl,
+        musicImageUrl:     _selectedSong?.imageUrl,
+        pollQuestion:      _pollData?.question,
+        pollOptionA:       _pollData?.optionA,
+        pollOptionB:       _pollData?.optionB,
         pollDurationHours: _pollData?.durationHours,
       );
 
-      // ✅ FIX : vérifier mounted avant navigation/snackbar
       if (!mounted) return;
-
       if (ok) {
         Get.offAllNamed(Routes.home);
         Helpers.showSuccessSnackbar('Ton post est maintenant visible');
@@ -131,15 +123,12 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         Helpers.showErrorSnackbar(_postsCtrl.errorMessage.value);
       }
     } on SessionExpiredException {
-      // ✅ Gérer la session expirée proprement
-      // SessionGuard redirige déjà vers login — pas d'autre action
+      // SessionGuard redirige déjà vers login
     } on UploadValidationException catch (e) {
-      // ✅ Erreur de validation upload (taille/format)
       if (mounted) Helpers.showErrorSnackbar(e.message);
     } catch (e) {
       if (mounted) Helpers.showErrorSnackbar('Erreur : $e');
     } finally {
-      // ✅ FIX : mounted check dans finally
       if (mounted) setState(() => _isPublishing = false);
     }
   }
@@ -147,9 +136,10 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor:    AppColors.bgPrimary,
-      appBar:             _buildAppBar(),
-      bottomNavigationBar: ShareButton(isPublishing: _isPublishing, onTap: _publish),
+      backgroundColor:     AppColors.bgPrimary,
+      appBar:              _buildAppBar(),
+      bottomNavigationBar: ShareButton(
+          isPublishing: _isPublishing, onTap: _publish),
       body: SingleChildScrollView(
         child: Column(children: [
           PostPreviewWidget(
@@ -200,7 +190,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       actions: [
         Padding(
           padding: const EdgeInsets.only(right: 12),
+          // ✅ Key sur le bouton Partager de l'AppBar
           child: GestureDetector(
+            key:  AppKeys.sharePostButton,
             onTap: _isPublishing ? null : _publish,
             child: Container(
               padding: const EdgeInsets.symmetric(
@@ -242,7 +234,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             style: GoogleFonts.inter(
                 color: AppColors.textMuted, fontSize: 12)),
         value:              _allowComments,
-        activeColor:        AppColors.primary,
+        activeThumbColor:   AppColors.primary,
         activeTrackColor:   AppColors.primary.withValues(alpha: 0.3),
         inactiveThumbColor: AppColors.textMuted,
         inactiveTrackColor: AppColors.textMuted.withValues(alpha: 0.2),

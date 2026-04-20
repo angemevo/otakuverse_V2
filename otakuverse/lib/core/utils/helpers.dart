@@ -107,14 +107,15 @@ class Helpers {
   /// Afficher un loading dialog
   static void showLoadingDialog([String message = 'Chargement...']) {
     Get.dialog(
-      WillPopScope(
-        onWillPop: () async => false,
+      PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, _) {
+          // rien — le dialog ne peut pas être fermé avec le bouton retour
+        },
         child: AlertDialog(
           content: Row(
             children: [
-              const CircularProgressIndicator(
-                color: AppColors.primary,
-              ),
+              const CircularProgressIndicator(color: AppColors.primary),
               const SizedBox(width: 20),
               Expanded(child: Text(message)),
             ],

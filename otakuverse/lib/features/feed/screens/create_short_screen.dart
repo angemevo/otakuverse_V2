@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:typed_data';
 import 'package:otakuverse/core/constants/app_colors.dart';
 
 class CreateShortScreen extends StatefulWidget {
@@ -16,7 +15,6 @@ class CreateShortScreen extends StatefulWidget {
 class _CreateShortScreenState extends State<CreateShortScreen> {
   final _captionCtrl = TextEditingController();
   XFile?     _videoFile;
-  Uint8List? _videoPreview;
   bool       _isPublishing = false;
 
   // ✅ Couleur accent Shorts (distinct de primary pour différencier visuellement)
@@ -34,8 +32,6 @@ class _CreateShortScreenState extends State<CreateShortScreen> {
       maxDuration: const Duration(seconds: 60),
     );
     if (file == null) return;
-    final bytes = await file.readAsBytes();
-    setState(() { _videoFile = file; _videoPreview = bytes; });
   }
 
   Future<void> _publish() async {

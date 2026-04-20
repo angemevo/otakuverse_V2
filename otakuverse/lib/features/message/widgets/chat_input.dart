@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:otakuverse/core/constants/app_colors.dart';
+import 'package:otakuverse/core/constants/app_keys.dart';
 
 class ChatInput extends StatelessWidget {
   final TextEditingController textCtrl;
@@ -60,6 +61,7 @@ class ChatInput extends StatelessWidget {
               child: ListenableBuilder(
                 listenable: textCtrl,
                 builder: (_, __) => TextField(
+                  key: AppKeys.chatInput,
                   controller: textCtrl,
                   focusNode:  focusNode,
                   maxLines:   null,
@@ -85,6 +87,7 @@ class ChatInput extends StatelessWidget {
             builder: (_, __) {
               final hasText = textCtrl.text.trim().isNotEmpty;
               return GestureDetector(
+                key: AppKeys.chatSend,
                 onTap: onSend,
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),

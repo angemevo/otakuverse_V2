@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:otakuverse/features/feed/controllers/post_controller.dart';
 import 'package:otakuverse/features/feed/models/comment_model.dart';
@@ -28,7 +29,7 @@ class CommentController extends GetxController {
     } catch (e) {
       errorMessage.value =
           'Impossible de charger les commentaires';
-      print('🔴 Erreur loadComments : $e');
+      debugPrint('🔴 Erreur loadComments : $e');
     } finally {
       isLoading.value = false;
     }
@@ -93,7 +94,7 @@ class CommentController extends GetxController {
       cancelReply();
       return true;
     } catch (e) {
-      print('🔴 Erreur sendComment : $e');
+      debugPrint('🔴 Erreur sendComment : $e');
       return false;
     } finally {
       isSending.value = false;
@@ -132,7 +133,7 @@ class CommentController extends GetxController {
       }
 
     } catch (e) {
-      print('🔴 Erreur deleteComment : $e');
+      debugPrint('🔴 Erreur deleteComment : $e');
       // ✅ Rollback — recharger les commentaires
       if (_currentPostId != null) {
         await loadComments(_currentPostId!);
@@ -161,7 +162,7 @@ class CommentController extends GetxController {
     } catch (e) {
       // ✅ Rollback
       _updateCommentLike(commentId, parentId: parentId);
-      print('🔴 Erreur toggleLike commentaire : $e');
+      debugPrint('🔴 Erreur toggleLike commentaire : $e');
     }
   }
 

@@ -1,4 +1,3 @@
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -6,7 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 /// Service d'upload Supabase Storage.
 ///
 /// Corrections apportées :
-/// - print() → debugPrint() conditionné à kDebugMode
+/// - debugPrint() → debugdebugPrint() conditionné à kDebugMode
 /// - Validation MIME type avant upload
 /// - Limite de taille par catégorie (avatar, post, story)
 /// - Gestion d'erreur avec message lisible
@@ -20,7 +19,6 @@ class StorageUploadService {
   static const _maxVideoBytes   = 50 * 1024 * 1024; // 50 MB
 
   // ─── MIME autorisés ─────────────────────────────────────────────
-  static const _allowedImageMimes = {'image/jpeg', 'image/png', 'image/webp', 'image/gif'};
   static const _allowedVideoMimes = {'video/mp4', 'video/quicktime', 'video/webm'};
 
   // ─── Validation ──────────────────────────────────────────────────

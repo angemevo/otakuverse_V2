@@ -58,7 +58,7 @@ class _InputStandardState extends State<InputStandard> {
             fontSize: 12,
           ),
           filled: true,
-          fillColor: widget.enabled ? AppColors.bgCard : AppColors.bgCard.withOpacity(0.5),
+          fillColor: widget.enabled ? AppColors.bgCard : AppColors.bgCard.withValues(alpha: 0.5),
           contentPadding: const EdgeInsets.symmetric(
             vertical: 14,
             horizontal: 16,

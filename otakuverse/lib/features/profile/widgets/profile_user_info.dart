@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:otakuverse/core/constants/app_colors.dart';
+import 'package:otakuverse/core/constants/app_keys.dart';
 import 'package:otakuverse/core/constants/app_text_styles.dart';
 import 'package:otakuverse/features/profile/models/profile_model.dart';
 import 'package:otakuverse/features/profile/widgets/genre_tags.dart';
@@ -152,6 +153,7 @@ class ProfileUserInfo extends StatelessWidget {
       return Row(children: [
         Expanded(
           child: ProfileActionButton(
+            key:      AppKeys.editProfileButton,
             label:    'Modifier le profil',
             icon:     Icons.edit_outlined,
             outlined: true,

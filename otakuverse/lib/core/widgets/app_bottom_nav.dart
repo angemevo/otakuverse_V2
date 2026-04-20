@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:otakuverse/core/constants/app_colors.dart';
+import 'package:otakuverse/core/constants/app_keys.dart';
 import 'package:otakuverse/core/constants/app_text_styles.dart';
 
 class AppBottomNav extends StatelessWidget {
-  final int              currentIndex;
+  final int               currentIndex;
   final ValueChanged<int> onTap;
 
   const AppBottomNav({
@@ -13,13 +14,21 @@ class AppBottomNav extends StatelessWidget {
     required this.onTap,
   });
 
-  // ─── Items nav ───────────────────────────────────────────────────
   static const _items = [
-    _NavItem(icon: Icons.home_outlined,        activeIcon: Icons.home_rounded,         label: 'AniFeed'),
-    _NavItem(icon: Icons.groups_2_outlined,    activeIcon: Icons.groups_2_rounded,     label: 'Community'),
-    _NavItem(icon: Icons.add,                  activeIcon: Icons.add,                  label: 'Créer'),
-    _NavItem(icon: Icons.event_outlined,       activeIcon: Icons.event_rounded,        label: 'Events'),
-    _NavItem(icon: Icons.person_outline,       activeIcon: Icons.person_rounded,       label: 'Profil'),
+    _NavItem(icon: Icons.home_outlined,     activeIcon: Icons.home_rounded,     label: 'AniFeed'),
+    _NavItem(icon: Icons.groups_2_outlined, activeIcon: Icons.groups_2_rounded, label: 'Community'),
+    _NavItem(icon: Icons.add,               activeIcon: Icons.add,              label: 'Créer'),
+    _NavItem(icon: Icons.event_outlined,    activeIcon: Icons.event_rounded,    label: 'Events'),
+    _NavItem(icon: Icons.person_outline,    activeIcon: Icons.person_rounded,   label: 'Profil'),
+  ];
+
+  // ✅ Keys correspondant à l'index de chaque onglet
+  static const _keys = [
+    AppKeys.bottomNavFeed,
+    AppKeys.bottomNavCommunity,
+    AppKeys.bottomNavCreate,
+    AppKeys.bottomNavEvents,
+    AppKeys.bottomNavProfile,
   ];
 
   @override
@@ -28,10 +37,7 @@ class AppBottomNav extends StatelessWidget {
       decoration: const BoxDecoration(
         color: AppColors.bgCard,
         border: Border(
-          top: BorderSide(
-            color: AppColors.border,
-            width: 0.5,
-          ),
+          top: BorderSide(color: AppColors.border, width: 0.5),
         ),
       ),
       child: SafeArea(
@@ -41,15 +47,17 @@ class AppBottomNav extends StatelessWidget {
           child: Row(
             children: List.generate(
               _items.length,
+              // ✅ Key ajoutée sur chaque Expanded
               (i) => Expanded(
+                key: _keys[i],
                 child: i == 2
                     ? _CreateButton(onTap: () {
                         HapticFeedback.lightImpact();
                         onTap(i);
                       })
                     : _NavTab(
-                        item:      _items[i],
-                        isActive:  currentIndex == i,
+                        item:     _items[i],
+                        isActive: currentIndex == i,
                         onTap: () {
                           HapticFeedback.selectionClick();
                           onTap(i);
@@ -64,10 +72,11 @@ class AppBottomNav extends StatelessWidget {
   }
 }
 
-// ─── ONGLET NORMAL ───────────────────────────────────────────────────
+// ─── Onglet normal ───────────────────────────────────────────────────
+
 class _NavTab extends StatelessWidget {
-  final _NavItem item;
-  final bool     isActive;
+  final _NavItem     item;
+  final bool         isActive;
   final VoidCallback onTap;
 
   const _NavTab({
@@ -79,15 +88,14 @@ class _NavTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap:     onTap,
-      behavior:  HitTestBehavior.opaque,
+      onTap:    onTap,
+      behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         curve:    Curves.easeOut,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // ─ Indicateur actif ────────────────────────────────
             AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               width:  isActive ? 32 : 0,
@@ -98,24 +106,16 @@ class _NavTab extends StatelessWidget {
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-
-            // ─ Icône ───────────────────────────────────────────
             Icon(
               isActive ? item.activeIcon : item.icon,
-              color: isActive
-                  ? AppColors.primary
-                  : AppColors.textMuted,
-              size: 22,
+              color: isActive ? AppColors.primary : AppColors.textMuted,
+              size:  22,
             ),
             const SizedBox(height: 2),
-
-            // ─ Label ───────────────────────────────────────────
             Text(
               item.label,
               style: AppTextStyles.navLabel.copyWith(
-                color: isActive
-                    ? AppColors.primary
-                    : AppColors.textMuted,
+                color: isActive ? AppColors.primary : AppColors.textMuted,
               ),
             ),
           ],
@@ -125,7 +125,8 @@ class _NavTab extends StatelessWidget {
   }
 }
 
-// ─── BOUTON CRÉER (central) ──────────────────────────────────────────
+// ─── Bouton Créer ────────────────────────────────────────────────────
+
 class _CreateButton extends StatelessWidget {
   final VoidCallback onTap;
   const _CreateButton({required this.onTap});
@@ -138,12 +139,11 @@ class _CreateButton extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // ─ Bouton + gradient ────────────────────────────────
           Container(
             width: 42, height: 42,
             decoration: const BoxDecoration(
-              gradient: AppColors.primaryGradient,
-              shape:    BoxShape.circle,
+              gradient:  AppColors.primaryGradient,
+              shape:     BoxShape.circle,
               boxShadow: [
                 BoxShadow(
                   color:      Color(0x556C5CE7),
@@ -152,18 +152,13 @@ class _CreateButton extends StatelessWidget {
                 ),
               ],
             ),
-            child: const Icon(
-              Icons.add_rounded,
-              color: AppColors.white,
-              size:  24,
-            ),
+            child: const Icon(Icons.add_rounded,
+                color: AppColors.white, size: 24),
           ),
           const SizedBox(height: 2),
           Text(
             'Créer',
-            style: AppTextStyles.navLabel.copyWith(
-              color: AppColors.textMuted,
-            ),
+            style: AppTextStyles.navLabel.copyWith(color: AppColors.textMuted),
           ),
         ],
       ),
@@ -171,7 +166,8 @@ class _CreateButton extends StatelessWidget {
   }
 }
 
-// ─── MODÈLE ITEM ─────────────────────────────────────────────────────
+// ─── Modèle item ─────────────────────────────────────────────────────
+
 class _NavItem {
   final IconData icon;
   final IconData activeIcon;

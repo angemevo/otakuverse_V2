@@ -1,16 +1,15 @@
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:otakuverse/core/constants/app_colors.dart';
+import 'package:otakuverse/core/constants/app_keys.dart';
 import 'package:otakuverse/core/utils/helpers.dart';
 import 'package:otakuverse/features/profile/models/profile_model.dart';
 import 'package:otakuverse/features/profile/services/profile_service.dart';
 import 'package:otakuverse/features/profile/widgets/edit_profile_field.dart';
 import 'package:otakuverse/features/profile/widgets/edit_profile_header.dart';
 import 'package:otakuverse/features/profile/widgets/edit_profile_save_bar.dart';
-
 
 class EditProfileScreen extends StatefulWidget {
   final ProfileModel profile;
@@ -23,17 +22,14 @@ class EditProfileScreen extends StatefulWidget {
 class _EditProfileScreenState extends State<EditProfileScreen>
     with SingleTickerProviderStateMixin {
 
-  // ─── Contrôleurs texte ───────────────────────────────────────────
   late final TextEditingController _displayNameCtrl;
   late final TextEditingController _usernameCtrl;
   late final TextEditingController _bioCtrl;
 
-  // ─── Focus nodes ─────────────────────────────────────────────────
   final _displayNameFocus = FocusNode();
   final _usernameFocus    = FocusNode();
   final _bioFocus         = FocusNode();
 
-  // ─── État ────────────────────────────────────────────────────────
   final _profileService = ProfileService();
   bool       _isSaving      = false;
   XFile?     _avatarFile;
@@ -41,7 +37,6 @@ class _EditProfileScreenState extends State<EditProfileScreen>
   XFile?     _bannerFile;
   Uint8List? _bannerPreview;
 
-  // ─── Animation entrée ────────────────────────────────────────────
   late final AnimationController _enterCtrl;
   late final Animation<double>   _fadeAnim;
   late final Animation<Offset>   _slideAnim;
@@ -61,8 +56,8 @@ class _EditProfileScreenState extends State<EditProfileScreen>
     _fadeAnim  = CurvedAnimation(parent: _enterCtrl, curve: Curves.easeOut);
     _slideAnim = Tween<Offset>(
       begin: const Offset(0, 0.06), end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _enterCtrl, curve: Curves.easeOutCubic));
-
+    ).animate(CurvedAnimation(
+        parent: _enterCtrl, curve: Curves.easeOutCubic));
     _enterCtrl.forward();
   }
 
@@ -118,7 +113,6 @@ class _EditProfileScreenState extends State<EditProfileScreen>
     setState(() => _isSaving = true);
     HapticFeedback.mediumImpact();
 
-    // ✅ Uploads indépendants : un échec n'annule pas la sauvegarde texte
     final newAvatarUrl = await _tryUploadAvatar();
     final newBannerUrl = await _tryUploadBanner();
 
@@ -171,8 +165,10 @@ class _EditProfileScreenState extends State<EditProfileScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor:   AppColors.bgPrimary,
+      backgroundColor: AppColors.bgPrimary,
       bottomNavigationBar: EditProfileSaveBar(
+        // ✅ Key sur le bouton Sauvegarder
+        key:      AppKeys.saveProfileButton,
         isSaving: _isSaving,
         onCancel: () => Navigator.pop(context, false),
         onSave:   _save,
@@ -195,12 +191,15 @@ class _EditProfileScreenState extends State<EditProfileScreen>
               ),
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
-                sliver:  SliverList(
+                sliver: SliverList(
                   delegate: SliverChildListDelegate([
                     _sectionLabel('IDENTITÉ'),
                     const SizedBox(height: 12),
+
+                    // ✅ Key sur le champ displayName
                     EditProfileField(
-                      label:     'Nom affiché',
+                      key:        AppKeys.displayNameInput,
+                      label:      'Nom affiché',
                       controller: _displayNameCtrl,
                       focusNode:  _displayNameFocus,
                       hint:       'Ton nom public',
@@ -208,6 +207,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                       nextFocus:  _usernameFocus,
                     ),
                     const SizedBox(height: 12),
+
                     EditProfileField(
                       label:      'Nom d\'utilisateur',
                       controller: _usernameCtrl,
@@ -221,6 +221,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                       ],
                     ),
                     const SizedBox(height: 24),
+
                     _sectionLabel('BIO'),
                     const SizedBox(height: 12),
                     EditProfileBioField(
@@ -239,19 +240,15 @@ class _EditProfileScreenState extends State<EditProfileScreen>
     );
   }
 
-  // ─── Label section ───────────────────────────────────────────────
-
   Widget _sectionLabel(String label) {
     return Row(children: [
-      Text(
-        label,
-        style: GoogleFonts.inter(
-          color:         AppColors.primary,
-          fontSize:      11,
-          fontWeight:    FontWeight.w700,
-          letterSpacing: 1.5,
-        ),
-      ),
+      Text(label,
+          style: GoogleFonts.inter(
+            color:         AppColors.primary,
+            fontSize:      11,
+            fontWeight:    FontWeight.w700,
+            letterSpacing: 1.5,
+          )),
       const SizedBox(width: 10),
       Expanded(
         child: Container(

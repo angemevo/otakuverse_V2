@@ -10,7 +10,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 Future<void> _firebaseMessagingBackgroundHandler(
     RemoteMessage message) async {
   await Firebase.initializeApp();
-  print('📩 Notification background : ${message.messageId}');
+  debugPrint('📩 Notification background : ${message.messageId}');
 }
 
 class PushNotificationService {
@@ -34,7 +34,7 @@ class PushNotificationService {
       provisional:   false,
     );
 
-    print('🔔 Permission : ${settings.authorizationStatus}');
+    debugPrint('🔔 Permission : ${settings.authorizationStatus}');
 
     if (settings.authorizationStatus ==
         AuthorizationStatus.authorized) {
@@ -49,7 +49,7 @@ class PushNotificationService {
     // ✅ Récupérer le token FCM
     final token = await _messaging.getToken();
 
-    print('🔑 TOKEN FCM : $token');
+    debugPrint('🔑 TOKEN FCM : $token');
     
     if (token != null) {
       await _saveTokenToSupabase(token);
@@ -73,9 +73,9 @@ class PushNotificationService {
         'updated_at': DateTime.now().toIso8601String(),
       }, onConflict: 'user_id');
 
-      print('✅ Token FCM sauvegardé');
+      debugPrint('✅ Token FCM sauvegardé');
     } catch (e) {
-      print('🔴 Erreur save token : $e');
+      debugPrint('🔴 Erreur save token : $e');
     }
   }
 
@@ -83,7 +83,7 @@ class PushNotificationService {
   static void _setupForegroundHandler() {
     // ✅ Afficher les notifications quand l'app est ouverte
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      print('📩 Notification foreground : ${message.messageId}');
+      debugPrint('📩 Notification foreground : ${message.messageId}');
 
       final notification = message.notification;
       if (notification == null) return;
@@ -112,7 +112,7 @@ class PushNotificationService {
   static void _setupOpenedAppHandler() {
     // ✅ App en background → ouverte via notification
     FirebaseMessaging.onMessageOpenedApp.listen((message) {
-      print('📩 App ouverte via notification');
+      debugPrint('📩 App ouverte via notification');
       _handleNotificationTap(message.data);
     });
 
@@ -163,9 +163,9 @@ class PushNotificationService {
           .delete()
           .eq('user_id', userId);
 
-      print('✅ Token FCM supprimé');
+      debugPrint('✅ Token FCM supprimé');
     } catch (e) {
-      print('🔴 Erreur delete token : $e');
+      debugPrint('🔴 Erreur delete token : $e');
     }
   }
 }
