@@ -23,6 +23,12 @@ flutter test
 # Run a single test file
 flutter test test/models/post_model_test.dart
 
+# Run all integration tests (requires connected device/emulator)
+flutter test integration_test/app_test.dart -d <device_id>
+
+# Run a single integration test suite
+flutter test integration_test/test/auth_test.dart -d <device_id>
+
 # Static analysis
 flutter analyze
 
@@ -53,9 +59,9 @@ lib/
 ├── main.dart              # App entry: Firebase + Supabase init, GetX routes, global services
 ├── core/                  # App-wide infrastructure
 │   ├── constants/         # AppColors, AppTextStyles, Dimensions, Assets paths
-│   ├── services/          # ConnectivityService, RealtimeService, PushNotificationService, AudioManager
+│   ├── services/          # ConnectivityService, RealtimeService, PushNotificationService, AudioManager, MusicService, OtakuPointsService
 │   ├── theme/             # AppTheme.dark (Material 3, dark-only)
-│   ├── utils/             # extensions.dart, validators.dart, helpers.dart, DateFormatter
+│   ├── utils/             # extensions.dart, validators.dart, helpers.dart, DateFormatter, session_guard.dart
 │   └── widgets/           # AppBarWidget, AppBottomNav (reused across features)
 ├── features/              # Feature modules — each with bindings/controllers/models/repositories/services/screens/widgets
 │   ├── auth/              # Sign in/up, onboarding (genre selection), Google Sign-In
@@ -67,7 +73,7 @@ lib/
 │   ├── stories/           # Instagram-style stories
 │   ├── explore/           # Discovery/explore feed
 │   ├── community/         # Placeholder (coming soon)
-│   └── navigation/        # NavigationPage — IndexedStack with 5 bottom tabs
+│   └── navigation/        # NavigationPage — IndexedStack with 5 bottom tabs: Home / Community (placeholder) / Create (sheet) / Events (placeholder) / Profile
 └── shared/
     ├── config/            # ApiConfig: Supabase URL/key, REST endpoint builders, isProduction flag
     ├── models/            # UserModel (shared across features)
@@ -84,7 +90,7 @@ lib/
 ### Backend: Supabase
 
 - Supabase client is used directly — no ORM. Models parse with `.fromJson()` factories.
-- **Real-time**: `RealtimeService` subscribes to Postgres changes on `posts`, `likes`, `comments`, `follows`, `bookmarks` tables and triggers controller refreshes.
+- **Real-time**: `RealtimeService` subscribes to Postgres changes on `posts`, `likes`, `comments`, `follows`, `bookmarks` tables and triggers controller refreshes. `RealtimeService.initialize()` must be called explicitly after login — it exits early if no authenticated user is present, so calling it at startup silently does nothing.
 - **Auth flow**: Sign up creates a row in `profiles` via a Supabase database trigger. Session is checked at startup to determine initial route (`/login` vs `/home`).
 - **Storage**: Media uploads go through `StorageUploadService` to Supabase Storage buckets.
 - **Edge Functions**: `send-notification` function in `supabase/functions/send-notification/`.
@@ -105,6 +111,8 @@ lib/
 ### Otaku Rank System
 
 `ProfileModel` has a `rank`/`level`/`xp` system (Novice → Sensei → Kami). `levelProgress` returns a `0.0–1.0` float used for progress bars. XP thresholds are computed in the model.
+
+XP is awarded through two mechanisms: Supabase DB triggers handle most social actions (post +10, like +2, comment +3, follower +5, story +5); `OtakuPointsService` handles actions without triggers (daily login +5, watchlist +3, review +15, quiz +20). Use `SessionGuard.uid` (from `core/utils/session_guard.dart`) instead of `Supabase.instance.client.auth.currentUser!.id` when the auth state might be null.
 
 ## Testing
 
